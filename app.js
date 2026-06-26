@@ -3,6 +3,7 @@ let CFG = {};         // {user, repo, token}
 let journal = [];     // array of day entries
 let ghSha = null;     // SHA of journal.json in GitHub (needed for updates)
 let mealCount = 0;
+let reactionCount = 0;
 let activeSymptoms = new Set();
 let activeSev = '';
 let syncTimer = null;
@@ -330,29 +331,60 @@ function addMeal() {
 }
 
 function updateMealSelect() {
-  const sel = document.getElementById('e-meal-triggered');
-  if (!sel) return;
-  const prev = sel.value;
-  sel.innerHTML = '<option value="">— select meal —</option>';
-  document.querySelectorAll('.meal-card').forEach(card => {
+  const opts = ['<option value="">— select meal —</option>'];
+  document.querySelectorAll('#meals-container .meal-card').forEach(card => {
     const type = card.querySelector('.meal-type-sel').value;
     const time = card.querySelector('.ml-time').value;
-    const opt = document.createElement('option');
-    opt.value = card.id;
-    opt.textContent = typeName(type) + (time ? ' · ' + time : '');
-    sel.appendChild(opt);
+    opts.push(`<option value="${card.id}">${typeName(type)}${time ? ' · ' + time : ''}</option>`);
   });
-  sel.value = prev;
+  document.querySelectorAll('#reactions-container .ep-meal').forEach(sel => {
+    const prev = sel.value;
+    sel.innerHTML = opts.join('');
+    sel.value = prev;
+  });
 }
 
-function resolveTriggeredMeal() {
-  const sel = document.getElementById('e-meal-triggered');
-  if (!sel || !sel.value) return '';
-  const card = document.getElementById(sel.value);
-  if (!card) return '';
-  const type = card.querySelector('.meal-type-sel').value;
-  const time = card.querySelector('.ml-time').value;
-  return typeName(type) + (time ? ' · ' + time : '');
+function addReactionEpisode() {
+  const id = 're-' + (reactionCount++);
+  const div = document.createElement('div');
+  div.className = 'meal-card';
+  div.id = id;
+  div.innerHTML = `
+    <div class="meal-card-head">
+      <span style="font-size:.8rem;color:var(--ink2);font-weight:500">Vomiting episode</span>
+      <button class="meal-remove" onclick="document.getElementById('${id}').remove()">Remove</button>
+    </div>
+    <div class="f-row">
+      <div class="f-group"><label>Meal that triggered it</label>
+        <select class="ep-meal"><option value="">— select meal —</option></select>
+      </div>
+      <div class="f-group"><label>Times vomited</label>
+        <select class="ep-count">
+          <option value="1">Once</option>
+          <option value="2">Twice</option>
+          <option value="3+">3 or more</option>
+        </select>
+      </div>
+    </div>
+    <div class="f-row">
+      <div class="f-group"><label>Delay after meal</label>
+        <select class="ep-delay">
+          <option value="">Not applicable</option>
+          <option value="<30m">Under 30 min</option>
+          <option value="30-60m">30 – 60 min</option>
+          <option value="1-2h">1 – 2 hours</option>
+          <option value="2-3h">2 – 3 hours</option>
+          <option value="3-4h">3 – 4 hours</option>
+          <option value=">4h">Over 4 hours</option>
+        </select>
+      </div>
+      <div class="f-group"><label>What was vomited</label>
+        <input type="text" class="ep-content" placeholder="e.g. breakfast residue, mucus">
+      </div>
+    </div>
+  `;
+  document.getElementById('reactions-container').appendChild(div);
+  updateMealSelect();
 }
 
 function toggleMedInput(checkbox) {
@@ -371,7 +403,7 @@ async function saveEntry() {
   const date = document.getElementById('e-date').value;
   if (!date) { toast('Please pick a date', true); return; }
 
-  const mealCards = document.querySelectorAll('.meal-card');
+  const mealCards = document.querySelectorAll('#meals-container .meal-card');
   if (mealCards.length === 0) { toast('Add at least one meal', true); return; }
 
   const meals = [];
@@ -390,27 +422,42 @@ async function saveEntry() {
     });
   });
 
+  const reactions = [];
+  document.querySelectorAll('#reactions-container .meal-card').forEach(card => {
+    const mealId = card.querySelector('.ep-meal').value;
+    const mealCard = mealId ? document.getElementById(mealId) : null;
+    let mealLabel = '';
+    if (mealCard) {
+      const type = mealCard.querySelector('.meal-type-sel').value;
+      const time = mealCard.querySelector('.ml-time').value;
+      mealLabel = typeName(type) + (time ? ' · ' + time : '');
+    }
+    reactions.push({
+      meal:    mealLabel,
+      count:   card.querySelector('.ep-count').value,
+      delay:   card.querySelector('.ep-delay').value,
+      content: card.querySelector('.ep-content').value.trim(),
+    });
+  });
+
   const medsChecked = document.getElementById('e-meds').checked;
   const entry = {
     date,
-    sleep:       document.getElementById('e-sleep').value,
-    mood:        document.getElementById('e-mood').value,
-    activity:    document.getElementById('e-activity').value,
-    stool:       document.getElementById('e-stool').value,
-    hydration:   document.getElementById('e-hydration').value,
-    newEnv:      document.getElementById('e-newenv').checked,
-    sick:        document.getElementById('e-sick').checked,
-    meds:        medsChecked,
-    medName:     medsChecked ? document.getElementById('e-med-name').value.trim() : '',
+    sleep:    document.getElementById('e-sleep').value,
+    mood:     document.getElementById('e-mood').value,
+    activity: document.getElementById('e-activity').value,
+    stool:    document.getElementById('e-stool').value,
+    hydration:document.getElementById('e-hydration').value,
+    newEnv:   document.getElementById('e-newenv').checked,
+    sick:     document.getElementById('e-sick').checked,
+    meds:     medsChecked,
+    medName:  medsChecked ? document.getElementById('e-med-name').value.trim() : '',
     meals,
-    vomit:        document.getElementById('e-vomit').value,
-    delay:        document.getElementById('e-delay').value,
-    mealVomited:  resolveTriggeredMeal(),
-    vomitContent: document.getElementById('e-vomit-content').value.trim(),
-    symptoms:     [...activeSymptoms],
-    severity:    activeSev,
-    notes:       document.getElementById('e-notes').value.trim(),
-    ts:          Date.now()
+    reactions,
+    symptoms: [...activeSymptoms],
+    severity: activeSev,
+    notes:    document.getElementById('e-notes').value.trim(),
+    ts:       Date.now()
   };
 
   const existIdx = journal.findIndex(e => e.date === date);
@@ -426,10 +473,7 @@ async function saveEntry() {
     if (entry.newEnv)    ex.newEnv    = true;
     if (entry.sick)      ex.sick      = true;
     if (entry.meds)      { ex.meds = true; if (entry.medName) ex.medName = entry.medName; }
-    if (entry.vomit && entry.vomit !== 'none') ex.vomit = entry.vomit;
-    if (entry.delay)        ex.delay        = entry.delay;
-    if (entry.mealVomited)  ex.mealVomited  = entry.mealVomited;
-    if (entry.vomitContent) ex.vomitContent = entry.vomitContent;
+    ex.reactions = [...(ex.reactions || []), ...(entry.reactions || [])];
     ex.symptoms = [...new Set([...(ex.symptoms || []), ...entry.symptoms])];
     if (entry.severity && (!ex.severity || Number(entry.severity) > Number(ex.severity))) {
       ex.severity = entry.severity;
@@ -469,10 +513,8 @@ function resetLogForm() {
   ['e-newenv','e-sick','e-meds'].forEach(id => {
     document.getElementById(id).checked = false;
   });
-  document.getElementById('e-vomit').value = 'none';
-  document.getElementById('e-delay').value = '';
-  document.getElementById('e-meal-triggered').value = '';
-  document.getElementById('e-vomit-content').value = '';
+  document.getElementById('reactions-container').innerHTML = '';
+  reactionCount = 0;
   document.getElementById('e-med-name').value = '';
   document.getElementById('med-name-row').style.display = 'none';
   document.getElementById('e-notes').value = '';
@@ -497,14 +539,19 @@ function renderHistory() {
   }
 
   el.innerHTML = journal.map(e => {
-    const hadVomit = e.vomit && e.vomit !== 'none';
+    const hasReactions = e.reactions && e.reactions.length > 0;
+    const hadVomit = hasReactions || (e.vomit && e.vomit !== 'none');
     const hasNew   = e.meals && e.meals.some(m => m.newFood);
     const hasGluten= e.meals && e.meals.some(m => m.gluten);
     const hasDairy = e.meals && e.meals.some(m => m.dairy);
 
     const tags = [
       hadVomit
-        ? `<span class="tag bad">🤢 Vomited (${e.vomit}×)</span>`
+        ? `<span class="tag bad">🤢 Vomited (${
+            hasReactions
+              ? e.reactions.length + (e.reactions.length === 1 ? ' episode' : ' episodes')
+              : e.vomit + '×'
+          })</span>`
         : `<span class="tag ok">✓ No vomiting</span>`,
       e.severity === '3' ? `<span class="tag bad">Severe day</span>` :
       e.severity === '2' ? `<span class="tag warn">Moderate day</span>` :
@@ -528,18 +575,28 @@ function renderHistory() {
         </span>
       </div>`).join('');
 
-    const reaction = hadVomit && e.delay
-      ? `<div class="reaction-bar ${e.severity === '3' ? 'severe' : ''}">
-          Reaction ${e.delay} after ${e.mealVomited ? `<strong>${e.mealVomited}</strong>` : 'last meal'}
-          ${e.vomitContent ? ` — <em>${e.vomitContent}</em>` : ''}
-          ${e.symptoms && e.symptoms.length ? ' · ' + e.symptoms.join(', ') : ''}
-        </div>` : '';
+    let reactionHtml = '';
+    if (hasReactions) {
+      reactionHtml = e.reactions.map(r =>
+        `<div class="reaction-bar ${e.severity === '3' ? 'severe' : ''}">
+          ${r.count}× &nbsp;·&nbsp; ${r.delay || '—'} after ${r.meal ? `<strong>${r.meal}</strong>` : 'last meal'}
+          ${r.content ? ` — <em>${r.content}</em>` : ''}
+        </div>`
+      ).join('');
+    } else if (e.vomit && e.vomit !== 'none' && e.delay) {
+      reactionHtml = `<div class="reaction-bar ${e.severity === '3' ? 'severe' : ''}">
+        Reaction ${e.delay} after ${e.mealVomited ? `<strong>${e.mealVomited}</strong>` : 'last meal'}
+        ${e.vomitContent ? ` — <em>${e.vomitContent}</em>` : ''}
+        ${e.symptoms && e.symptoms.length ? ' · ' + e.symptoms.join(', ') : ''}
+      </div>`;
+    }
 
     return `<div class="card">
       <div class="entry-date-head">${fmtDate(e.date)}</div>
       <div class="tag-row">${tags}</div>
       <div>${mealRows}</div>
-      ${reaction}
+      ${reactionHtml}
+      ${e.symptoms && e.symptoms.length ? `<div class="reaction-bar" style="border-left-color:var(--ink3);background:var(--bg)">${e.symptoms.join(', ')}</div>` : ''}
       ${e.notes ? `<div class="entry-note">${e.notes}</div>` : ''}
     </div>`;
   }).join('');
@@ -556,8 +613,10 @@ function renderPatterns() {
     return;
   }
 
+  const hadReaction = e => (e.reactions && e.reactions.length > 0) || (e.vomit && e.vomit !== 'none');
+
   const n = journal.length;
-  const vomitDays = journal.filter(e => e.vomit && e.vomit !== 'none').length;
+  const vomitDays = journal.filter(hadReaction).length;
 
   const pct = (a, b) => b === 0 ? '—' : Math.round(a / b * 100) + '%';
   const pctClass = (a, b) => {
@@ -570,42 +629,42 @@ function renderPatterns() {
     {
       name: 'Gluten days with vomiting',
       filter: e => e.meals && e.meals.some(m => m.gluten),
-      react:  e => e.vomit && e.vomit !== 'none'
+      react:  hadReaction
     },
     {
       name: 'Dairy days with vomiting',
       filter: e => e.meals && e.meals.some(m => m.dairy),
-      react:  e => e.vomit && e.vomit !== 'none'
+      react:  hadReaction
     },
     {
       name: 'Egg days with vomiting',
       filter: e => e.meals && e.meals.some(m => m.egg),
-      react:  e => e.vomit && e.vomit !== 'none'
+      react:  hadReaction
     },
     {
       name: 'New food days with vomiting',
       filter: e => e.meals && e.meals.some(m => m.newFood),
-      react:  e => e.vomit && e.vomit !== 'none'
+      react:  hadReaction
     },
     {
       name: 'Poor-sleep days with vomiting',
       filter: e => e.sleep === 'poor' || e.sleep === 'very-poor',
-      react:  e => e.vomit && e.vomit !== 'none'
+      react:  hadReaction
     },
     {
       name: 'Away-from-home days with vomiting',
       filter: e => e.newEnv,
-      react:  e => e.vomit && e.vomit !== 'none'
+      react:  hadReaction
     },
     {
       name: 'Illness-sign days with vomiting',
       filter: e => e.sick,
-      react:  e => e.vomit && e.vomit !== 'none'
+      react:  hadReaction
     },
     {
       name: 'Heavy-meal days with vomiting',
       filter: e => e.meals && e.meals.some(m => m.heavy === 'heavy'),
-      react:  e => e.vomit && e.vomit !== 'none'
+      react:  hadReaction
     },
   ];
 
@@ -623,7 +682,7 @@ function renderPatterns() {
     </div>`;
   }).join('');
 
-  const vEntries = journal.filter(e => e.vomit && e.vomit !== 'none' && e.delay);
+  const vEntries = journal.filter(hadReaction);
   const delayCounts = {};
   vEntries.forEach(e => { delayCounts[e.delay] = (delayCounts[e.delay] || 0) + 1; });
   const delayRows = Object.entries(delayCounts)

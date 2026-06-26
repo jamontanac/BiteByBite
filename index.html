@@ -579,47 +579,15 @@ img{display:block}
       <span style="font-size:1.1rem">+</span> Add meal or snack
     </button>
 
-    <div class="sec-label">Symptoms</div>
+    <div class="sec-label">Vomiting episodes</div>
+    <div id="reactions-container"></div>
+    <button class="add-meal-btn" onclick="addReactionEpisode()">
+      <span style="font-size:1.1rem">+</span> Add vomiting episode
+    </button>
+
+    <div class="sec-label">Other symptoms</div>
     <div class="card">
-      <div class="f-row">
-        <div class="f-group">
-          <label>Vomiting today</label>
-          <select id="e-vomit">
-            <option value="none">None</option>
-            <option value="1">Once</option>
-            <option value="2">Twice</option>
-            <option value="3+">3 or more times</option>
-          </select>
-        </div>
-        <div class="f-group">
-          <label>Delay after meal</label>
-          <select id="e-delay">
-            <option value="">Not applicable</option>
-            <option value="<30m">Under 30 min</option>
-            <option value="30-60m">30 – 60 min</option>
-            <option value="1-2h">1 – 2 hours</option>
-            <option value="2-3h">2 – 3 hours</option>
-            <option value="3-4h">3 – 4 hours</option>
-            <option value=">4h">Over 4 hours</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="f-row" style="margin-bottom:.875rem">
-        <div class="f-group">
-          <label>Meal that triggered it</label>
-          <select id="e-meal-triggered">
-            <option value="">— select meal —</option>
-          </select>
-        </div>
-        <div class="f-group">
-          <label>What was vomited</label>
-          <input type="text" id="e-vomit-content" placeholder="e.g. lunch residue, mucus">
-        </div>
-      </div>
-
       <div class="f-group" style="margin-bottom:.875rem">
-        <label>Other symptoms</label>
         <div class="chip-grid" id="symptom-chips">
           <span class="chip bad" data-v="bloating">Bloating</span>
           <span class="chip bad" data-v="gas">Excess gas</span>
