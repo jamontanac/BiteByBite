@@ -22,6 +22,18 @@
         "gluten": false,
         "dairy": false,
         "egg": true
+      },
+      {
+        "type": "lunch",
+        "time": "13:00",
+        "source": "homemade",
+        "foods": "Soup : Spring onion, cilantro, yellow potatoes, tuna, oatmeal, fortini, platain flour.",
+        "heavy": "heavy",
+        "amount": "all",
+        "newFood": false,
+        "gluten": false,
+        "dairy": false,
+        "egg": false
       }
     ],
     "reactions": [],
@@ -30,6 +42,6 @@
     ],
     "severity": "1",
     "notes": "",
-    "ts": 1782513697785
+    "ts": 1782513896097
   }
 ]
