@@ -1,0 +1,24 @@
+{
+  "name": "BiteByBite · Food Journal",
+  "short_name": "BiteByBite",
+  "description": "A lightweight, data-driven food and symptom diary designed to track daily meals and identify potential food allergies or sensitivities over time.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F4EF",
+  "theme_color": "#F7F4EF",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
