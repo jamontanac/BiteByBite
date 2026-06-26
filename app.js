@@ -304,28 +304,33 @@ function addMeal() {
     </div>
     <div style="margin-top:.25rem">
       <div class="toggle-row">
-        <div class="tog"><input type="checkbox" class="ml-new"><span class="tog-track"></span></div>
+        <label class="tog"><input type="checkbox" class="ml-new"><span class="tog-track"></span></label>
         <div class="toggle-label">New food
           <small>Ingredient rarely or never eaten before</small>
         </div>
       </div>
       <div class="toggle-row">
-        <div class="tog"><input type="checkbox" class="ml-gluten"><span class="tog-track"></span></div>
+        <label class="tog"><input type="checkbox" class="ml-gluten"><span class="tog-track"></span></label>
         <div class="toggle-label">Contains gluten
           <small>Wheat, barley, rye, spelt, or oats</small>
         </div>
       </div>
       <div class="toggle-row">
-        <div class="tog"><input type="checkbox" class="ml-dairy"><span class="tog-track"></span></div>
+        <label class="tog"><input type="checkbox" class="ml-dairy"><span class="tog-track"></span></label>
         <div class="toggle-label">Contains dairy</div>
       </div>
       <div class="toggle-row">
-        <div class="tog"><input type="checkbox" class="ml-egg"><span class="tog-track"></span></div>
+        <label class="tog"><input type="checkbox" class="ml-egg"><span class="tog-track"></span></label>
         <div class="toggle-label">Contains egg</div>
       </div>
     </div>
   `;
   document.getElementById('meals-container').appendChild(div);
+}
+
+function toggleMedInput(checkbox) {
+  document.getElementById('med-name-row').style.display = checkbox.checked ? 'block' : 'none';
+  if (!checkbox.checked) document.getElementById('e-med-name').value = '';
 }
 
 function selectSev(btn) {
@@ -358,29 +363,52 @@ async function saveEntry() {
     });
   });
 
+  const medsChecked = document.getElementById('e-meds').checked;
   const entry = {
     date,
-    sleep:    document.getElementById('e-sleep').value,
-    mood:     document.getElementById('e-mood').value,
-    activity: document.getElementById('e-activity').value,
-    stool:    document.getElementById('e-stool').value,
-    hydration:document.getElementById('e-hydration').value,
-    newEnv:   document.getElementById('e-newenv').checked,
-    sick:     document.getElementById('e-sick').checked,
-    meds:     document.getElementById('e-meds').checked,
+    sleep:       document.getElementById('e-sleep').value,
+    mood:        document.getElementById('e-mood').value,
+    activity:    document.getElementById('e-activity').value,
+    stool:       document.getElementById('e-stool').value,
+    hydration:   document.getElementById('e-hydration').value,
+    newEnv:      document.getElementById('e-newenv').checked,
+    sick:        document.getElementById('e-sick').checked,
+    meds:        medsChecked,
+    medName:     medsChecked ? document.getElementById('e-med-name').value.trim() : '',
     meals,
-    vomit:    document.getElementById('e-vomit').value,
-    delay:    document.getElementById('e-delay').value,
-    symptoms: [...activeSymptoms],
-    severity: activeSev,
-    notes:    document.getElementById('e-notes').value.trim(),
-    ts:       Date.now()
+    vomit:       document.getElementById('e-vomit').value,
+    delay:       document.getElementById('e-delay').value,
+    mealVomited: document.getElementById('e-meal-vomited').value.trim(),
+    symptoms:    [...activeSymptoms],
+    severity:    activeSev,
+    notes:       document.getElementById('e-notes').value.trim(),
+    ts:          Date.now()
   };
 
   const existIdx = journal.findIndex(e => e.date === date);
+  let isMerge = false;
   if (existIdx >= 0) {
-    if (!confirm('An entry for this date already exists. Replace it?')) return;
-    journal[existIdx] = entry;
+    const ex = journal[existIdx];
+    ex.meals = [...(ex.meals || []), ...entry.meals];
+    if (entry.sleep)     ex.sleep     = entry.sleep;
+    if (entry.mood)      ex.mood      = entry.mood;
+    if (entry.activity)  ex.activity  = entry.activity;
+    if (entry.stool)     ex.stool     = entry.stool;
+    if (entry.hydration) ex.hydration = entry.hydration;
+    if (entry.newEnv)    ex.newEnv    = true;
+    if (entry.sick)      ex.sick      = true;
+    if (entry.meds)      { ex.meds = true; if (entry.medName) ex.medName = entry.medName; }
+    if (entry.vomit && entry.vomit !== 'none') ex.vomit = entry.vomit;
+    if (entry.delay)        ex.delay        = entry.delay;
+    if (entry.mealVomited)  ex.mealVomited  = entry.mealVomited;
+    ex.symptoms = [...new Set([...(ex.symptoms || []), ...entry.symptoms])];
+    if (entry.severity && (!ex.severity || Number(entry.severity) > Number(ex.severity))) {
+      ex.severity = entry.severity;
+    }
+    if (entry.notes) ex.notes = ex.notes ? ex.notes + '\n' + entry.notes : entry.notes;
+    ex.ts = entry.ts;
+    journal[existIdx] = ex;
+    isMerge = true;
   } else {
     journal.unshift(entry);
   }
@@ -394,7 +422,7 @@ async function saveEntry() {
   try {
     await saveToGitHub();
     updateSettingsDisplay();
-    toast('Entry saved ✓');
+    toast(isMerge ? 'Merged into existing day ✓' : 'Entry saved ✓');
     resetLogForm();
   } catch(e) {
     toast('Save failed: ' + e.message, true);
@@ -414,6 +442,9 @@ function resetLogForm() {
   });
   document.getElementById('e-vomit').value = 'none';
   document.getElementById('e-delay').value = '';
+  document.getElementById('e-meal-vomited').value = '';
+  document.getElementById('e-med-name').value = '';
+  document.getElementById('med-name-row').style.display = 'none';
   document.getElementById('e-notes').value = '';
   document.getElementById('meals-container').innerHTML = '';
   mealCount = 0;
@@ -453,6 +484,7 @@ function renderHistory() {
       hasDairy  ? `<span class="tag neutral">Dairy</span>` : '',
       e.newEnv  ? `<span class="tag neutral">Away from home</span>` : '',
       e.sick    ? `<span class="tag warn">Illness signs</span>` : '',
+      e.meds    ? `<span class="tag neutral">💊 ${e.medName || 'Medication'}</span>` : '',
       e.sleep   ? `<span class="tag neutral">Sleep: ${e.sleep}</span>` : '',
     ].filter(Boolean).join('');
 
@@ -468,7 +500,7 @@ function renderHistory() {
 
     const reaction = hadVomit && e.delay
       ? `<div class="reaction-bar ${e.severity === '3' ? 'severe' : ''}">
-          Reaction ${e.delay} after last meal
+          Reaction ${e.delay} after ${e.mealVomited ? `<strong>${e.mealVomited}</strong>` : 'last meal'}
           ${e.symptoms && e.symptoms.length ? ' · ' + e.symptoms.join(', ') : ''}
         </div>` : '';
 

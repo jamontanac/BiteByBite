@@ -547,20 +547,28 @@ img{display:block}
 
       <div style="margin-top:.25rem">
         <div class="toggle-row">
-          <div class="tog"><input type="checkbox" id="e-newenv"><span class="tog-track"></span></div>
+          <label class="tog"><input type="checkbox" id="e-newenv"><span class="tog-track"></span></label>
           <div class="toggle-label">Different environment
             <small>Travel, eating out, visiting family</small>
           </div>
         </div>
         <div class="toggle-row">
-          <div class="tog"><input type="checkbox" id="e-sick"><span class="tog-track"></span></div>
+          <label class="tog"><input type="checkbox" id="e-sick"><span class="tog-track"></span></label>
           <div class="toggle-label">Signs of illness / teething
             <small>Runny nose, fever, inflamed gums</small>
           </div>
         </div>
         <div class="toggle-row">
-          <div class="tog"><input type="checkbox" id="e-meds"><span class="tog-track"></span></div>
-          <div class="toggle-label">Medication given today</div>
+          <label class="tog"><input type="checkbox" id="e-meds" onchange="toggleMedInput(this)"><span class="tog-track"></span></label>
+          <div class="toggle-label">New medication today
+            <small>Outside usual routine</small>
+          </div>
+        </div>
+        <div id="med-name-row" style="display:none;padding:.5rem 0 .25rem">
+          <div class="f-group">
+            <label>Medication name &amp; dose</label>
+            <input type="text" id="e-med-name" placeholder="e.g. Amoxicillin 250mg" autocomplete="off">
+          </div>
         </div>
       </div>
     </div>
@@ -584,7 +592,7 @@ img{display:block}
           </select>
         </div>
         <div class="f-group">
-          <label>Delay after last meal</label>
+          <label>Delay after meal</label>
           <select id="e-delay">
             <option value="">Not applicable</option>
             <option value="<30m">Under 30 min</option>
@@ -594,6 +602,13 @@ img{display:block}
             <option value="3-4h">3 – 4 hours</option>
             <option value=">4h">Over 4 hours</option>
           </select>
+        </div>
+      </div>
+
+      <div class="f-row full" style="margin-bottom:.875rem">
+        <div class="f-group">
+          <label>Which meal / food triggered it</label>
+          <input type="text" id="e-meal-vomited" placeholder="e.g. Lunch — pasta with tomato sauce">
         </div>
       </div>
 
@@ -612,7 +627,7 @@ img{display:block}
         </div>
       </div>
 
-      <div class="f-group" style="margin-bottom:.875rem">
+      <div class="f-group">
         <label>Overall severity</label>
         <div class="sev-row" style="margin-top:.375rem">
           <button class="sev-btn s1" data-s="1" onclick="selectSev(this)">Mild</button>
@@ -620,9 +635,11 @@ img{display:block}
           <button class="sev-btn s3" data-s="3" onclick="selectSev(this)">Severe</button>
         </div>
       </div>
+    </div>
 
+    <div class="sec-label">Notes</div>
+    <div class="card">
       <div class="f-group">
-        <label>Notes</label>
         <textarea id="e-notes" placeholder="Doctor's observations, new foods introduced, anything unusual…"></textarea>
       </div>
     </div>
