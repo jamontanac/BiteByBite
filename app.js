@@ -242,6 +242,12 @@ function initLogTab() {
       const v = c.dataset.v;
       if (activeSymptoms.has(v)) activeSymptoms.delete(v);
       else activeSymptoms.add(v);
+      if (v === 'other') {
+        const row = document.getElementById('other-symptom-row');
+        const active = c.classList.contains('active');
+        row.style.display = active ? 'block' : 'none';
+        if (!active) document.getElementById('e-symptom-other').value = '';
+      }
     });
   });
 
@@ -454,7 +460,7 @@ async function saveEntry() {
     medName:  medsChecked ? document.getElementById('e-med-name').value.trim() : '',
     meals,
     reactions,
-    symptoms: [...activeSymptoms],
+    symptoms: (otherText => [...activeSymptoms].map(s => s === 'other' ? (otherText || 'other') : s))(document.getElementById('e-symptom-other').value.trim()),
     severity: activeSev,
     notes:    document.getElementById('e-notes').value.trim(),
     ts:       Date.now()
@@ -522,6 +528,8 @@ function resetLogForm() {
   mealCount = 0;
   document.querySelectorAll('#symptom-chips .chip').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('e-symptom-other').value = '';
+  document.getElementById('other-symptom-row').style.display = 'none';
   activeSymptoms.clear();
   activeSev = '';
   addMeal();
