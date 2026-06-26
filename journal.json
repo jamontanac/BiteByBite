@@ -1,0 +1,35 @@
+[
+  {
+    "date": "2026-06-26",
+    "sleep": "ok",
+    "mood": "happy",
+    "activity": "high",
+    "stool": "soft",
+    "hydration": "low",
+    "newEnv": true,
+    "sick": false,
+    "meds": false,
+    "medName": "",
+    "meals": [
+      {
+        "type": "breakfast",
+        "time": "08:30",
+        "source": "homemade",
+        "foods": "Oatmeal pancakes, scramble eggs with cherry tomato and blue berries oatmeal, platain flour. Fortini",
+        "heavy": "moderate",
+        "amount": "all",
+        "newFood": false,
+        "gluten": false,
+        "dairy": false,
+        "egg": true
+      }
+    ],
+    "reactions": [],
+    "symptoms": [
+      "reflux"
+    ],
+    "severity": "1",
+    "notes": "",
+    "ts": 1782513697785
+  }
+]
