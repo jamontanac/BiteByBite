@@ -605,10 +605,16 @@ img{display:block}
         </div>
       </div>
 
-      <div class="f-row full" style="margin-bottom:.875rem">
+      <div class="f-row" style="margin-bottom:.875rem">
         <div class="f-group">
-          <label>Which meal / food triggered it</label>
-          <input type="text" id="e-meal-vomited" placeholder="e.g. Lunch — pasta with tomato sauce">
+          <label>Meal that triggered it</label>
+          <select id="e-meal-triggered">
+            <option value="">— select meal —</option>
+          </select>
+        </div>
+        <div class="f-group">
+          <label>What was vomited</label>
+          <input type="text" id="e-vomit-content" placeholder="e.g. lunch residue, mucus">
         </div>
       </div>
 

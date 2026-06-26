@@ -259,7 +259,7 @@ function addMeal() {
 
   div.innerHTML = `
     <div class="meal-card-head">
-      <select class="meal-type-sel" style="font-size:.8rem;padding:.3rem .6rem;border:1px solid var(--border);border-radius:20px;background:var(--bg)" onchange="updateBadge(this,'${id}')">
+      <select class="meal-type-sel" style="font-size:.8rem;padding:.3rem .6rem;border:1px solid var(--border);border-radius:20px;background:var(--bg)" onchange="updateMealSelect()">
         <option value="breakfast">Breakfast</option>
         <option value="snack">Morning snack</option>
         <option value="lunch">Lunch</option>
@@ -267,7 +267,7 @@ function addMeal() {
         <option value="dinner">Dinner</option>
         <option value="other">Other</option>
       </select>
-      <button class="meal-remove" onclick="document.getElementById('${id}').remove()">Remove</button>
+      <button class="meal-remove" onclick="document.getElementById('${id}').remove(); updateMealSelect()">Remove</button>
     </div>
     <div class="f-row">
       <div class="f-group"><label>Time given</label><input type="time" class="ml-time" value="${hh}:${mm}"></div>
@@ -326,6 +326,33 @@ function addMeal() {
     </div>
   `;
   document.getElementById('meals-container').appendChild(div);
+  updateMealSelect();
+}
+
+function updateMealSelect() {
+  const sel = document.getElementById('e-meal-triggered');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— select meal —</option>';
+  document.querySelectorAll('.meal-card').forEach(card => {
+    const type = card.querySelector('.meal-type-sel').value;
+    const time = card.querySelector('.ml-time').value;
+    const opt = document.createElement('option');
+    opt.value = card.id;
+    opt.textContent = typeName(type) + (time ? ' · ' + time : '');
+    sel.appendChild(opt);
+  });
+  sel.value = prev;
+}
+
+function resolveTriggeredMeal() {
+  const sel = document.getElementById('e-meal-triggered');
+  if (!sel || !sel.value) return '';
+  const card = document.getElementById(sel.value);
+  if (!card) return '';
+  const type = card.querySelector('.meal-type-sel').value;
+  const time = card.querySelector('.ml-time').value;
+  return typeName(type) + (time ? ' · ' + time : '');
 }
 
 function toggleMedInput(checkbox) {
@@ -376,10 +403,11 @@ async function saveEntry() {
     meds:        medsChecked,
     medName:     medsChecked ? document.getElementById('e-med-name').value.trim() : '',
     meals,
-    vomit:       document.getElementById('e-vomit').value,
-    delay:       document.getElementById('e-delay').value,
-    mealVomited: document.getElementById('e-meal-vomited').value.trim(),
-    symptoms:    [...activeSymptoms],
+    vomit:        document.getElementById('e-vomit').value,
+    delay:        document.getElementById('e-delay').value,
+    mealVomited:  resolveTriggeredMeal(),
+    vomitContent: document.getElementById('e-vomit-content').value.trim(),
+    symptoms:     [...activeSymptoms],
     severity:    activeSev,
     notes:       document.getElementById('e-notes').value.trim(),
     ts:          Date.now()
@@ -401,6 +429,7 @@ async function saveEntry() {
     if (entry.vomit && entry.vomit !== 'none') ex.vomit = entry.vomit;
     if (entry.delay)        ex.delay        = entry.delay;
     if (entry.mealVomited)  ex.mealVomited  = entry.mealVomited;
+    if (entry.vomitContent) ex.vomitContent = entry.vomitContent;
     ex.symptoms = [...new Set([...(ex.symptoms || []), ...entry.symptoms])];
     if (entry.severity && (!ex.severity || Number(entry.severity) > Number(ex.severity))) {
       ex.severity = entry.severity;
@@ -442,7 +471,8 @@ function resetLogForm() {
   });
   document.getElementById('e-vomit').value = 'none';
   document.getElementById('e-delay').value = '';
-  document.getElementById('e-meal-vomited').value = '';
+  document.getElementById('e-meal-triggered').value = '';
+  document.getElementById('e-vomit-content').value = '';
   document.getElementById('e-med-name').value = '';
   document.getElementById('med-name-row').style.display = 'none';
   document.getElementById('e-notes').value = '';
@@ -501,6 +531,7 @@ function renderHistory() {
     const reaction = hadVomit && e.delay
       ? `<div class="reaction-bar ${e.severity === '3' ? 'severe' : ''}">
           Reaction ${e.delay} after ${e.mealVomited ? `<strong>${e.mealVomited}</strong>` : 'last meal'}
+          ${e.vomitContent ? ` — <em>${e.vomitContent}</em>` : ''}
           ${e.symptoms && e.symptoms.length ? ' · ' + e.symptoms.join(', ') : ''}
         </div>` : '';
 
