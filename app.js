@@ -102,8 +102,6 @@ async function saveToGitHub() {
     const res = await ghPut(`/repos/${CFG.user}/${CFG.repo}/contents/${FILE}`, body);
     ghSha = res.content.sha;
     setSyncState('synced');
-    const now = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-    document.getElementById('cfg-sync-display').textContent = `Today at ${now}`;
     localStorage.setItem('diario_last_sync', Date.now());
     localStorage.setItem('diario_local', JSON.stringify(journal));
   } catch(e) {
@@ -986,6 +984,20 @@ function updateSettingsDisplay() {
     CFG.user ? `${CFG.user}/${CFG.repo}` : '—';
   document.getElementById('cfg-count-display').textContent =
     `${journal.length} entr${journal.length === 1 ? 'y' : 'ies'}`;
+
+  const raw = localStorage.getItem('diario_last_sync');
+  if (raw) {
+    const d       = new Date(Number(raw));
+    const today   = new Date();
+    const isToday = d.toDateString() === today.toDateString();
+    const time    = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const label   = isToday
+      ? `Today at ${time}`
+      : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ` at ${time}`;
+    document.getElementById('cfg-sync-display').textContent = label;
+  } else {
+    document.getElementById('cfg-sync-display').textContent = 'Never';
+  }
 }
 
 function exportJSON() {
