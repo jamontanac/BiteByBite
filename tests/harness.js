@@ -25,20 +25,24 @@ async function it(label, fn) {
 
 function expect(val) {
   const fail = msg => { throw new Error(msg); };
-  const ser  = v => JSON.stringify(v);
+  const ser  = v => {
+    try { return JSON.stringify(v); } catch (_) { return String(v); }
+  };
   return {
-    toBe:          exp => val !== exp            && fail(`Expected ${ser(exp)}, got ${ser(val)}`),
-    toEqual:       exp => ser(val) !== ser(exp)  && fail(`Expected\n  ${ser(exp)}\ngot\n  ${ser(val)}`),
-    toBeTruthy:    ()  => !val                   && fail(`Expected truthy, got ${ser(val)}`),
-    toBeFalsy:     ()  => !!val                  && fail(`Expected falsy, got ${ser(val)}`),
-    toBeNull:      ()  => val !== null            && fail(`Expected null, got ${ser(val)}`),
-    toContain:     s   => !String(val).includes(String(s)) && fail(`"${val}" does not contain "${s}"`),
-    toHaveLength:  n   => val.length !== n        && fail(`Expected length ${n}, got ${val.length}`),
-    toBeGreaterThan: n => val <= n               && fail(`Expected ${val} > ${n}`),
+    toBe:           exp => val !== exp                   && fail(`Expected ${ser(exp)}, got ${ser(val)}`),
+    toEqual:        exp => ser(val) !== ser(exp)         && fail(`Expected\n  ${ser(exp)}\ngot\n  ${ser(val)}`),
+    toBeTruthy:     ()  => !val                          && fail(`Expected truthy, got ${ser(val)}`),
+    toBeFalsy:      ()  => !!val                         && fail(`Expected falsy, got ${ser(val)}`),
+    toBeNull:       ()  => val !== null                  && fail(`Expected null, got ${ser(val)}`),
+    toContain:      s   => !String(val).includes(String(s)) && fail(`"${val}" does not contain "${s}"`),
+    toHaveLength:   n   => val.length !== n              && fail(`Expected length ${n}, got ${val.length}`),
+    toBeGreaterThan: n  => val <= n                      && fail(`Expected ${val} > ${n}`),
     not: {
-      toBe:      exp => val === exp             && fail(`Expected not to be ${ser(exp)}`),
-      toBeTruthy: ()  => !!val                  && fail(`Expected falsy, got ${ser(val)}`),
-      toContain:  s   => String(val).includes(String(s)) && fail(`"${val}" should not contain "${s}"`),
+      toBe:        exp => val === exp                    && fail(`Expected not to be ${ser(exp)}`),
+      toBeTruthy:  ()  => !!val                          && fail(`Expected falsy, got ${ser(val)}`),
+      toBeFalsy:   ()  => !val                           && fail(`Expected truthy, got ${ser(val)}`),
+      toBeNull:    ()  => val === null                   && fail(`Expected not to be null`),
+      toContain:   s   => String(val).includes(String(s)) && fail(`"${val}" should not contain "${s}"`),
     }
   };
 }
@@ -50,7 +54,7 @@ function renderResults() {
 
   let html = `<div class="summary ${results.fail === 0 ? 'all-pass' : 'has-fail'}">
     <span class="big">${results.pass} / ${total}</span>
-    <span class="sub">${pct}% passing${results.fail ? ` · ${results.fail} failed` : ''}</span>
+    <span class="sub">${pct}% passing${results.fail ? ` · ${results.fail} failed` : ' ✓'}</span>
   </div>`;
 
   for (const suite of results.suites) {

@@ -1,5 +1,4 @@
 // ── App DOM ─────────────────────────────────────────────
-// Mirrors every element id / class the app's JS touches.
 function buildDOM() {
   document.getElementById('app-root').innerHTML = `
     <div id="loading" style="display:none">
@@ -7,7 +6,6 @@ function buildDOM() {
     </div>
     <div id="toast"></div>
 
-    <!-- Login -->
     <div id="s-login" class="screen">
       <div id="login-err" class="err-msg" style="display:none"></div>
       <input id="gh-user"  type="text">
@@ -16,12 +14,10 @@ function buildDOM() {
       <button id="login-btn">Connect &amp; open journal</button>
     </div>
 
-    <!-- App -->
     <div id="s-app" class="screen">
       <div class="sync-dot synced" id="sync-dot"></div>
       <span id="sync-label">Saved</span>
 
-      <!-- Log tab -->
       <div id="tab-log" class="scroll-area active">
         <input id="e-date" type="date">
         <select id="e-sleep">
@@ -87,15 +83,12 @@ function buildDOM() {
         <button id="save-btn"><span>Save entry</span></button>
       </div>
 
-      <!-- History tab -->
       <div id="tab-history" class="scroll-area">
         <div id="history-list"></div>
       </div>
-      <!-- Patterns tab -->
       <div id="tab-patterns" class="scroll-area">
         <div id="patterns-content"></div>
       </div>
-      <!-- Settings tab -->
       <div id="tab-settings" class="scroll-area">
         <div id="cfg-repo-display"></div>
         <div id="cfg-count-display"></div>
@@ -112,23 +105,28 @@ function buildDOM() {
   `;
 }
 
-// ── State reset (between tests) ─────────────────────────
+// ── State reset ─────────────────────────────────────────
+// IMPORTANT: app.js uses `let` declarations, which do NOT appear on window.
+// We access them directly by name (same global lexical scope), NOT via window.X.
 function resetState() {
-  window.CFG            = {};
-  window.journal        = [];
-  window.ghSha          = null;
-  window.mealCount      = 0;
-  window.reactionCount  = 0;
-  window.activeSymptoms = new Set();
-  window.activeSev      = '';
+  // Reset app.js let-bindings directly (same global scope)
+  CFG            = {};
+  journal.length = 0;      // mutate in-place so app.js always holds the same array ref
+  ghSha          = null;
+  mealCount      = 0;
+  reactionCount  = 0;
+  activeSymptoms = new Set();
+  activeSev      = '';
   localStorage.clear();
 
+  // Reset DOM containers
   document.getElementById('meals-container').innerHTML     = '';
   document.getElementById('reactions-container').innerHTML = '';
   document.getElementById('history-list').innerHTML        = '';
   document.getElementById('patterns-content').innerHTML    = '';
   document.getElementById('login-err').style.display       = 'none';
 
+  // Reset form fields
   ['e-date','e-sleep','e-mood','e-activity','e-stool','e-hydration',
    'e-notes','e-med-name','e-symptom-other','gh-user','gh-repo','gh-token']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -143,32 +141,52 @@ function resetState() {
   document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
 }
 
-// ── Test helpers ────────────────────────────────────────
-// Minimal valid journal entry
+// ── Journal helpers ─────────────────────────────────────
+// Use these instead of window.journal = [...] to avoid the let-vs-window split.
+function setJournal(...entries) {
+  journal.length = 0;
+  entries.forEach(e => journal.push(e));
+}
+
 function makeEntry(overrides = {}) {
   return {
     date: '2026-06-26', sleep: '', mood: '', activity: '', stool: '',
     hydration: '', newEnv: false, sick: false, meds: false, medName: '',
     meals: [{
       type: 'breakfast', time: '08:00', source: 'homemade', foods: 'oatmeal',
-      heavy: 'light', amount: 'all', newFood: false, gluten: false, dairy: false, egg: false
+      heavy: 'light', amount: 'all', newFood: false, newFoodName: '',
+      gluten: false, dairy: false, egg: false
     }],
     reactions: [], symptoms: [], severity: '', notes: '', ts: 1000,
     ...overrides
   };
 }
 
-// Sets date + adds one meal card (minimum for saveEntry to succeed)
+// Sets date + adds one meal (minimum for saveEntry to succeed)
 function setupMinimalForm(date = '2026-06-26') {
   document.getElementById('e-date').value = date;
   document.getElementById('meals-container').innerHTML = '';
-  window.mealCount = 0;
+  mealCount = 0;
   addMeal();
 }
 
-// Simulates clicking a chip by its data-v value
+// Resets all chip DOM state AND the activeSymptoms Set together.
+// Use instead of bare activeSymptoms.clear() to avoid DOM/state desync.
+function resetChips() {
+  activeSymptoms = new Set();
+  document.querySelectorAll('#symptom-chips .chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('other-symptom-row').style.display = 'none';
+  document.getElementById('e-symptom-other').value = '';
+}
+
+// Clicks a chip by data-v value
 function clickChip(v) {
-  const chip = document.querySelector(`#symptom-chips .chip[data-v="${v}"]`);
-  chip.click();
-  return chip;
+  document.querySelector(`#symptom-chips .chip[data-v="${v}"]`).click();
+}
+
+// Mocks saveToGitHub (function declaration = on window); returns restore fn
+function mockSave() {
+  const orig = window.saveToGitHub;
+  window.saveToGitHub = async () => { ghSha = 'sha-saved'; };
+  return () => { window.saveToGitHub = orig; };
 }

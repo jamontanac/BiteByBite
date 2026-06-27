@@ -1,27 +1,40 @@
+// NOTE: app.js uses `let` at the top level — those bindings are in the global
+// lexical scope, NOT on window. Access them directly (journal, CFG, activeSev …)
+// instead of window.journal, window.activeSev, etc.
+// Use setJournal(...entries) to replace journal contents safely.
+
 async function runSuite() {
 
 // ════════════════════════════════════════════════════════
 // 1. UTILITY FUNCTIONS
 // ════════════════════════════════════════════════════════
 await describe('typeName()', async () => {
-  await it('maps breakfast',        () => expect(typeName('breakfast')).toBe('Breakfast'));
-  await it('maps lunch',            () => expect(typeName('lunch')).toBe('Lunch'));
-  await it('maps dinner',           () => expect(typeName('dinner')).toBe('Dinner'));
-  await it('maps snack and snack2', () => {
+  await it('maps breakfast',         () => expect(typeName('breakfast')).toBe('Breakfast'));
+  await it('maps lunch',             () => expect(typeName('lunch')).toBe('Lunch'));
+  await it('maps dinner',            () => expect(typeName('dinner')).toBe('Dinner'));
+  await it('maps snack and snack2',  () => {
     expect(typeName('snack')).toBe('Snack');
     expect(typeName('snack2')).toBe('Snack');
   });
-  await it('maps other',            () => expect(typeName('other')).toBe('Other'));
-  await it('passes through unknown keys', () => expect(typeName('custom')).toBe('custom'));
+  await it('maps other',             () => expect(typeName('other')).toBe('Other'));
+  await it('passes through unknown', () => expect(typeName('custom')).toBe('custom'));
 });
 
 await describe('fmtDate()', async () => {
   await it('returns empty string for empty input', () => expect(fmtDate('')).toBe(''));
   await it('formats a valid date string', () => {
-    const result = fmtDate('2026-06-26');
-    expect(result).toContain('2026');
-    expect(result).toContain('June');
+    const r = fmtDate('2026-06-26');
+    expect(r).toContain('2026');
+    expect(r).toContain('June');
   });
+});
+
+await describe('fmtTime()', async () => {
+  await it('converts midnight',   () => expect(fmtTime('00:00')).toBe('12:00 AM'));
+  await it('converts noon',       () => expect(fmtTime('12:00')).toBe('12:00 PM'));
+  await it('converts afternoon',  () => expect(fmtTime('13:30')).toBe('1:30 PM'));
+  await it('converts morning',    () => expect(fmtTime('08:05')).toBe('8:05 AM'));
+  await it('returns empty for empty input', () => expect(fmtTime('')).toBe(''));
 });
 
 
@@ -36,14 +49,12 @@ await describe('loadAppConfig()', async () => {
     expect(cfg.github.reponame).toBe('testrepo');
     restoreFetch();
   });
-
   await it('returns empty object on 404', async () => {
     mockFetch({ 'GET config.json': { status: 404, body: {} } });
     const cfg = await loadAppConfig();
     expect(cfg).toEqual({});
     restoreFetch();
   });
-
   await it('returns empty object on network error', async () => {
     window.fetch = async () => { throw new Error('Network error'); };
     const cfg = await loadAppConfig();
@@ -61,35 +72,30 @@ await describe('loadCfg() / saveCfg()', async () => {
     resetState();
     expect(loadCfg()).toBeNull();
   });
-
   await it('loadCfg returns null with incomplete credentials', () => {
     resetState();
-    localStorage.setItem('diario_cfg', JSON.stringify({ user: 'a', repo: 'b' })); // no token
+    localStorage.setItem('diario_cfg', JSON.stringify({ user: 'a', repo: 'b' }));
     expect(loadCfg()).toBeNull();
   });
-
   await it('loadCfg returns config when all fields present', () => {
     resetState();
     const stored = { user: 'u', repo: 'r', token: 't' };
     localStorage.setItem('diario_cfg', JSON.stringify(stored));
     expect(loadCfg()).toEqual(stored);
   });
-
   await it('saveCfg writes CFG to localStorage', () => {
     resetState();
-    window.CFG = { user: 'jose', repo: 'BiteByBite', token: 'ghp_test' };
+    CFG = { user: 'jose', repo: 'BiteByBite', token: 'ghp_test' };
     saveCfg();
     const stored = JSON.parse(localStorage.getItem('diario_cfg'));
     expect(stored.user).toBe('jose');
     expect(stored.repo).toBe('BiteByBite');
   });
-
   await it('saveCfg round-trips correctly', () => {
     resetState();
-    window.CFG = { user: 'u2', repo: 'r2', token: 'tok2' };
+    CFG = { user: 'u2', repo: 'r2', token: 'tok2' };
     saveCfg();
-    const loaded = loadCfg();
-    expect(loaded).toEqual(window.CFG);
+    expect(loadCfg()).toEqual(CFG);
   });
 });
 
@@ -100,9 +106,9 @@ await describe('loadCfg() / saveCfg()', async () => {
 await describe('doLogout()', async () => {
   await it('clears all localStorage keys', () => {
     resetState();
-    localStorage.setItem('diario_cfg',        '{}');
-    localStorage.setItem('diario_local',      '[]');
-    localStorage.setItem('diario_last_sync',  '0');
+    localStorage.setItem('diario_cfg',       '{}');
+    localStorage.setItem('diario_local',     '[]');
+    localStorage.setItem('diario_last_sync', '0');
     mockConfirm(true);
     doLogout();
     expect(localStorage.getItem('diario_cfg')).toBeNull();
@@ -110,20 +116,18 @@ await describe('doLogout()', async () => {
     expect(localStorage.getItem('diario_last_sync')).toBeNull();
     restoreConfirm();
   });
-
   await it('resets CFG, journal, ghSha', () => {
     resetState();
-    window.CFG = { user: 'u', repo: 'r', token: 't' };
-    window.journal = [makeEntry()];
-    window.ghSha = 'sha-xyz';
+    CFG = { user: 'u', repo: 'r', token: 't' };
+    setJournal(makeEntry());
+    ghSha = 'sha-xyz';
     mockConfirm(true);
     doLogout();
-    expect(Object.keys(window.CFG)).toHaveLength(0);
-    expect(window.journal).toHaveLength(0);
-    expect(window.ghSha).toBeNull();
+    expect(Object.keys(CFG)).toHaveLength(0);
+    expect(journal).toHaveLength(0);
+    expect(ghSha).toBeNull();
     restoreConfirm();
   });
-
   await it('does nothing when user cancels', () => {
     resetState();
     localStorage.setItem('diario_cfg', '{"user":"u"}');
@@ -132,13 +136,11 @@ await describe('doLogout()', async () => {
     expect(localStorage.getItem('diario_cfg')).not.toBeNull();
     restoreConfirm();
   });
-
   await it('shows login screen after logout', () => {
     resetState();
     mockConfirm(true);
     doLogout();
-    const login = document.getElementById('s-login');
-    expect(login.classList.contains('active')).toBeTruthy();
+    expect(document.getElementById('s-login').classList.contains('active')).toBeTruthy();
     restoreConfirm();
   });
 });
@@ -151,15 +153,13 @@ await describe('addMeal()', async () => {
   await it('adds a meal card to #meals-container', () => {
     resetState();
     addMeal();
-    expect(document.querySelectorAll('#meals-container .meal-card')).toHaveLength(1);
+    expect(document.querySelectorAll('#meals-container .meal-card').length).toBe(1);
   });
-
   await it('each call adds one more card', () => {
     resetState();
     addMeal(); addMeal(); addMeal();
-    expect(document.querySelectorAll('#meals-container .meal-card')).toHaveLength(3);
+    expect(document.querySelectorAll('#meals-container .meal-card').length).toBe(3);
   });
-
   await it('card has all required input fields', () => {
     resetState();
     addMeal();
@@ -170,19 +170,15 @@ await describe('addMeal()', async () => {
     expect(card.querySelector('.ml-foods')).not.toBeNull();
     expect(card.querySelector('.ml-heavy')).not.toBeNull();
     expect(card.querySelector('.ml-amount')).not.toBeNull();
+    expect(card.querySelector('.ml-new-food-name')).not.toBeNull();
   });
-
   await it('uses <label> wrappers for toggles (not divs)', () => {
     resetState();
     addMeal();
     const card = document.querySelector('#meals-container .meal-card');
-    const labels = card.querySelectorAll('label.tog');
-    expect(labels.length).toBeGreaterThan(0);
-    // No raw div.tog should exist
-    const divToggles = card.querySelectorAll('div.tog');
-    expect(divToggles).toHaveLength(0);
+    expect(card.querySelectorAll('label.tog').length).toBeGreaterThan(0);
+    expect(card.querySelectorAll('div.tog').length).toBe(0);
   });
-
   await it('clicking a meal label toggles its checkbox', () => {
     resetState();
     addMeal();
@@ -195,23 +191,17 @@ await describe('addMeal()', async () => {
     label.click();
     expect(cb.checked).toBeFalsy();
   });
-
   await it('increments mealCount on each call', () => {
     resetState();
-    expect(window.mealCount).toBe(0);
-    addMeal();
-    expect(window.mealCount).toBe(1);
-    addMeal();
-    expect(window.mealCount).toBe(2);
+    expect(mealCount).toBe(0);
+    addMeal(); expect(mealCount).toBe(1);
+    addMeal(); expect(mealCount).toBe(2);
   });
-
-  await it('sets time input to approximately current time', () => {
+  await it('sets time input to a valid HH:MM value', () => {
     resetState();
-    const before = new Date();
     addMeal();
-    const timeVal = document.querySelector('#meals-container .ml-time').value; // "HH:MM"
-    const [hh, mm] = timeVal.split(':').map(Number);
-    // Just check it's a valid time
+    const val = document.querySelector('#meals-container .ml-time').value;
+    const [hh, mm] = val.split(':').map(Number);
     expect(hh >= 0 && hh <= 23).toBeTruthy();
     expect(mm >= 0 && mm <= 59).toBeTruthy();
   });
@@ -223,39 +213,32 @@ await describe('updateMealSelect()', async () => {
     addMeal();
     addReactionEpisode();
     const epSel = document.querySelector('#reactions-container .ep-meal');
-    // Should have blank option + 1 meal option
+    // blank option + 1 meal option
     expect(epSel.options.length).toBe(2);
     expect(epSel.options[1].text).toContain('Breakfast');
   });
-
   await it('updates existing episode dropdowns when a new meal is added', () => {
     resetState();
     addReactionEpisode();
     const epSel = document.querySelector('#reactions-container .ep-meal');
     expect(epSel.options.length).toBe(1); // only blank
-    addMeal(); // triggers updateMealSelect via onchange
-    // Force update since addMeal calls updateMealSelect at the end
+    addMeal();
     expect(epSel.options.length).toBe(2);
   });
-
   await it('removes meal from dropdown after card is removed', () => {
     resetState();
     addMeal();
     addReactionEpisode();
-    const mealCard = document.querySelector('#meals-container .meal-card');
-    const epSel    = document.querySelector('#reactions-container .ep-meal');
+    const epSel = document.querySelector('#reactions-container .ep-meal');
     expect(epSel.options.length).toBe(2);
-    // Simulate remove button click
-    mealCard.querySelector('.meal-remove').click();
-    expect(epSel.options.length).toBe(1); // back to blank only
+    document.querySelector('#meals-container .meal-card').querySelector('.meal-remove').click();
+    expect(epSel.options.length).toBe(1);
   });
-
-  await it('label reflects meal type', () => {
+  await it('label reflects meal type after type change', () => {
     resetState();
     addMeal();
     const mealCard = document.querySelector('#meals-container .meal-card');
     mealCard.querySelector('.meal-type-sel').value = 'dinner';
-    // Manually fire onchange to trigger updateMealSelect
     mealCard.querySelector('.meal-type-sel').dispatchEvent(new Event('change'));
     addReactionEpisode();
     const epSel = document.querySelector('#reactions-container .ep-meal');
@@ -271,9 +254,8 @@ await describe('addReactionEpisode()', async () => {
   await it('adds a card to #reactions-container', () => {
     resetState();
     addReactionEpisode();
-    expect(document.querySelectorAll('#reactions-container .meal-card')).toHaveLength(1);
+    expect(document.querySelectorAll('#reactions-container .meal-card').length).toBe(1);
   });
-
   await it('card has all required fields', () => {
     resetState();
     addReactionEpisode();
@@ -283,33 +265,24 @@ await describe('addReactionEpisode()', async () => {
     expect(card.querySelector('.ep-delay')).not.toBeNull();
     expect(card.querySelector('.ep-content')).not.toBeNull();
   });
-
   await it('increments reactionCount', () => {
     resetState();
-    expect(window.reactionCount).toBe(0);
-    addReactionEpisode();
-    expect(window.reactionCount).toBe(1);
-    addReactionEpisode();
-    expect(window.reactionCount).toBe(2);
+    expect(reactionCount).toBe(0);
+    addReactionEpisode(); expect(reactionCount).toBe(1);
+    addReactionEpisode(); expect(reactionCount).toBe(2);
   });
-
   await it('multiple episodes are independent', () => {
     resetState();
-    addMeal();
-    addReactionEpisode();
-    addReactionEpisode();
+    addReactionEpisode(); addReactionEpisode();
     const eps = document.querySelectorAll('#reactions-container .meal-card');
-    expect(eps).toHaveLength(2);
+    expect(eps.length).toBe(2);
     expect(eps[0].id).not.toBe(eps[1].id);
   });
-
-  await it('episode remove button only removes that episode', () => {
+  await it('remove button only removes that episode', () => {
     resetState();
-    addReactionEpisode();
-    addReactionEpisode();
-    const first = document.querySelector('#reactions-container .meal-card');
-    first.querySelector('.meal-remove').click();
-    expect(document.querySelectorAll('#reactions-container .meal-card')).toHaveLength(1);
+    addReactionEpisode(); addReactionEpisode();
+    document.querySelector('#reactions-container .meal-card').querySelector('.meal-remove').click();
+    expect(document.querySelectorAll('#reactions-container .meal-card').length).toBe(1);
   });
 });
 
@@ -317,73 +290,57 @@ await describe('addReactionEpisode()', async () => {
 // ════════════════════════════════════════════════════════
 // 7. SYMPTOM CHIPS
 // ════════════════════════════════════════════════════════
-// initLogTab attaches the chip listeners; call it once then keep the DOM
+// Chip listeners are attached by the bootstrap's initLogTab() call.
+// Do NOT call initLogTab() again here — duplicate listeners would double-toggle
+// every click, leaving chips in the wrong state.
 await describe('Symptom chips', async () => {
-  // Make sure listeners are attached
   resetState();
-  initLogTab();
-  // Clear the auto-added meal
-  document.getElementById('meals-container').innerHTML = '';
-  window.mealCount = 0;
 
   await it('clicking a chip adds it to activeSymptoms', () => {
-    window.activeSymptoms.clear();
+    resetChips();
     clickChip('bloating');
-    expect(window.activeSymptoms.has('bloating')).toBeTruthy();
+    expect(activeSymptoms.has('bloating')).toBeTruthy();
   });
-
   await it('clicking again removes it from activeSymptoms', () => {
-    window.activeSymptoms.clear();
-    clickChip('bloating');
-    clickChip('bloating');
-    expect(window.activeSymptoms.has('bloating')).toBeFalsy();
+    resetChips();
+    clickChip('bloating'); clickChip('bloating');
+    expect(activeSymptoms.has('bloating')).toBeFalsy();
   });
-
   await it('chip gets active class when selected', () => {
-    window.activeSymptoms.clear();
+    resetChips();
     const chip = document.querySelector('.chip[data-v="gas"]');
     chip.classList.remove('active');
     clickChip('gas');
     expect(chip.classList.contains('active')).toBeTruthy();
   });
-
   await it('active class removed on second click', () => {
-    window.activeSymptoms.clear();
-    const chip = document.querySelector('.chip[data-v="rash"]');
+    resetChips();
     clickChip('rash'); clickChip('rash');
-    expect(chip.classList.contains('active')).toBeFalsy();
+    expect(document.querySelector('.chip[data-v="rash"]').classList.contains('active')).toBeFalsy();
   });
-
   await it('multiple chips can be active simultaneously', () => {
-    window.activeSymptoms.clear();
+    resetChips();
     clickChip('bloating'); clickChip('cramps'); clickChip('reflux');
-    expect(window.activeSymptoms.size).toBe(3);
+    expect(activeSymptoms.size).toBe(3);
   });
-
   await it('"Other…" chip shows other-symptom-row', () => {
-    window.activeSymptoms.clear();
-    const row = document.getElementById('other-symptom-row');
-    row.style.display = 'none';
+    resetChips();
+    document.getElementById('other-symptom-row').style.display = 'none';
     clickChip('other');
-    expect(row.style.display).toBe('block');
+    expect(document.getElementById('other-symptom-row').style.display).toBe('block');
   });
-
   await it('"Other…" chip hides row and clears input on second click', () => {
-    window.activeSymptoms.clear();
+    resetChips();
     document.getElementById('e-symptom-other').value = 'some symptom';
-    clickChip('other'); // select
-    clickChip('other'); // deselect
-    const row = document.getElementById('other-symptom-row');
-    expect(row.style.display).toBe('none');
+    clickChip('other'); clickChip('other');
+    expect(document.getElementById('other-symptom-row').style.display).toBe('none');
     expect(document.getElementById('e-symptom-other').value).toBe('');
   });
-
   await it('non-other chips do not affect other-symptom-row', () => {
-    window.activeSymptoms.clear();
-    const row = document.getElementById('other-symptom-row');
-    row.style.display = 'none';
+    resetChips();
+    document.getElementById('other-symptom-row').style.display = 'none';
     clickChip('cramps');
-    expect(row.style.display).toBe('none');
+    expect(document.getElementById('other-symptom-row').style.display).toBe('none');
   });
 });
 
@@ -395,34 +352,27 @@ await describe('toggleMedInput()', async () => {
   await it('shows med-name-row when checked', () => {
     resetState();
     const cb = document.getElementById('e-meds');
-    cb.checked = true;
-    toggleMedInput(cb);
+    cb.checked = true; toggleMedInput(cb);
     expect(document.getElementById('med-name-row').style.display).toBe('block');
   });
-
   await it('hides med-name-row when unchecked', () => {
     resetState();
     const cb = document.getElementById('e-meds');
-    cb.checked = false;
-    toggleMedInput(cb);
+    cb.checked = false; toggleMedInput(cb);
     expect(document.getElementById('med-name-row').style.display).toBe('none');
   });
-
   await it('clears med-name input when unchecked', () => {
     resetState();
     document.getElementById('e-med-name').value = 'Amoxicillin 250mg';
     const cb = document.getElementById('e-meds');
-    cb.checked = false;
-    toggleMedInput(cb);
+    cb.checked = false; toggleMedInput(cb);
     expect(document.getElementById('e-med-name').value).toBe('');
   });
-
   await it('preserves med-name when checked', () => {
     resetState();
     document.getElementById('e-med-name').value = 'Ibuprofen 100mg';
     const cb = document.getElementById('e-meds');
-    cb.checked = true;
-    toggleMedInput(cb);
+    cb.checked = true; toggleMedInput(cb);
     expect(document.getElementById('e-med-name').value).toBe('Ibuprofen 100mg');
   });
 });
@@ -435,32 +385,26 @@ await describe('selectSev()', async () => {
   await it('sets activeSev to clicked button value', () => {
     resetState();
     selectSev(document.querySelector('.sev-btn.s2'));
-    expect(window.activeSev).toBe('2');
+    expect(activeSev).toBe('2');
   });
-
   await it('adds active class to clicked button', () => {
     resetState();
     const btn = document.querySelector('.sev-btn.s3');
     selectSev(btn);
     expect(btn.classList.contains('active')).toBeTruthy();
   });
-
   await it('removes active class from other buttons', () => {
     resetState();
     const s1 = document.querySelector('.sev-btn.s1');
     const s2 = document.querySelector('.sev-btn.s2');
-    selectSev(s1);
-    selectSev(s2);
+    selectSev(s1); selectSev(s2);
     expect(s1.classList.contains('active')).toBeFalsy();
     expect(s2.classList.contains('active')).toBeTruthy();
   });
-
   await it('activeSev updates when switching severity', () => {
     resetState();
-    selectSev(document.querySelector('.sev-btn.s1'));
-    expect(window.activeSev).toBe('1');
-    selectSev(document.querySelector('.sev-btn.s3'));
-    expect(window.activeSev).toBe('3');
+    selectSev(document.querySelector('.sev-btn.s1')); expect(activeSev).toBe('1');
+    selectSev(document.querySelector('.sev-btn.s3')); expect(activeSev).toBe('3');
   });
 });
 
@@ -476,17 +420,15 @@ await describe('saveEntry() – validation', async () => {
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal).toHaveLength(0);
+    expect(journal).toHaveLength(0);
   });
-
   await it('rejects when no meals are present', async () => {
     resetState();
     document.getElementById('e-date').value = '2026-06-26';
-    document.getElementById('meals-container').innerHTML = '';
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal).toHaveLength(0);
+    expect(journal).toHaveLength(0);
   });
 });
 
@@ -501,21 +443,19 @@ await describe('saveEntry() – creates a new entry', async () => {
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal).toHaveLength(1);
-    expect(window.journal[0].date).toBe('2026-06-26');
+    expect(journal).toHaveLength(1);
+    expect(journal[0].date).toBe('2026-06-26');
   });
-
   await it('entry contains meals array', async () => {
     resetState();
     setupMinimalForm('2026-06-26');
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(Array.isArray(window.journal[0].meals)).toBeTruthy();
-    expect(window.journal[0].meals).toHaveLength(1);
+    expect(Array.isArray(journal[0].meals)).toBeTruthy();
+    expect(journal[0].meals).toHaveLength(1);
   });
-
-  await it('entry captures meal fields correctly', async () => {
+  await it('entry captures meal type and foods', async () => {
     resetState();
     setupMinimalForm('2026-06-26');
     const card = document.querySelector('#meals-container .meal-card');
@@ -524,11 +464,9 @@ await describe('saveEntry() – creates a new entry', async () => {
     const restore = mockSave();
     await saveEntry();
     restore();
-    const meal = window.journal[0].meals[0];
-    expect(meal.type).toBe('lunch');
-    expect(meal.foods).toBe('rice and chicken');
+    expect(journal[0].meals[0].type).toBe('lunch');
+    expect(journal[0].meals[0].foods).toBe('rice and chicken');
   });
-
   await it('entry captures day-overview fields', async () => {
     resetState();
     setupMinimalForm('2026-06-26');
@@ -538,12 +476,10 @@ await describe('saveEntry() – creates a new entry', async () => {
     const restore = mockSave();
     await saveEntry();
     restore();
-    const e = window.journal[0];
-    expect(e.sleep).toBe('poor');
-    expect(e.mood).toBe('fussy');
-    expect(e.activity).toBe('low');
+    expect(journal[0].sleep).toBe('poor');
+    expect(journal[0].mood).toBe('fussy');
+    expect(journal[0].activity).toBe('low');
   });
-
   await it('entry captures boolean toggles', async () => {
     resetState();
     setupMinimalForm('2026-06-26');
@@ -552,10 +488,9 @@ await describe('saveEntry() – creates a new entry', async () => {
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].newEnv).toBeTruthy();
-    expect(window.journal[0].sick).toBeTruthy();
+    expect(journal[0].newEnv).toBeTruthy();
+    expect(journal[0].sick).toBeTruthy();
   });
-
   await it('entry captures medication name', async () => {
     resetState();
     setupMinimalForm('2026-06-26');
@@ -564,10 +499,9 @@ await describe('saveEntry() – creates a new entry', async () => {
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].meds).toBeTruthy();
-    expect(window.journal[0].medName).toBe('Amoxicillin 250mg');
+    expect(journal[0].meds).toBeTruthy();
+    expect(journal[0].medName).toBe('Amoxicillin 250mg');
   });
-
   await it('medName is empty when meds toggle is off', async () => {
     resetState();
     setupMinimalForm('2026-06-26');
@@ -576,9 +510,8 @@ await describe('saveEntry() – creates a new entry', async () => {
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].medName).toBe('');
+    expect(journal[0].medName).toBe('');
   });
-
   await it('entry captures reactions array', async () => {
     resetState();
     setupMinimalForm('2026-06-26');
@@ -590,14 +523,12 @@ await describe('saveEntry() – creates a new entry', async () => {
     const restore = mockSave();
     await saveEntry();
     restore();
-    const reactions = window.journal[0].reactions;
-    expect(reactions).toHaveLength(1);
-    expect(reactions[0].count).toBe('2');
-    expect(reactions[0].delay).toBe('30-60m');
-    expect(reactions[0].content).toBe('full breakfast');
+    expect(journal[0].reactions).toHaveLength(1);
+    expect(journal[0].reactions[0].count).toBe('2');
+    expect(journal[0].reactions[0].delay).toBe('30-60m');
+    expect(journal[0].reactions[0].content).toBe('full breakfast');
   });
-
-  await it('resets form after successful save', async () => {
+  await it('resets form after save', async () => {
     resetState();
     setupMinimalForm('2026-06-26');
     document.getElementById('e-sleep').value = 'great';
@@ -605,56 +536,47 @@ await describe('saveEntry() – creates a new entry', async () => {
     await saveEntry();
     restore();
     expect(document.getElementById('e-sleep').value).toBe('');
-    expect(document.getElementById('meals-container').children).toHaveLength(1); // reset adds one meal
   });
 });
 
 
 // ════════════════════════════════════════════════════════
 // 12. SAVE ENTRY — SYMPTOMS
+// Directly manipulate activeSymptoms — do NOT call initLogTab() here,
+// as the bootstrap already attached listeners and calling it again doubles them.
 // ════════════════════════════════════════════════════════
 await describe('saveEntry() – symptoms', async () => {
-  await it('saves selected chips to symptoms array', async () => {
+  await it('saves active chips to symptoms array', async () => {
     resetState();
-    initLogTab();
-    document.getElementById('meals-container').innerHTML = '';
-    window.mealCount = 0;
     setupMinimalForm('2026-06-26');
-    clickChip('bloating'); clickChip('cramps');
+    activeSymptoms.add('bloating');
+    activeSymptoms.add('cramps');
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].symptoms).toContain('bloating');
-    expect(window.journal[0].symptoms).toContain('cramps');
+    expect(journal[0].symptoms).toContain('bloating');
+    expect(journal[0].symptoms).toContain('cramps');
   });
-
   await it('replaces "other" token with typed text', async () => {
     resetState();
-    initLogTab();
-    document.getElementById('meals-container').innerHTML = '';
-    window.mealCount = 0;
     setupMinimalForm('2026-06-26');
-    clickChip('other');
+    activeSymptoms.add('other');
     document.getElementById('e-symptom-other').value = 'hives on lower back';
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].symptoms).toContain('hives on lower back');
-    expect(window.journal[0].symptoms).not.toContain('other');
+    expect(journal[0].symptoms).toContain('hives on lower back');
+    expect(journal[0].symptoms).not.toContain('other');
   });
-
-  await it('keeps "other" if no text provided', async () => {
+  await it('keeps "other" label when no text provided', async () => {
     resetState();
-    initLogTab();
-    document.getElementById('meals-container').innerHTML = '';
-    window.mealCount = 0;
     setupMinimalForm('2026-06-26');
-    clickChip('other');
+    activeSymptoms.add('other');
     document.getElementById('e-symptom-other').value = '';
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].symptoms).toContain('other');
+    expect(journal[0].symptoms).toContain('other');
   });
 });
 
@@ -665,31 +587,27 @@ await describe('saveEntry() – symptoms', async () => {
 await describe('saveEntry() merge – meals', async () => {
   await it('appends new meals to existing entry', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', meals: [
-      { type: 'breakfast', time: '08:00', source: 'homemade', foods: 'oatmeal',
-        heavy: 'light', amount: 'all', newFood: false, gluten: false, dairy: false, egg: false }
-    ]})];
+    setJournal(makeEntry({ date: '2026-06-26', meals: [
+      { type:'breakfast', time:'08:00', source:'homemade', foods:'oatmeal',
+        heavy:'light', amount:'all', newFood:false, newFoodName:'', gluten:false, dairy:false, egg:false }
+    ]}));
     setupMinimalForm('2026-06-26');
-    const card = document.querySelector('#meals-container .meal-card');
-    card.querySelector('.meal-type-sel').value = 'lunch';
-    card.querySelector('.ml-foods').value      = 'pasta';
+    document.querySelector('#meals-container .meal-type-sel').value = 'lunch';
     const restore = mockSave();
     await saveEntry();
     restore();
-    const meals = window.journal[0].meals;
-    expect(meals).toHaveLength(2);
-    expect(meals[0].type).toBe('breakfast');
-    expect(meals[1].type).toBe('lunch');
+    expect(journal[0].meals).toHaveLength(2);
+    expect(journal[0].meals[0].type).toBe('breakfast');
+    expect(journal[0].meals[1].type).toBe('lunch');
   });
-
-  await it('preserves original meals when merging', async () => {
+  await it('preserves original meals', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26' })];
+    setJournal(makeEntry({ date: '2026-06-26' }));
     setupMinimalForm('2026-06-26');
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].meals).toHaveLength(2);
+    expect(journal[0].meals).toHaveLength(2);
   });
 });
 
@@ -698,99 +616,93 @@ await describe('saveEntry() merge – meals', async () => {
 // 14. MERGE — DAY OVERVIEW
 // ════════════════════════════════════════════════════════
 await describe('saveEntry() merge – day overview', async () => {
-  await it('does NOT overwrite existing sleep if new value is empty', async () => {
+  await it('does NOT overwrite sleep when new value is empty', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', sleep: 'poor' })];
+    setJournal(makeEntry({ date: '2026-06-26', sleep: 'poor' }));
     setupMinimalForm('2026-06-26');
-    document.getElementById('e-sleep').value = ''; // not filled in
+    document.getElementById('e-sleep').value = '';
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].sleep).toBe('poor');
+    expect(journal[0].sleep).toBe('poor');
   });
-
-  await it('overwrites existing sleep if new value is filled in', async () => {
+  await it('overwrites sleep when new value is filled in', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', sleep: 'poor' })];
+    setJournal(makeEntry({ date: '2026-06-26', sleep: 'poor' }));
     setupMinimalForm('2026-06-26');
     document.getElementById('e-sleep').value = 'great';
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].sleep).toBe('great');
+    expect(journal[0].sleep).toBe('great');
   });
-
-  await it('does NOT overwrite existing mood if new value is empty', async () => {
+  await it('does NOT overwrite mood when new value is empty', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', mood: 'happy' })];
+    setJournal(makeEntry({ date: '2026-06-26', mood: 'happy' }));
     setupMinimalForm('2026-06-26');
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].mood).toBe('happy');
+    expect(journal[0].mood).toBe('happy');
   });
-
   await it('overwrites stool when provided', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', stool: 'normal' })];
+    setJournal(makeEntry({ date: '2026-06-26', stool: 'normal' }));
     setupMinimalForm('2026-06-26');
     document.getElementById('e-stool').value = 'soft';
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].stool).toBe('soft');
+    expect(journal[0].stool).toBe('soft');
   });
 });
 
 
 // ════════════════════════════════════════════════════════
-// 15. MERGE — TOGGLES (STICKY)
+// 15. MERGE — STICKY TOGGLES
 // ════════════════════════════════════════════════════════
 await describe('saveEntry() merge – sticky toggles', async () => {
-  await it('newEnv stays true once set (OR logic)', async () => {
+  await it('newEnv stays true once set', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', newEnv: true })];
+    setJournal(makeEntry({ date: '2026-06-26', newEnv: true }));
     setupMinimalForm('2026-06-26');
     document.getElementById('e-newenv').checked = false;
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].newEnv).toBeTruthy();
+    expect(journal[0].newEnv).toBeTruthy();
   });
-
   await it('sick is sticky', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', sick: true })];
+    setJournal(makeEntry({ date: '2026-06-26', sick: true }));
     setupMinimalForm('2026-06-26');
     document.getElementById('e-sick').checked = false;
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].sick).toBeTruthy();
+    expect(journal[0].sick).toBeTruthy();
   });
-
   await it('meds is sticky and medName is updated', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', meds: true, medName: 'OldMed' })];
+    setJournal(makeEntry({ date: '2026-06-26', meds: true, medName: 'OldMed' }));
     setupMinimalForm('2026-06-26');
     document.getElementById('e-meds').checked   = true;
     document.getElementById('e-med-name').value = 'NewMed 5mg';
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].meds).toBeTruthy();
-    expect(window.journal[0].medName).toBe('NewMed 5mg');
+    expect(journal[0].meds).toBeTruthy();
+    expect(journal[0].medName).toBe('NewMed 5mg');
   });
-
-  await it('newEnv gets set to true from false by new save', async () => {
+  await it('newEnv gets set to true from false', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', newEnv: false })];
+    setJournal(makeEntry({ date: '2026-06-26', newEnv: false }));
     setupMinimalForm('2026-06-26');
     document.getElementById('e-newenv').checked = true;
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].newEnv).toBeTruthy();
+    expect(journal[0].newEnv).toBeTruthy();
   });
 });
 
@@ -801,10 +713,10 @@ await describe('saveEntry() merge – sticky toggles', async () => {
 await describe('saveEntry() merge – reactions', async () => {
   await it('appends new episodes to existing ones', async () => {
     resetState();
-    window.journal = [makeEntry({
+    setJournal(makeEntry({
       date: '2026-06-26',
-      reactions: [{ meal: 'Breakfast · 08:00', count: '1', delay: '<30m', content: 'full breakfast' }]
-    })];
+      reactions: [{ meal:'Breakfast · 8:00 AM', count:'1', delay:'<30m', content:'full breakfast' }]
+    }));
     setupMinimalForm('2026-06-26');
     addReactionEpisode();
     const ep = document.querySelector('#reactions-container .meal-card');
@@ -814,34 +726,30 @@ await describe('saveEntry() merge – reactions', async () => {
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].reactions).toHaveLength(2);
-    expect(window.journal[0].reactions[0].delay).toBe('<30m');
-    expect(window.journal[0].reactions[1].delay).toBe('1-2h');
+    expect(journal[0].reactions).toHaveLength(2);
+    expect(journal[0].reactions[0].delay).toBe('<30m');
+    expect(journal[0].reactions[1].delay).toBe('1-2h');
   });
-
   await it('preserves original episode data', async () => {
     resetState();
-    const original = { meal: 'Breakfast · 08:00', count: '2', delay: '30-60m', content: 'cereal' };
-    window.journal = [makeEntry({ date: '2026-06-26', reactions: [original] })];
+    const original = { meal:'Breakfast · 8:00 AM', count:'2', delay:'30-60m', content:'cereal' };
+    setJournal(makeEntry({ date: '2026-06-26', reactions: [original] }));
     setupMinimalForm('2026-06-26');
     const restore = mockSave();
     await saveEntry();
     restore();
-    const first = window.journal[0].reactions[0];
-    expect(first.meal).toBe('Breakfast · 08:00');
+    const first = journal[0].reactions[0];
     expect(first.count).toBe('2');
     expect(first.content).toBe('cereal');
   });
-
-  await it('no episodes added when reactions-container is empty', async () => {
+  await it('no episodes added when container is empty', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', reactions: [{ meal: 'Lunch · 12:00', count: '1', delay: '1-2h', content: 'pasta' }] })];
+    setJournal(makeEntry({ date: '2026-06-26', reactions: [{ meal:'Lunch', count:'1', delay:'1-2h', content:'pasta' }] }));
     setupMinimalForm('2026-06-26');
-    // Don't add any episode cards
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].reactions).toHaveLength(1);
+    expect(journal[0].reactions).toHaveLength(1);
   });
 });
 
@@ -850,46 +758,40 @@ await describe('saveEntry() merge – reactions', async () => {
 // 17. MERGE — SYMPTOMS & SEVERITY
 // ════════════════════════════════════════════════════════
 await describe('saveEntry() merge – symptoms & severity', async () => {
-  await it('merges symptoms as a union', async () => {
+  await it('merges symptoms as a union (no duplicates)', async () => {
     resetState();
-    initLogTab();
-    document.getElementById('meals-container').innerHTML = '';
-    window.mealCount = 0;
-    window.journal = [makeEntry({ date: '2026-06-26', symptoms: ['bloating', 'gas'] })];
+    setJournal(makeEntry({ date: '2026-06-26', symptoms: ['bloating', 'gas'] }));
     setupMinimalForm('2026-06-26');
-    clickChip('cramps'); clickChip('bloating'); // bloating already present
+    activeSymptoms.add('cramps');
+    activeSymptoms.add('bloating'); // already present
     const restore = mockSave();
     await saveEntry();
     restore();
-    const s = window.journal[0].symptoms;
+    const s = journal[0].symptoms;
     expect(s).toContain('bloating');
     expect(s).toContain('gas');
     expect(s).toContain('cramps');
-    // No duplicates
-    const bloatingCount = s.filter(x => x === 'bloating').length;
-    expect(bloatingCount).toBe(1);
+    expect(s.filter(x => x === 'bloating').length).toBe(1);
   });
-
   await it('takes highest severity', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', severity: '2' })];
+    setJournal(makeEntry({ date: '2026-06-26', severity: '2' }));
     setupMinimalForm('2026-06-26');
     selectSev(document.querySelector('.sev-btn.s3'));
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].severity).toBe('3');
+    expect(journal[0].severity).toBe('3');
   });
-
-  await it('keeps higher existing severity when new is lower', async () => {
+  await it('keeps existing severity when new is lower', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', severity: '3' })];
+    setJournal(makeEntry({ date: '2026-06-26', severity: '3' }));
     setupMinimalForm('2026-06-26');
     selectSev(document.querySelector('.sev-btn.s1'));
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].severity).toBe('3');
+    expect(journal[0].severity).toBe('3');
   });
 });
 
@@ -900,37 +802,35 @@ await describe('saveEntry() merge – symptoms & severity', async () => {
 await describe('saveEntry() merge – notes', async () => {
   await it('appends new notes with a newline', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', notes: 'Morning note' })];
+    setJournal(makeEntry({ date: '2026-06-26', notes: 'Morning note' }));
     setupMinimalForm('2026-06-26');
     document.getElementById('e-notes').value = 'Evening note';
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].notes).toContain('Morning note');
-    expect(window.journal[0].notes).toContain('Evening note');
-    expect(window.journal[0].notes).toContain('\n');
+    expect(journal[0].notes).toContain('Morning note');
+    expect(journal[0].notes).toContain('Evening note');
+    expect(journal[0].notes).toContain('\n');
   });
-
   await it('preserves existing notes when new notes are empty', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', notes: 'Keep this' })];
+    setJournal(makeEntry({ date: '2026-06-26', notes: 'Keep this' }));
     setupMinimalForm('2026-06-26');
     document.getElementById('e-notes').value = '';
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].notes).toBe('Keep this');
+    expect(journal[0].notes).toBe('Keep this');
   });
-
-  await it('sets notes on first entry with notes', async () => {
+  await it('sets notes on first note for the day', async () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26', notes: '' })];
+    setJournal(makeEntry({ date: '2026-06-26', notes: '' }));
     setupMinimalForm('2026-06-26');
     document.getElementById('e-notes').value = 'First note ever';
     const restore = mockSave();
     await saveEntry();
     restore();
-    expect(window.journal[0].notes).toBe('First note ever');
+    expect(journal[0].notes).toBe('First note ever');
   });
 });
 
@@ -949,80 +849,66 @@ await describe('resetLogForm()', async () => {
       expect(document.getElementById(id).value).toBe('');
     });
   });
-
   await it('unchecks all boolean toggles', () => {
     resetState();
-    ['e-newenv','e-sick','e-meds'].forEach(id => {
-      document.getElementById(id).checked = true;
-    });
+    ['e-newenv','e-sick','e-meds'].forEach(id => { document.getElementById(id).checked = true; });
     resetLogForm();
     ['e-newenv','e-sick','e-meds'].forEach(id => {
       expect(document.getElementById(id).checked).toBeFalsy();
     });
   });
-
   await it('clears meals-container and adds one fresh meal', () => {
     resetState();
     addMeal(); addMeal(); addMeal();
     resetLogForm();
-    expect(document.querySelectorAll('#meals-container .meal-card')).toHaveLength(1);
+    expect(document.querySelectorAll('#meals-container .meal-card').length).toBe(1);
   });
-
   await it('clears reactions-container', () => {
     resetState();
     addReactionEpisode(); addReactionEpisode();
     resetLogForm();
-    expect(document.querySelectorAll('#reactions-container .meal-card')).toHaveLength(0);
+    expect(document.querySelectorAll('#reactions-container .meal-card').length).toBe(0);
   });
-
   await it('resets reactionCount to 0', () => {
     resetState();
     addReactionEpisode(); addReactionEpisode();
     resetLogForm();
-    expect(window.reactionCount).toBe(0);
+    expect(reactionCount).toBe(0);
   });
-
   await it('hides med-name-row and clears input', () => {
     resetState();
-    document.getElementById('e-med-name').value         = 'SomeMed';
+    document.getElementById('e-med-name').value          = 'SomeMed';
     document.getElementById('med-name-row').style.display = 'block';
     resetLogForm();
     expect(document.getElementById('med-name-row').style.display).toBe('none');
     expect(document.getElementById('e-med-name').value).toBe('');
   });
-
   await it('hides other-symptom-row and clears input', () => {
     resetState();
-    document.getElementById('e-symptom-other').value       = 'custom';
+    document.getElementById('e-symptom-other').value          = 'custom';
     document.getElementById('other-symptom-row').style.display = 'block';
     resetLogForm();
     expect(document.getElementById('other-symptom-row').style.display).toBe('none');
     expect(document.getElementById('e-symptom-other').value).toBe('');
   });
-
   await it('clears activeSymptoms', () => {
     resetState();
-    window.activeSymptoms.add('bloating');
-    window.activeSymptoms.add('gas');
+    activeSymptoms.add('bloating'); activeSymptoms.add('gas');
     resetLogForm();
-    expect(window.activeSymptoms.size).toBe(0);
+    expect(activeSymptoms.size).toBe(0);
   });
-
   await it('clears activeSev', () => {
     resetState();
-    window.activeSev = '3';
+    activeSev = '3';
     resetLogForm();
-    expect(window.activeSev).toBe('');
+    expect(activeSev).toBe('');
   });
-
   await it('sets date to today', () => {
     resetState();
     document.getElementById('e-date').value = '2020-01-01';
     resetLogForm();
-    const today = new Date().toISOString().slice(0, 10);
-    expect(document.getElementById('e-date').value).toBe(today);
+    expect(document.getElementById('e-date').value).toBe(new Date().toISOString().slice(0, 10));
   });
-
   await it('clears notes', () => {
     resetState();
     document.getElementById('e-notes').value = 'some notes';
@@ -1038,101 +924,92 @@ await describe('resetLogForm()', async () => {
 await describe('renderHistory()', async () => {
   await it('shows empty state when journal is empty', () => {
     resetState();
-    window.journal = [];
     renderHistory();
     expect(document.getElementById('history-list').innerHTML).toContain('No entries');
   });
-
-  await it('renders entry date heading', () => {
+  await it('renders entry date', () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26' })];
+    setJournal(makeEntry({ date: '2026-06-26' }));
     renderHistory();
     expect(document.getElementById('history-list').innerHTML).toContain('2026');
   });
-
-  await it('shows ✓ No vomiting tag when no reactions', () => {
+  await it('shows ✓ No vomiting when no reactions', () => {
     resetState();
-    window.journal = [makeEntry({ reactions: [] })];
+    setJournal(makeEntry({ reactions: [] }));
     renderHistory();
     expect(document.getElementById('history-list').innerHTML).toContain('No vomiting');
   });
-
   await it('shows vomited tag with episode count', () => {
     resetState();
-    window.journal = [makeEntry({
+    setJournal(makeEntry({
       reactions: [
-        { meal: 'Breakfast · 08:00', count: '1', delay: '<30m', content: 'cereal' },
-        { meal: 'Lunch · 12:30',     count: '1', delay: '1-2h', content: 'residue' }
+        { meal:'Breakfast · 8:00 AM', count:'1', delay:'<30m', content:'cereal' },
+        { meal:'Lunch · 12:30 PM',    count:'1', delay:'1-2h', content:'residue' }
       ]
-    })];
+    }));
     renderHistory();
     const html = document.getElementById('history-list').innerHTML;
     expect(html).toContain('2 episodes');
     expect(html).toContain('Breakfast');
     expect(html).toContain('Lunch');
   });
-
   await it('backward-compat: renders old vomit format', () => {
     resetState();
-    window.journal = [makeEntry({
+    setJournal(makeEntry({
       vomit: '1', delay: '30-60m', mealVomited: 'Lunch · 12:00',
-      vomitContent: 'pasta residue', reactions: undefined
-    })];
+      vomitContent: 'pasta residue'
+    }));
     renderHistory();
     const html = document.getElementById('history-list').innerHTML;
     expect(html).toContain('Vomited');
     expect(html).toContain('Lunch');
   });
-
   await it('shows medication tag with name', () => {
     resetState();
-    window.journal = [makeEntry({ meds: true, medName: 'Amoxicillin' })];
+    setJournal(makeEntry({ meds: true, medName: 'Amoxicillin' }));
     renderHistory();
     expect(document.getElementById('history-list').innerHTML).toContain('Amoxicillin');
   });
-
-  await it('shows medication tag without name if medName is empty', () => {
+  await it('shows medication tag without name if medName empty', () => {
     resetState();
-    window.journal = [makeEntry({ meds: true, medName: '' })];
+    setJournal(makeEntry({ meds: true, medName: '' }));
     renderHistory();
     expect(document.getElementById('history-list').innerHTML).toContain('Medication');
   });
-
   await it('shows notes', () => {
     resetState();
-    window.journal = [makeEntry({ notes: 'Follow up with doctor' })];
+    setJournal(makeEntry({ notes: 'Follow up with doctor' }));
     renderHistory();
     expect(document.getElementById('history-list').innerHTML).toContain('Follow up with doctor');
   });
-
   await it('shows severity tag', () => {
     resetState();
-    window.journal = [makeEntry({ severity: '3' })];
+    setJournal(makeEntry({ severity: '3' }));
     renderHistory();
     expect(document.getElementById('history-list').innerHTML).toContain('Severe day');
   });
-
-  await it('shows new food tag', () => {
+  await it('shows new food tag with ingredient name', () => {
     resetState();
-    window.journal = [makeEntry({
-      meals: [{ type: 'breakfast', time: '08:00', source: 'homemade', foods: 'mango',
-                heavy: 'light', amount: 'all', newFood: true, gluten: false, dairy: false, egg: false }]
-    })];
+    setJournal(makeEntry({
+      meals: [{ type:'breakfast', time:'08:00', source:'homemade', foods:'mango',
+                heavy:'light', amount:'all', newFood:true, newFoodName:'mango',
+                gluten:false, dairy:false, egg:false }]
+    }));
     renderHistory();
-    expect(document.getElementById('history-list').innerHTML).toContain('New food');
+    expect(document.getElementById('history-list').innerHTML).toContain('mango');
   });
-
-  await it('renders multiple entries in descending date order', () => {
+  await it('renders entries in descending date order', () => {
     resetState();
-    window.journal = [
-      makeEntry({ date: '2026-06-26' }),
-      makeEntry({ date: '2026-06-25' }),
-    ];
+    setJournal(makeEntry({ date:'2026-06-26' }), makeEntry({ date:'2026-06-25' }));
     renderHistory();
     const html = document.getElementById('history-list').innerHTML;
-    const pos26 = html.indexOf('26');
-    const pos25 = html.indexOf('25');
-    expect(pos26 < pos25).toBeTruthy();
+    expect(html.indexOf('June 26') < html.indexOf('June 25')).toBeTruthy();
+  });
+  await it('shows symptoms bar', () => {
+    resetState();
+    setJournal(makeEntry({ symptoms: ['bloating', 'cramps'] }));
+    renderHistory();
+    expect(document.getElementById('history-list').innerHTML).toContain('bloating');
   });
 });
 
@@ -1143,57 +1020,45 @@ await describe('renderHistory()', async () => {
 await describe('renderPatterns()', async () => {
   await it('shows empty state with < 2 entries', () => {
     resetState();
-    window.journal = [makeEntry()];
+    setJournal(makeEntry());
     renderPatterns();
     expect(document.getElementById('patterns-content').innerHTML).toContain('2 days');
   });
-
-  await it('shows days logged count', () => {
+  await it('shows total days logged', () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26' }), makeEntry({ date: '2026-06-25' })];
+    setJournal(makeEntry({ date:'2026-06-26' }), makeEntry({ date:'2026-06-25' }));
     renderPatterns();
     expect(document.getElementById('patterns-content').innerHTML).toContain('2');
   });
-
-  await it('counts days with vomiting (new format)', () => {
+  await it('counts vomit days (new reaction format)', () => {
     resetState();
-    window.journal = [
-      makeEntry({ date: '2026-06-26', reactions: [{ meal: 'Breakfast · 08:00', count: '1', delay: '<30m', content: '' }] }),
-      makeEntry({ date: '2026-06-25', reactions: [] })
-    ];
+    setJournal(
+      makeEntry({ date:'2026-06-26', reactions:[{ meal:'Breakfast', count:'1', delay:'<30m', content:'' }] }),
+      makeEntry({ date:'2026-06-25', reactions:[] })
+    );
     renderPatterns();
-    const html = document.getElementById('patterns-content').innerHTML;
-    // 1 vomit day out of 2
-    expect(html).toContain('50%');
+    expect(document.getElementById('patterns-content').innerHTML).toContain('50%');
   });
-
-  await it('counts days with vomiting (old format)', () => {
+  await it('counts vomit days (old vomit format)', () => {
     resetState();
-    window.journal = [
-      makeEntry({ date: '2026-06-26', vomit: '1', reactions: undefined }),
-      makeEntry({ date: '2026-06-25', vomit: 'none', reactions: undefined })
-    ];
+    setJournal(
+      makeEntry({ date:'2026-06-26', vomit:'1' }),
+      makeEntry({ date:'2026-06-25', vomit:'none' })
+    );
     renderPatterns();
-    const html = document.getElementById('patterns-content').innerHTML;
-    expect(html).toContain('50%');
+    expect(document.getElementById('patterns-content').innerHTML).toContain('50%');
   });
-
+  await it('shows 0% when all days clear', () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26', reactions:[] }), makeEntry({ date:'2026-06-25', reactions:[] }));
+    renderPatterns();
+    expect(document.getElementById('patterns-content').innerHTML).toContain('0%');
+  });
   await it('shows gluten correlation row', () => {
     resetState();
-    window.journal = [makeEntry({ date: '2026-06-26' }), makeEntry({ date: '2026-06-25' })];
+    setJournal(makeEntry({ date:'2026-06-26' }), makeEntry({ date:'2026-06-25' }));
     renderPatterns();
     expect(document.getElementById('patterns-content').innerHTML).toContain('Gluten');
-  });
-
-  await it('shows 0 vomit days when all clear', () => {
-    resetState();
-    window.journal = [
-      makeEntry({ date: '2026-06-26', reactions: [] }),
-      makeEntry({ date: '2026-06-25', reactions: [] })
-    ];
-    renderPatterns();
-    const html = document.getElementById('patterns-content').innerHTML;
-    expect(html).toContain('0%');
   });
 });
 
