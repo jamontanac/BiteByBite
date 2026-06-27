@@ -154,8 +154,8 @@ function makeEntry(overrides = {}) {
     hydration: '', newEnv: false, sick: false, meds: false, medName: '',
     meals: [{
       type: 'breakfast', time: '08:00', source: 'homemade', foods: 'oatmeal',
-      heavy: 'light', amount: 'all', newFood: false, newFoodName: '',
-      gluten: false, dairy: false, egg: false
+      heavy: 'light', amount: 'all', freshFood: true, cookedWhen: '',
+      newFood: false, newFoodName: '', gluten: false, dairy: false, egg: false
     }],
     reactions: [], symptoms: [], severity: '', notes: '', ts: 1000,
     ...overrides

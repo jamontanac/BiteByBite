@@ -205,6 +205,18 @@ await describe('addMeal()', async () => {
     expect(hh >= 0 && hh <= 23).toBeTruthy();
     expect(mm >= 0 && mm <= 59).toBeTruthy();
   });
+  await it('fresh food toggle is checked by default', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    expect(card.querySelector('.ml-fresh').checked).toBeTruthy();
+  });
+  await it('cooked-when row is hidden by default', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    expect(card.querySelector('.ml-cooked-when-row').style.display).toBe('none');
+  });
 });
 
 await describe('updateMealSelect()', async () => {
@@ -379,7 +391,46 @@ await describe('toggleMedInput()', async () => {
 
 
 // ════════════════════════════════════════════════════════
-// 9. SEVERITY SELECTION
+// 9. FRESH FOOD TOGGLE
+// ════════════════════════════════════════════════════════
+await describe('toggleFreshFoodInput()', async () => {
+  await it('shows cooked-when row when unchecked (leftover)', () => {
+    resetState(); addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    const cb   = card.querySelector('.ml-fresh');
+    cb.checked = false; toggleFreshFoodInput(cb);
+    expect(card.querySelector('.ml-cooked-when-row').style.display).toBe('block');
+  });
+  await it('hides cooked-when row when re-checked (fresh)', () => {
+    resetState(); addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    const cb   = card.querySelector('.ml-fresh');
+    cb.checked = false; toggleFreshFoodInput(cb);
+    cb.checked = true;  toggleFreshFoodInput(cb);
+    expect(card.querySelector('.ml-cooked-when-row').style.display).toBe('none');
+  });
+  await it('clears cooked-when input when re-checked', () => {
+    resetState(); addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    const cb   = card.querySelector('.ml-fresh');
+    cb.checked = false; toggleFreshFoodInput(cb);
+    card.querySelector('.ml-cooked-when').value = 'yesterday evening';
+    cb.checked = true;  toggleFreshFoodInput(cb);
+    expect(card.querySelector('.ml-cooked-when').value).toBe('');
+  });
+  await it('preserves cooked-when text while unchecked', () => {
+    resetState(); addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    const cb   = card.querySelector('.ml-fresh');
+    cb.checked = false; toggleFreshFoodInput(cb);
+    card.querySelector('.ml-cooked-when').value = '2 days ago';
+    expect(card.querySelector('.ml-cooked-when').value).toBe('2 days ago');
+  });
+});
+
+
+// ════════════════════════════════════════════════════════
+// 10. SEVERITY SELECTION
 // ════════════════════════════════════════════════════════
 await describe('selectSev()', async () => {
   await it('sets activeSev to clicked button value', () => {
@@ -511,6 +562,38 @@ await describe('saveEntry() – creates a new entry', async () => {
     await saveEntry();
     restore();
     expect(journal[0].medName).toBe('');
+  });
+  await it('captures freshFood true by default', async () => {
+    resetState();
+    setupMinimalForm('2026-06-26');
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    expect(journal[0].meals[0].freshFood).toBeTruthy();
+    expect(journal[0].meals[0].cookedWhen).toBe('');
+  });
+  await it('captures freshFood false and cookedWhen when leftover', async () => {
+    resetState();
+    setupMinimalForm('2026-06-26');
+    const card = document.querySelector('#meals-container .meal-card');
+    const cb   = card.querySelector('.ml-fresh');
+    cb.checked = false;
+    card.querySelector('.ml-cooked-when').value = 'yesterday evening';
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    expect(journal[0].meals[0].freshFood).toBeFalsy();
+    expect(journal[0].meals[0].cookedWhen).toBe('yesterday evening');
+  });
+  await it('cookedWhen is empty when food is fresh', async () => {
+    resetState();
+    setupMinimalForm('2026-06-26');
+    const card = document.querySelector('#meals-container .meal-card');
+    card.querySelector('.ml-cooked-when').value = 'should be ignored';
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    expect(journal[0].meals[0].cookedWhen).toBe('');
   });
   await it('entry captures reactions array', async () => {
     resetState();
@@ -998,6 +1081,46 @@ await describe('renderHistory()', async () => {
     renderHistory();
     expect(document.getElementById('history-list').innerHTML).toContain('mango');
   });
+  await it('shows Leftover food tag when a meal has freshFood false', () => {
+    resetState();
+    setJournal(makeEntry({
+      meals: [{ type:'lunch', time:'12:00', source:'homemade', foods:'pasta',
+                heavy:'moderate', amount:'all', freshFood:false, cookedWhen:'yesterday',
+                newFood:false, newFoodName:'', gluten:false, dairy:false, egg:false }]
+    }));
+    renderHistory();
+    expect(document.getElementById('history-list').innerHTML).toContain('Leftover food');
+  });
+  await it('shows cookedWhen text in meal row', () => {
+    resetState();
+    setJournal(makeEntry({
+      meals: [{ type:'lunch', time:'12:00', source:'homemade', foods:'pasta',
+                heavy:'moderate', amount:'all', freshFood:false, cookedWhen:'2 days ago',
+                newFood:false, newFoodName:'', gluten:false, dairy:false, egg:false }]
+    }));
+    renderHistory();
+    expect(document.getElementById('history-list').innerHTML).toContain('2 days ago');
+  });
+  await it('no leftover tag when all meals are fresh', () => {
+    resetState();
+    setJournal(makeEntry({
+      meals: [{ type:'breakfast', time:'08:00', source:'homemade', foods:'eggs',
+                heavy:'light', amount:'all', freshFood:true, cookedWhen:'',
+                newFood:false, newFoodName:'', gluten:false, dairy:false, egg:true }]
+    }));
+    renderHistory();
+    expect(document.getElementById('history-list').innerHTML).not.toContain('Leftover food');
+  });
+  await it('old entries without freshFood field show no leftover tag', () => {
+    resetState();
+    setJournal(makeEntry({
+      meals: [{ type:'breakfast', time:'08:00', source:'homemade', foods:'oatmeal',
+                heavy:'light', amount:'all', newFood:false, newFoodName:'',
+                gluten:false, dairy:false, egg:false }]  // no freshFood field
+    }));
+    renderHistory();
+    expect(document.getElementById('history-list').innerHTML).not.toContain('Leftover food');
+  });
   await it('renders entries in descending date order', () => {
     resetState();
     setJournal(makeEntry({ date:'2026-06-26' }), makeEntry({ date:'2026-06-25' }));
@@ -1059,6 +1182,43 @@ await describe('renderPatterns()', async () => {
     setJournal(makeEntry({ date:'2026-06-26' }), makeEntry({ date:'2026-06-25' }));
     renderPatterns();
     expect(document.getElementById('patterns-content').innerHTML).toContain('Gluten');
+  });
+  await it('shows leftover food correlation row', () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }), makeEntry({ date:'2026-06-25' }));
+    renderPatterns();
+    expect(document.getElementById('patterns-content').innerHTML).toContain('Leftover');
+  });
+  await it('leftover correlation only counts days with freshFood === false', () => {
+    resetState();
+    const leftoverMeal = { type:'lunch', time:'12:00', source:'homemade', foods:'pasta',
+      heavy:'moderate', amount:'all', freshFood:false, cookedWhen:'yesterday',
+      newFood:false, newFoodName:'', gluten:false, dairy:false, egg:false };
+    const freshMeal = { type:'breakfast', time:'08:00', source:'homemade', foods:'oatmeal',
+      heavy:'light', amount:'all', freshFood:true, cookedWhen:'',
+      newFood:false, newFoodName:'', gluten:false, dairy:false, egg:false };
+    setJournal(
+      makeEntry({ date:'2026-06-26', meals:[leftoverMeal] }),
+      makeEntry({ date:'2026-06-25', meals:[freshMeal] })
+    );
+    renderPatterns();
+    // Only 1 of 2 days has leftover food — row should exist
+    expect(document.getElementById('patterns-content').innerHTML).toContain('Leftover');
+  });
+  await it('old entries without freshFood field not counted as leftover', () => {
+    resetState();
+    const oldMeal = { type:'breakfast', time:'08:00', source:'homemade', foods:'oatmeal',
+      heavy:'light', amount:'all', newFood:false, newFoodName:'',
+      gluten:false, dairy:false, egg:false }; // no freshFood field
+    setJournal(
+      makeEntry({ date:'2026-06-26', meals:[oldMeal] }),
+      makeEntry({ date:'2026-06-25', meals:[oldMeal] })
+    );
+    renderPatterns();
+    // 0 leftover days — correlation row shows "0 of 0 days"
+    const html = document.getElementById('patterns-content').innerHTML;
+    expect(html).toContain('Leftover');
+    expect(html).toContain('0 of 0');
   });
 });
 
