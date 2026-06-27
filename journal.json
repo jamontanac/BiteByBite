@@ -43,5 +43,99 @@
     "severity": "1",
     "notes": "",
     "ts": 1782513896097
+  },
+  {
+    "date": "2026-06-25",
+    "sleep": "ok",
+    "mood": "normal",
+    "activity": "normal",
+    "stool": "soft",
+    "hydration": "low",
+    "newEnv": false,
+    "sick": false,
+    "meds": false,
+    "medName": "",
+    "meals": [
+      {
+        "type": "breakfast",
+        "time": "08:30",
+        "source": "homemade",
+        "foods": "Tamal, eggs",
+        "heavy": "light",
+        "amount": "little",
+        "newFood": true,
+        "newFoodName": "Tamal",
+        "gluten": false,
+        "dairy": false,
+        "egg": true
+      },
+      {
+        "type": "snack",
+        "time": "10:30",
+        "source": "homemade",
+        "foods": "Oatmeal, Strawberry, Blueberries, Plantain flour",
+        "heavy": "moderate",
+        "amount": "all",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      },
+      {
+        "type": "lunch",
+        "time": "13:00",
+        "source": "homemade",
+        "foods": "Soup, Grounded meat, Rice",
+        "heavy": "heavy",
+        "amount": "all",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      },
+      {
+        "type": "snack2",
+        "time": "16:00",
+        "source": "homemade",
+        "foods": "Ice cream, Crepe, Plantain flour, Strawberry, Blueberry",
+        "heavy": "moderate",
+        "amount": "all",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      },
+      {
+        "type": "lunch",
+        "time": "19:00",
+        "source": "homemade",
+        "foods": "Soup: Onions, Spring Onions, Peas, Oatmeal, Plantain Flour, Tuna, Cilantro",
+        "heavy": "moderate",
+        "amount": "all",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      }
+    ],
+    "reactions": [
+      {
+        "meal": "Lunch · 1:00 PM",
+        "count": "1",
+        "delay": "2-3h",
+        "content": "Lunch and some part of Snack"
+      }
+    ],
+    "symptoms": [
+      "bloating",
+      "reflux"
+    ],
+    "severity": "1",
+    "notes": "",
+    "ts": 1782533386292
   }
 ]
