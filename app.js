@@ -251,6 +251,8 @@ function initLogTab() {
     });
   });
 
+  document.getElementById('e-date').addEventListener('change', updateMealSelect);
+
   if (document.getElementById('meals-container').children.length === 0) addMeal();
 }
 
@@ -311,9 +313,15 @@ function addMeal() {
     </div>
     <div style="margin-top:.25rem">
       <div class="toggle-row">
-        <label class="tog"><input type="checkbox" class="ml-new"><span class="tog-track"></span></label>
+        <label class="tog"><input type="checkbox" class="ml-new" onchange="toggleNewFoodInput(this)"><span class="tog-track"></span></label>
         <div class="toggle-label">New food
           <small>Ingredient rarely or never eaten before</small>
+        </div>
+      </div>
+      <div class="ml-new-food-row" style="display:none;padding:.375rem 0 .25rem">
+        <div class="f-group">
+          <label>New ingredient</label>
+          <input type="text" class="ml-new-food-name" placeholder="e.g. mango, wheat bread…" autocomplete="off">
         </div>
       </div>
       <div class="toggle-row">
@@ -338,11 +346,34 @@ function addMeal() {
 
 function updateMealSelect() {
   const opts = ['<option value="">— select meal —</option>'];
-  document.querySelectorAll('#meals-container .meal-card').forEach(card => {
-    const type = card.querySelector('.meal-type-sel').value;
-    const time = card.querySelector('.ml-time').value;
-    opts.push(`<option value="${card.id}">${typeName(type)}${time ? ' · ' + time : ''}</option>`);
-  });
+
+  // Meals already saved for this date (from a previous save earlier in the day)
+  const date = document.getElementById('e-date') ? document.getElementById('e-date').value : '';
+  const savedEntry = date ? journal.find(e => e.date === date) : null;
+  if (savedEntry && savedEntry.meals && savedEntry.meals.length) {
+    opts.push('<optgroup label="Already logged today">');
+    savedEntry.meals.forEach((m, i) => {
+      opts.push(`<option value="saved:${i}">${typeName(m.type)}${m.time ? ' · ' + fmtTime(m.time) : ''}</option>`);
+    });
+    opts.push('</optgroup>');
+  }
+
+  // Meals being added right now in the form
+  const formMeals = document.querySelectorAll('#meals-container .meal-card');
+  if (formMeals.length) {
+    if (savedEntry && savedEntry.meals && savedEntry.meals.length) {
+      opts.push('<optgroup label="Adding now">');
+    }
+    formMeals.forEach(card => {
+      const type = card.querySelector('.meal-type-sel').value;
+      const time = card.querySelector('.ml-time').value;
+      opts.push(`<option value="${card.id}">${typeName(type)}${time ? ' · ' + fmtTime(time) : ''}</option>`);
+    });
+    if (savedEntry && savedEntry.meals && savedEntry.meals.length) {
+      opts.push('</optgroup>');
+    }
+  }
+
   document.querySelectorAll('#reactions-container .ep-meal').forEach(sel => {
     const prev = sel.value;
     sel.innerHTML = opts.join('');
@@ -393,6 +424,13 @@ function addReactionEpisode() {
   updateMealSelect();
 }
 
+function toggleNewFoodInput(checkbox) {
+  const card = checkbox.closest('.meal-card');
+  const row  = card.querySelector('.ml-new-food-row');
+  row.style.display = checkbox.checked ? 'block' : 'none';
+  if (!checkbox.checked) card.querySelector('.ml-new-food-name').value = '';
+}
+
 function toggleMedInput(checkbox) {
   document.getElementById('med-name-row').style.display = checkbox.checked ? 'block' : 'none';
   if (!checkbox.checked) document.getElementById('e-med-name').value = '';
@@ -421,22 +459,31 @@ async function saveEntry() {
       foods:   card.querySelector('.ml-foods').value.trim(),
       heavy:   card.querySelector('.ml-heavy').value,
       amount:  card.querySelector('.ml-amount').value,
-      newFood: card.querySelector('.ml-new').checked,
+      newFood:     card.querySelector('.ml-new').checked,
+      newFoodName: card.querySelector('.ml-new').checked ? card.querySelector('.ml-new-food-name').value.trim() : '',
       gluten:  card.querySelector('.ml-gluten').checked,
       dairy:   card.querySelector('.ml-dairy').checked,
       egg:     card.querySelector('.ml-egg').checked,
     });
   });
 
+  const savedEntry = journal.find(e => e.date === date);
   const reactions = [];
   document.querySelectorAll('#reactions-container .meal-card').forEach(card => {
     const mealId = card.querySelector('.ep-meal').value;
-    const mealCard = mealId ? document.getElementById(mealId) : null;
     let mealLabel = '';
-    if (mealCard) {
-      const type = mealCard.querySelector('.meal-type-sel').value;
-      const time = mealCard.querySelector('.ml-time').value;
-      mealLabel = typeName(type) + (time ? ' · ' + time : '');
+    if (mealId.startsWith('saved:')) {
+      const idx = parseInt(mealId.slice(6));
+      if (savedEntry && savedEntry.meals && savedEntry.meals[idx]) {
+        const m = savedEntry.meals[idx];
+        mealLabel = typeName(m.type) + (m.time ? ' · ' + fmtTime(m.time) : '');
+      }
+    } else if (mealId) {
+      const mealCard = document.getElementById(mealId);
+      if (mealCard) {
+        const mt = mealCard.querySelector('.ml-time').value;
+        mealLabel = typeName(mealCard.querySelector('.meal-type-sel').value) + (mt ? ' · ' + fmtTime(mt) : '');
+      }
     }
     reactions.push({
       meal:    mealLabel,
@@ -575,10 +622,10 @@ function renderHistory() {
 
     const mealRows = (e.meals || []).map(m => `
       <div class="meal-row">
-        <span class="meal-time">${m.time || '—'}</span>
+        <span class="meal-time">${m.time ? fmtTime(m.time) : '—'}</span>
         <span class="meal-foods-text">
           <strong>${typeName(m.type)}</strong> · ${m.foods || '(no detail)'}
-          ${m.newFood ? ' · <em style="color:var(--amber)">new food</em>' : ''}
+          ${m.newFood ? ` · <em style="color:var(--amber)">${m.newFoodName || 'new food'}</em>` : ''}
           ${m.gluten  ? ' · <em style="color:var(--purple)">gluten</em>' : ''}
         </span>
       </div>`).join('');
@@ -763,6 +810,14 @@ function exportJSON() {
 function typeName(t) {
   const m = { breakfast:'Breakfast', snack:'Snack', snack2:'Snack', lunch:'Lunch', dinner:'Dinner', other:'Other' };
   return m[t] || t;
+}
+
+function fmtTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12  = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
 }
 
 function fmtDate(s) {

@@ -171,10 +171,10 @@ img{display:block}
 }
 
 /* ── Form elements ───────────────────────────────────── */
-.f-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
+.f-row{display:grid;grid-template-columns:1fr;gap:.75rem;margin-bottom:.75rem}
 .f-row.full{grid-template-columns:1fr}
-.f-row.three{grid-template-columns:1fr 1fr 1fr}
-.f-group{display:flex;flex-direction:column;gap:.3rem}
+.f-row.three{grid-template-columns:1fr}
+.f-group{display:flex;flex-direction:column;gap:.3rem;min-width:0}
 .f-group label{font-size:.78rem;font-weight:500;color:var(--ink2)}
 .f-group input,.f-group select,.f-group textarea{
   padding:.575rem .8rem;border:1px solid var(--border);
@@ -412,13 +412,9 @@ img{display:block}
 }
 
 /* ── Responsive tweaks ───────────────────────────────── */
-@media(min-width:480px){
+@media(min-width:560px){
+  .f-row{grid-template-columns:1fr 1fr}
   .f-row.three{grid-template-columns:1fr 1fr 1fr}
-}
-@media(max-width:340px){
-  .f-row{grid-template-columns:1fr}
-  .sev-row{grid-template-columns:1fr}
-  .stat-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
