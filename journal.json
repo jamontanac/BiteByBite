@@ -6,7 +6,7 @@
     "activity": "high",
     "stool": "soft",
     "hydration": "low",
-    "newEnv": true,
+    "newEnv": false,
     "sick": false,
     "meds": false,
     "medName": "",
@@ -18,7 +18,10 @@
         "foods": "Oatmeal pancakes, scramble eggs with cherry tomato and blue berries oatmeal, platain flour. Fortini",
         "heavy": "moderate",
         "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
         "newFood": false,
+        "newFoodName": "",
         "gluten": false,
         "dairy": false,
         "egg": true
@@ -30,7 +33,10 @@
         "foods": "Soup : Spring onion, cilantro, yellow potatoes, tuna, oatmeal, fortini, platain flour.",
         "heavy": "heavy",
         "amount": "all",
+        "freshFood": false,
+        "cookedWhen": "yesterday",
         "newFood": false,
+        "newFoodName": "",
         "gluten": false,
         "dairy": false,
         "egg": false
@@ -42,6 +48,8 @@
         "foods": "Granadilla",
         "heavy": "light",
         "amount": "half",
+        "freshFood": true,
+        "cookedWhen": "",
         "newFood": false,
         "newFoodName": "",
         "gluten": false,
@@ -49,12 +57,14 @@
         "egg": false
       },
       {
-        "type": "lunch",
+        "type": "dinner",
         "time": "19:40",
         "source": "homemade",
         "foods": "Tuna, Arepa, Fried Potatoes, Yogurt, Mayonaise, Tea",
         "heavy": "moderate",
         "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
         "newFood": false,
         "newFoodName": "",
         "gluten": false,
@@ -69,7 +79,7 @@
     ],
     "severity": "1",
     "notes": "",
-    "ts": 1782533595125
+    "ts": 1782536116388
   },
   {
     "date": "2026-06-25",
@@ -90,6 +100,8 @@
         "foods": "Tamal, eggs",
         "heavy": "light",
         "amount": "little",
+        "freshFood": true,
+        "cookedWhen": "",
         "newFood": true,
         "newFoodName": "Tamal",
         "gluten": false,
@@ -103,6 +115,8 @@
         "foods": "Oatmeal, Strawberry, Blueberries, Plantain flour",
         "heavy": "moderate",
         "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
         "newFood": false,
         "newFoodName": "",
         "gluten": false,
@@ -116,6 +130,8 @@
         "foods": "Soup, Grounded meat, Rice",
         "heavy": "heavy",
         "amount": "all",
+        "freshFood": false,
+        "cookedWhen": "yesterday",
         "newFood": false,
         "newFoodName": "",
         "gluten": false,
@@ -129,6 +145,8 @@
         "foods": "Ice cream, Crepe, Plantain flour, Strawberry, Blueberry",
         "heavy": "moderate",
         "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
         "newFood": false,
         "newFoodName": "",
         "gluten": false,
@@ -142,6 +160,8 @@
         "foods": "Soup: Onions, Spring Onions, Peas, Oatmeal, Plantain Flour, Tuna, Cilantro",
         "heavy": "moderate",
         "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
         "newFood": false,
         "newFoodName": "",
         "gluten": false,
@@ -151,7 +171,7 @@
     ],
     "reactions": [
       {
-        "meal": "Lunch · 1:00 PM",
+        "meal": "",
         "count": "1",
         "delay": "2-3h",
         "content": "Lunch and some part of Snack"
@@ -163,6 +183,6 @@
     ],
     "severity": "1",
     "notes": "",
-    "ts": 1782533386292
+    "ts": 1782535984723
   }
 ]
