@@ -34,15 +34,42 @@
         "gluten": false,
         "dairy": false,
         "egg": false
+      },
+      {
+        "type": "snack2",
+        "time": "17:30",
+        "source": "homemade",
+        "foods": "Granadilla",
+        "heavy": "light",
+        "amount": "half",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      },
+      {
+        "type": "lunch",
+        "time": "19:40",
+        "source": "homemade",
+        "foods": "Tuna, Arepa, Fried Potatoes, Yogurt, Mayonaise, Tea",
+        "heavy": "moderate",
+        "amount": "all",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
       }
     ],
     "reactions": [],
     "symptoms": [
-      "reflux"
+      "reflux",
+      "gas"
     ],
     "severity": "1",
     "notes": "",
-    "ts": 1782513896097
+    "ts": 1782533595125
   },
   {
     "date": "2026-06-25",
