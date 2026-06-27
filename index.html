@@ -485,6 +485,11 @@ input[type="date"],input[type="time"]{
   <!-- Log tab -->
   <div class="scroll-area active" id="tab-log">
 
+    <div id="edit-banner" style="display:none;align-items:center;justify-content:space-between;background:var(--accent-l);border:1px solid var(--accent);border-radius:var(--r);padding:.625rem .875rem;margin-bottom:1rem">
+      <span style="font-size:.85rem;color:var(--accent);font-weight:500">Editing <span id="edit-banner-date"></span></span>
+      <button onclick="cancelEdit()" style="font-size:.8rem;color:var(--accent);background:none;border:none;cursor:pointer;padding:.2rem .5rem;border-radius:var(--r)">Cancel ×</button>
+    </div>
+
     <div class="sec-label">Day overview</div>
     <div class="card">
       <div class="f-row">

@@ -19,6 +19,10 @@ function buildDOM() {
       <span id="sync-label">Saved</span>
 
       <div id="tab-log" class="scroll-area active">
+        <div id="edit-banner" style="display:none">
+          <span>Editing <span id="edit-banner-date"></span></span>
+          <button onclick="cancelEdit()">Cancel ×</button>
+        </div>
         <input id="e-date" type="date">
         <select id="e-sleep">
           <option value="">—</option><option value="great">Great</option>
@@ -115,6 +119,7 @@ function resetState() {
   ghSha          = null;
   mealCount      = 0;
   reactionCount  = 0;
+  editIndex      = -1;
   activeSymptoms = new Set();
   activeSev      = '';
   localStorage.clear();
@@ -136,6 +141,11 @@ function resetState() {
 
   document.getElementById('med-name-row').style.display      = 'none';
   document.getElementById('other-symptom-row').style.display = 'none';
+  document.getElementById('edit-banner').style.display       = 'none';
+  document.getElementById('edit-banner-date').textContent    = '';
+  const _dateEl = document.getElementById('e-date');
+  _dateEl.readOnly = false; _dateEl.style.opacity = ''; _dateEl.style.cursor = '';
+  document.querySelector('#save-btn span').textContent = 'Save entry';
 
   document.querySelectorAll('#symptom-chips .chip').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));

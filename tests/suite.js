@@ -260,6 +260,288 @@ await describe('updateMealSelect()', async () => {
 
 
 // ════════════════════════════════════════════════════════
+// 5b. updateMealSelect() IN EDIT MODE
+// ════════════════════════════════════════════════════════
+await describe('updateMealSelect() – edit mode', async () => {
+  await it('does not show saved-entry group when editIndex >= 0', () => {
+    resetState();
+    setJournal(makeEntry({ date: '2026-06-26' }));
+    editIndex = 0;
+    document.getElementById('e-date').value = '2026-06-26';
+    addMeal();
+    addReactionEpisode();
+    const epSel = document.querySelector('#reactions-container .ep-meal');
+    // Should only have blank + 1 form card option — no "Already logged today" optgroup
+    const optgroups = epSel.querySelectorAll('optgroup');
+    expect(optgroups.length).toBe(0);
+    expect(epSel.options.length).toBe(2); // blank + 1 form card
+    editIndex = -1;
+  });
+  await it('shows form meal cards in edit mode', () => {
+    resetState();
+    setJournal(makeEntry({ date: '2026-06-26' }));
+    editIndex = 0;
+    document.getElementById('e-date').value = '2026-06-26';
+    addMeal();
+    addMeal();
+    addReactionEpisode();
+    const epSel = document.querySelector('#reactions-container .ep-meal');
+    expect(epSel.options.length).toBe(3); // blank + 2 form cards
+    editIndex = -1;
+  });
+});
+
+
+// ════════════════════════════════════════════════════════
+// 5c. loadMealIntoCard()
+// ════════════════════════════════════════════════════════
+await describe('loadMealIntoCard()', async () => {
+  await it('sets all basic meal fields', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    const meal = { type:'lunch', time:'12:30', source:'restaurant', foods:'pasta',
+                   heavy:'heavy', amount:'half', freshFood:true, cookedWhen:'',
+                   newFood:false, newFoodName:'', gluten:true, dairy:false, egg:false };
+    loadMealIntoCard(card, meal);
+    expect(card.querySelector('.meal-type-sel').value).toBe('lunch');
+    expect(card.querySelector('.ml-time').value).toBe('12:30');
+    expect(card.querySelector('.ml-source').value).toBe('restaurant');
+    expect(card.querySelector('.ml-foods').value).toBe('pasta');
+    expect(card.querySelector('.ml-heavy').value).toBe('heavy');
+    expect(card.querySelector('.ml-amount').value).toBe('half');
+  });
+  await it('fresh food checked by default (freshFood true)', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    loadMealIntoCard(card, { ...makeEntry().meals[0], freshFood: true });
+    expect(card.querySelector('.ml-fresh').checked).toBeTruthy();
+    expect(card.querySelector('.ml-cooked-when-row').style.display).toBe('none');
+  });
+  await it('shows cooked-when row when freshFood is false', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    loadMealIntoCard(card, { ...makeEntry().meals[0], freshFood: false, cookedWhen: 'yesterday' });
+    expect(card.querySelector('.ml-fresh').checked).toBeFalsy();
+    expect(card.querySelector('.ml-cooked-when-row').style.display).toBe('block');
+    expect(card.querySelector('.ml-cooked-when').value).toBe('yesterday');
+  });
+  await it('shows new-food row when newFood is true', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    loadMealIntoCard(card, { ...makeEntry().meals[0], newFood: true, newFoodName: 'mango' });
+    expect(card.querySelector('.ml-new').checked).toBeTruthy();
+    expect(card.querySelector('.ml-new-food-row').style.display).toBe('block');
+    expect(card.querySelector('.ml-new-food-name').value).toBe('mango');
+  });
+  await it('sets allergen toggles', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    loadMealIntoCard(card, { ...makeEntry().meals[0], gluten: true, dairy: true, egg: false });
+    expect(card.querySelector('.ml-gluten').checked).toBeTruthy();
+    expect(card.querySelector('.ml-dairy').checked).toBeTruthy();
+    expect(card.querySelector('.ml-egg').checked).toBeFalsy();
+  });
+  await it('treats missing freshFood field as fresh (backward compat)', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    const oldMeal = { type:'breakfast', time:'08:00', source:'homemade', foods:'oatmeal',
+                      heavy:'light', amount:'all', newFood:false, newFoodName:'',
+                      gluten:false, dairy:false, egg:false }; // no freshFood
+    loadMealIntoCard(card, oldMeal);
+    expect(card.querySelector('.ml-fresh').checked).toBeTruthy();
+    expect(card.querySelector('.ml-cooked-when-row').style.display).toBe('none');
+  });
+});
+
+
+// ════════════════════════════════════════════════════════
+// 5d. loadEntryIntoForm()
+// ════════════════════════════════════════════════════════
+await describe('loadEntryIntoForm()', async () => {
+  await it('populates day overview fields', () => {
+    resetState();
+    loadEntryIntoForm(makeEntry({ sleep:'poor', mood:'fussy', activity:'low',
+                                  stool:'soft', hydration:'good' }));
+    expect(document.getElementById('e-sleep').value).toBe('poor');
+    expect(document.getElementById('e-mood').value).toBe('fussy');
+    expect(document.getElementById('e-activity').value).toBe('low');
+    expect(document.getElementById('e-stool').value).toBe('soft');
+    expect(document.getElementById('e-hydration').value).toBe('good');
+  });
+  await it('sets the date field', () => {
+    resetState();
+    loadEntryIntoForm(makeEntry({ date: '2026-06-25' }));
+    expect(document.getElementById('e-date').value).toBe('2026-06-25');
+  });
+  await it('sets toggle checkboxes', () => {
+    resetState();
+    loadEntryIntoForm(makeEntry({ newEnv: true, sick: true, meds: false }));
+    expect(document.getElementById('e-newenv').checked).toBeTruthy();
+    expect(document.getElementById('e-sick').checked).toBeTruthy();
+    expect(document.getElementById('e-meds').checked).toBeFalsy();
+  });
+  await it('shows med-name row and value when meds is true', () => {
+    resetState();
+    loadEntryIntoForm(makeEntry({ meds: true, medName: 'Amoxicillin 250mg' }));
+    expect(document.getElementById('med-name-row').style.display).toBe('block');
+    expect(document.getElementById('e-med-name').value).toBe('Amoxicillin 250mg');
+  });
+  await it('creates the correct number of meal cards', () => {
+    resetState();
+    const entry = makeEntry();
+    entry.meals.push({ ...entry.meals[0], type: 'lunch' });
+    loadEntryIntoForm(entry);
+    expect(document.querySelectorAll('#meals-container .meal-card').length).toBe(2);
+  });
+  await it('creates the correct number of reaction episode cards', () => {
+    resetState();
+    loadEntryIntoForm(makeEntry({
+      reactions: [
+        { meal:'Breakfast · 8:00 AM', count:'1', delay:'<30m', content:'cereal' },
+        { meal:'Lunch · 12:30 PM',    count:'1', delay:'1-2h', content:'residue' }
+      ]
+    }));
+    expect(document.querySelectorAll('#reactions-container .meal-card').length).toBe(2);
+  });
+  await it('activates matching symptom chips', () => {
+    resetState();
+    loadEntryIntoForm(makeEntry({ symptoms: ['bloating', 'cramps'] }));
+    expect(document.querySelector('.chip[data-v="bloating"]').classList.contains('active')).toBeTruthy();
+    expect(document.querySelector('.chip[data-v="cramps"]').classList.contains('active')).toBeTruthy();
+    expect(document.querySelector('.chip[data-v="gas"]').classList.contains('active')).toBeFalsy();
+  });
+  await it('handles "other" symptom with custom text', () => {
+    resetState();
+    loadEntryIntoForm(makeEntry({ symptoms: ['hives on lower back'] }));
+    expect(document.querySelector('.chip[data-v="other"]').classList.contains('active')).toBeTruthy();
+    expect(document.getElementById('e-symptom-other').value).toBe('hives on lower back');
+    expect(document.getElementById('other-symptom-row').style.display).toBe('block');
+  });
+  await it('sets severity button active', () => {
+    resetState();
+    loadEntryIntoForm(makeEntry({ severity: '2' }));
+    expect(document.querySelector('.sev-btn.s2').classList.contains('active')).toBeTruthy();
+    expect(activeSev).toBe('2');
+  });
+  await it('sets notes field', () => {
+    resetState();
+    loadEntryIntoForm(makeEntry({ notes: 'Doctor visit tomorrow' }));
+    expect(document.getElementById('e-notes').value).toBe('Doctor visit tomorrow');
+  });
+  await it('populates activeSymptoms set', () => {
+    resetState();
+    loadEntryIntoForm(makeEntry({ symptoms: ['gas', 'reflux'] }));
+    expect(activeSymptoms.has('gas')).toBeTruthy();
+    expect(activeSymptoms.has('reflux')).toBeTruthy();
+    expect(activeSymptoms.size).toBe(2);
+  });
+});
+
+
+// ════════════════════════════════════════════════════════
+// 5e. EDIT MODE FUNCTIONS
+// ════════════════════════════════════════════════════════
+await describe('enterEditMode() / exitEditMode() / cancelEdit()', async () => {
+  await it('enterEditMode sets editIndex', () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }), makeEntry({ date:'2026-06-25' }));
+    enterEditMode(1);
+    expect(editIndex).toBe(1);
+    exitEditMode(); resetLogForm();
+  });
+  await it('enterEditMode shows edit banner', () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }));
+    enterEditMode(0);
+    expect(document.getElementById('edit-banner').style.display).toBe('flex');
+    exitEditMode(); resetLogForm();
+  });
+  await it('enterEditMode sets banner date text', () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }));
+    enterEditMode(0);
+    expect(document.getElementById('edit-banner-date').textContent).toContain('2026');
+    exitEditMode(); resetLogForm();
+  });
+  await it('enterEditMode locks the date field', () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }));
+    enterEditMode(0);
+    expect(document.getElementById('e-date').readOnly).toBeTruthy();
+    exitEditMode(); resetLogForm();
+  });
+  await it('enterEditMode changes save button to "Update entry"', () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }));
+    enterEditMode(0);
+    expect(document.querySelector('#save-btn span').textContent).toBe('Update entry');
+    exitEditMode(); resetLogForm();
+  });
+  await it('enterEditMode switches to log tab', () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }));
+    switchTab('history');
+    enterEditMode(0);
+    expect(document.getElementById('tab-log').classList.contains('active')).toBeTruthy();
+    exitEditMode(); resetLogForm();
+  });
+  await it('exitEditMode resets editIndex to -1', () => {
+    resetState();
+    setJournal(makeEntry());
+    enterEditMode(0);
+    exitEditMode();
+    expect(editIndex).toBe(-1);
+    resetLogForm();
+  });
+  await it('exitEditMode hides edit banner', () => {
+    resetState();
+    setJournal(makeEntry());
+    enterEditMode(0);
+    exitEditMode();
+    expect(document.getElementById('edit-banner').style.display).toBe('none');
+    resetLogForm();
+  });
+  await it('exitEditMode unlocks date field', () => {
+    resetState();
+    setJournal(makeEntry());
+    enterEditMode(0);
+    exitEditMode();
+    expect(document.getElementById('e-date').readOnly).toBeFalsy();
+    resetLogForm();
+  });
+  await it('exitEditMode resets save button to "Save entry"', () => {
+    resetState();
+    setJournal(makeEntry());
+    enterEditMode(0);
+    exitEditMode();
+    expect(document.querySelector('#save-btn span').textContent).toBe('Save entry');
+    resetLogForm();
+  });
+  await it('cancelEdit hides banner and switches to history tab', () => {
+    resetState();
+    setJournal(makeEntry());
+    enterEditMode(0);
+    cancelEdit();
+    expect(document.getElementById('edit-banner').style.display).toBe('none');
+    expect(document.getElementById('tab-history').classList.contains('active')).toBeTruthy();
+  });
+  await it('cancelEdit resets editIndex to -1', () => {
+    resetState();
+    setJournal(makeEntry());
+    enterEditMode(0);
+    cancelEdit();
+    expect(editIndex).toBe(-1);
+  });
+});
+
+
+// ════════════════════════════════════════════════════════
 // 6. REACTION EPISODES
 // ════════════════════════════════════════════════════════
 await describe('addReactionEpisode()', async () => {
@@ -919,7 +1201,97 @@ await describe('saveEntry() merge – notes', async () => {
 
 
 // ════════════════════════════════════════════════════════
-// 19. RESET FORM
+// 19. saveEntry() – EDIT MODE
+// ════════════════════════════════════════════════════════
+await describe('saveEntry() – edit mode', async () => {
+  await it('replaces journal[editIndex] entirely (no merge)', async () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26', sleep:'poor', notes:'original' }));
+    editIndex = 0;
+    setupMinimalForm('2026-06-26');
+    document.getElementById('e-sleep').value = 'great';
+    document.getElementById('e-notes').value = 'corrected';
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    // sleep should be 'great', not merged — 'poor' is gone
+    expect(journal[0].sleep).toBe('great');
+    expect(journal[0].notes).toBe('corrected');
+    expect(journal).toHaveLength(1);
+  });
+  await it('does NOT accumulate meals — replaces with form contents', async () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26', meals:[
+      { type:'breakfast', time:'08:00', source:'homemade', foods:'oatmeal',
+        heavy:'light', amount:'all', freshFood:true, cookedWhen:'',
+        newFood:false, newFoodName:'', gluten:false, dairy:false, egg:false },
+      { type:'lunch', time:'12:00', source:'homemade', foods:'pasta',
+        heavy:'moderate', amount:'all', freshFood:true, cookedWhen:'',
+        newFood:false, newFoodName:'', gluten:false, dairy:false, egg:false }
+    ]}));
+    editIndex = 0;
+    setupMinimalForm('2026-06-26'); // adds exactly 1 meal card
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    expect(journal[0].meals).toHaveLength(1); // replaced, not appended to original 2
+  });
+  await it('resets editIndex to -1 after successful save', async () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }));
+    editIndex = 0;
+    setupMinimalForm('2026-06-26');
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    expect(editIndex).toBe(-1);
+  });
+  await it('clears newEnv that was wrongly set (full replace fixes sticky fields)', async () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26', newEnv: true }));
+    editIndex = 0;
+    setupMinimalForm('2026-06-26');
+    document.getElementById('e-newenv').checked = false; // correct the mistake
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    expect(journal[0].newEnv).toBeFalsy();
+  });
+  await it('edit banner is hidden after save', async () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }));
+    enterEditMode(0);
+    setupMinimalForm('2026-06-26');
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    expect(document.getElementById('edit-banner').style.display).toBe('none');
+  });
+  await it('date field is unlocked after save', async () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }));
+    enterEditMode(0);
+    setupMinimalForm('2026-06-26');
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    expect(document.getElementById('e-date').readOnly).toBeFalsy();
+  });
+  await it('switches to history tab after save', async () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }));
+    enterEditMode(0);
+    setupMinimalForm('2026-06-26');
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    expect(document.getElementById('tab-history').classList.contains('active')).toBeTruthy();
+  });
+});
+
+
+// ════════════════════════════════════════════════════════
+// 20. RESET FORM
 // ════════════════════════════════════════════════════════
 await describe('resetLogForm()', async () => {
   await it('clears sleep, mood, activity, stool, hydration', () => {
@@ -1133,6 +1505,25 @@ await describe('renderHistory()', async () => {
     setJournal(makeEntry({ symptoms: ['bloating', 'cramps'] }));
     renderHistory();
     expect(document.getElementById('history-list').innerHTML).toContain('bloating');
+  });
+  await it('renders an Edit button on each history card', () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }), makeEntry({ date:'2026-06-25' }));
+    renderHistory();
+    const editButtons = document.querySelectorAll('#history-list button');
+    // Each card should have an Edit button — at least 2
+    expect(editButtons.length).toBeGreaterThan(1);
+    expect(editButtons[0].textContent.trim()).toBe('Edit');
+  });
+  await it('Edit button calls enterEditMode with correct index', () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }), makeEntry({ date:'2026-06-25' }));
+    renderHistory();
+    // Click the first card's Edit button (index 0 = most recent entry)
+    document.querySelector('#history-list button').click();
+    expect(editIndex).toBe(0);
+    expect(document.getElementById('edit-banner').style.display).toBe('flex');
+    exitEditMode(); resetLogForm();
   });
 });
 

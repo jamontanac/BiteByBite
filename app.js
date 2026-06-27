@@ -4,6 +4,7 @@ let journal = [];     // array of day entries
 let ghSha = null;     // SHA of journal.json in GitHub (needed for updates)
 let mealCount = 0;
 let reactionCount = 0;
+let editIndex = -1;
 let activeSymptoms = new Set();
 let activeSev = '';
 let syncTimer = null;
@@ -231,6 +232,143 @@ async function manualSync() {
   }
 }
 
+// ── Edit mode ──────────────────────────────────────────
+function enterEditMode(index) {
+  editIndex = index;
+  const entry = journal[index];
+
+  resetLogForm();
+  loadEntryIntoForm(entry);
+
+  document.getElementById('edit-banner').style.display = 'flex';
+  document.getElementById('edit-banner-date').textContent = fmtDate(entry.date);
+
+  const dateEl = document.getElementById('e-date');
+  dateEl.readOnly = true;
+  dateEl.style.opacity = '0.6';
+  dateEl.style.cursor  = 'default';
+
+  document.querySelector('#save-btn span').textContent = 'Update entry';
+  switchTab('log');
+  document.getElementById('tab-log').scrollTop = 0;
+}
+
+function exitEditMode() {
+  editIndex = -1;
+  document.getElementById('edit-banner').style.display = 'none';
+  const dateEl = document.getElementById('e-date');
+  dateEl.readOnly = false;
+  dateEl.style.opacity = '';
+  dateEl.style.cursor  = '';
+  document.querySelector('#save-btn span').textContent = 'Save entry';
+}
+
+function cancelEdit() {
+  exitEditMode();
+  resetLogForm();
+  switchTab('history');
+}
+
+function loadMealIntoCard(card, meal) {
+  card.querySelector('.meal-type-sel').value = meal.type    || 'breakfast';
+  card.querySelector('.ml-time').value       = meal.time    || '';
+  card.querySelector('.ml-source').value     = meal.source  || 'homemade';
+  card.querySelector('.ml-foods').value      = meal.foods   || '';
+  card.querySelector('.ml-heavy').value      = meal.heavy   || 'light';
+  card.querySelector('.ml-amount').value     = meal.amount  || 'all';
+
+  const freshCb = card.querySelector('.ml-fresh');
+  freshCb.checked = meal.freshFood !== false;
+  if (!freshCb.checked) {
+    card.querySelector('.ml-cooked-when-row').style.display = 'block';
+    card.querySelector('.ml-cooked-when').value = meal.cookedWhen || '';
+  }
+
+  const newCb = card.querySelector('.ml-new');
+  newCb.checked = !!meal.newFood;
+  if (newCb.checked) {
+    card.querySelector('.ml-new-food-row').style.display = 'block';
+    card.querySelector('.ml-new-food-name').value = meal.newFoodName || '';
+  }
+
+  card.querySelector('.ml-gluten').checked = !!meal.gluten;
+  card.querySelector('.ml-dairy').checked  = !!meal.dairy;
+  card.querySelector('.ml-egg').checked    = !!meal.egg;
+}
+
+function loadEntryIntoForm(entry) {
+  document.getElementById('e-date').value      = entry.date;
+  document.getElementById('e-sleep').value     = entry.sleep    || '';
+  document.getElementById('e-mood').value      = entry.mood     || '';
+  document.getElementById('e-activity').value  = entry.activity || '';
+  document.getElementById('e-stool').value     = entry.stool    || '';
+  document.getElementById('e-hydration').value = entry.hydration|| '';
+
+  document.getElementById('e-newenv').checked = !!entry.newEnv;
+  document.getElementById('e-sick').checked   = !!entry.sick;
+  document.getElementById('e-meds').checked   = !!entry.meds;
+  if (entry.meds && entry.medName) {
+    document.getElementById('e-med-name').value          = entry.medName;
+    document.getElementById('med-name-row').style.display = 'block';
+  }
+
+  // Meals
+  document.getElementById('meals-container').innerHTML = '';
+  mealCount = 0;
+  (entry.meals || []).forEach(meal => {
+    addMeal();
+    const cards = document.querySelectorAll('#meals-container .meal-card');
+    loadMealIntoCard(cards[cards.length - 1], meal);
+  });
+
+  // Reactions (build dropdowns first so we can match meal labels)
+  document.getElementById('reactions-container').innerHTML = '';
+  reactionCount = 0;
+  updateMealSelect();
+  (entry.reactions || []).forEach(reaction => {
+    addReactionEpisode();
+    const cards = document.querySelectorAll('#reactions-container .meal-card');
+    const card  = cards[cards.length - 1];
+    const epSel = card.querySelector('.ep-meal');
+    // Match saved meal label text to option
+    for (const opt of epSel.options) {
+      if (opt.text.trim() === (reaction.meal || '').trim()) { epSel.value = opt.value; break; }
+    }
+    card.querySelector('.ep-count').value   = reaction.count   || '1';
+    card.querySelector('.ep-delay').value   = reaction.delay   || '';
+    card.querySelector('.ep-content').value = reaction.content || '';
+  });
+
+  // Symptoms
+  activeSymptoms = new Set();
+  document.querySelectorAll('#symptom-chips .chip').forEach(c => c.classList.remove('active'));
+  const predefined = ['bloating','gas','cramps','rash','itching','swelling','reflux','crying','constipation'];
+  (entry.symptoms || []).forEach(s => {
+    if (predefined.includes(s)) {
+      const chip = document.querySelector(`#symptom-chips .chip[data-v="${s}"]`);
+      if (chip) { chip.classList.add('active'); activeSymptoms.add(s); }
+    } else {
+      const chip = document.querySelector('#symptom-chips .chip[data-v="other"]');
+      if (chip) {
+        chip.classList.add('active');
+        activeSymptoms.add('other');
+        document.getElementById('e-symptom-other').value          = s;
+        document.getElementById('other-symptom-row').style.display = 'block';
+      }
+    }
+  });
+
+  // Severity
+  activeSev = '';
+  document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
+  if (entry.severity) {
+    const btn = document.querySelector(`.sev-btn[data-s="${entry.severity}"]`);
+    if (btn) selectSev(btn);
+  }
+
+  document.getElementById('e-notes').value = entry.notes || '';
+}
+
 // ── Log tab ─────────────────────────────────────────────
 function initLogTab() {
   const today = new Date().toISOString().slice(0, 10);
@@ -359,6 +497,14 @@ function addMeal() {
 function updateMealSelect() {
   const opts = ['<option value="">— select meal —</option>'];
 
+  if (editIndex >= 0) {
+    // Edit mode: form cards ARE the full day's meals — no separate saved-entry group
+    document.querySelectorAll('#meals-container .meal-card').forEach(card => {
+      const type = card.querySelector('.meal-type-sel').value;
+      const time = card.querySelector('.ml-time').value;
+      opts.push(`<option value="${card.id}">${typeName(type)}${time ? ' · ' + fmtTime(time) : ''}</option>`);
+    });
+  } else {
   // Meals already saved for this date (from a previous save earlier in the day)
   const date = document.getElementById('e-date') ? document.getElementById('e-date').value : '';
   const savedEntry = date ? journal.find(e => e.date === date) : null;
@@ -385,6 +531,7 @@ function updateMealSelect() {
       opts.push('</optgroup>');
     }
   }
+  } // end else (non-edit mode)
 
   document.querySelectorAll('#reactions-container .ep-meal').forEach(sel => {
     const prev = sel.value;
@@ -534,30 +681,36 @@ async function saveEntry() {
     ts:       Date.now()
   };
 
-  const existIdx = journal.findIndex(e => e.date === date);
-  let isMerge = false;
-  if (existIdx >= 0) {
-    const ex = journal[existIdx];
-    ex.meals = [...(ex.meals || []), ...entry.meals];
-    if (entry.sleep)     ex.sleep     = entry.sleep;
-    if (entry.mood)      ex.mood      = entry.mood;
-    if (entry.activity)  ex.activity  = entry.activity;
-    if (entry.stool)     ex.stool     = entry.stool;
-    if (entry.hydration) ex.hydration = entry.hydration;
-    if (entry.newEnv)    ex.newEnv    = true;
-    if (entry.sick)      ex.sick      = true;
-    if (entry.meds)      { ex.meds = true; if (entry.medName) ex.medName = entry.medName; }
-    ex.reactions = [...(ex.reactions || []), ...(entry.reactions || [])];
-    ex.symptoms = [...new Set([...(ex.symptoms || []), ...entry.symptoms])];
-    if (entry.severity && (!ex.severity || Number(entry.severity) > Number(ex.severity))) {
-      ex.severity = entry.severity;
-    }
-    if (entry.notes) ex.notes = ex.notes ? ex.notes + '\n' + entry.notes : entry.notes;
-    ex.ts = entry.ts;
-    journal[existIdx] = ex;
-    isMerge = true;
+  const isEdit = editIndex >= 0;
+  let isMerge  = false;
+
+  if (isEdit) {
+    journal[editIndex] = entry;
   } else {
-    journal.unshift(entry);
+    const existIdx = journal.findIndex(e => e.date === date);
+    if (existIdx >= 0) {
+      const ex = journal[existIdx];
+      ex.meals = [...(ex.meals || []), ...entry.meals];
+      if (entry.sleep)     ex.sleep     = entry.sleep;
+      if (entry.mood)      ex.mood      = entry.mood;
+      if (entry.activity)  ex.activity  = entry.activity;
+      if (entry.stool)     ex.stool     = entry.stool;
+      if (entry.hydration) ex.hydration = entry.hydration;
+      if (entry.newEnv)    ex.newEnv    = true;
+      if (entry.sick)      ex.sick      = true;
+      if (entry.meds)      { ex.meds = true; if (entry.medName) ex.medName = entry.medName; }
+      ex.reactions = [...(ex.reactions || []), ...(entry.reactions || [])];
+      ex.symptoms = [...new Set([...(ex.symptoms || []), ...entry.symptoms])];
+      if (entry.severity && (!ex.severity || Number(entry.severity) > Number(ex.severity))) {
+        ex.severity = entry.severity;
+      }
+      if (entry.notes) ex.notes = ex.notes ? ex.notes + '\n' + entry.notes : entry.notes;
+      ex.ts = entry.ts;
+      journal[existIdx] = ex;
+      isMerge = true;
+    } else {
+      journal.unshift(entry);
+    }
   }
 
   journal.sort((a, b) => b.date.localeCompare(a.date));
@@ -569,13 +722,20 @@ async function saveEntry() {
   try {
     await saveToGitHub();
     updateSettingsDisplay();
-    toast(isMerge ? 'Merged into existing day ✓' : 'Entry saved ✓');
-    resetLogForm();
+    if (isEdit) {
+      toast('Entry updated ✓');
+      exitEditMode();
+      resetLogForm();
+      switchTab('history');
+    } else {
+      toast(isMerge ? 'Merged into existing day ✓' : 'Entry saved ✓');
+      resetLogForm();
+    }
   } catch(e) {
     toast('Save failed: ' + e.message, true);
   } finally {
     btn.disabled = false;
-    btn.querySelector('span').textContent = 'Save entry';
+    btn.querySelector('span').textContent = isEdit ? 'Update entry' : 'Save entry';
   }
 }
 
@@ -614,7 +774,7 @@ function renderHistory() {
     return;
   }
 
-  el.innerHTML = journal.map(e => {
+  el.innerHTML = journal.map((e, i) => {
     const hasReactions = e.reactions && e.reactions.length > 0;
     const hadVomit    = hasReactions || (e.vomit && e.vomit !== 'none');
     const hasNew      = e.meals && e.meals.some(m => m.newFood);
@@ -671,7 +831,10 @@ function renderHistory() {
     }
 
     return `<div class="card">
-      <div class="entry-date-head">${fmtDate(e.date)}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.375rem">
+        <div class="entry-date-head" style="margin-bottom:0">${fmtDate(e.date)}</div>
+        <button onclick="enterEditMode(${i})" style="font-size:.75rem;color:var(--ink3);border:none;background:none;padding:.2rem .5rem;border-radius:var(--r);cursor:pointer;flex-shrink:0" aria-label="Edit entry">Edit</button>
+      </div>
       <div class="tag-row">${tags}</div>
       <div>${mealRows}</div>
       ${reactionHtml}
