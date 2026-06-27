@@ -325,6 +325,18 @@ function addMeal() {
         </div>
       </div>
       <div class="toggle-row">
+        <label class="tog"><input type="checkbox" class="ml-fresh" checked onchange="toggleFreshFoodInput(this)"><span class="tog-track"></span></label>
+        <div class="toggle-label">Fresh food
+          <small>Cooked today, not a leftover</small>
+        </div>
+      </div>
+      <div class="ml-cooked-when-row" style="display:none;padding:.375rem 0 .25rem">
+        <div class="f-group">
+          <label>When was it cooked?</label>
+          <input type="text" class="ml-cooked-when" placeholder="e.g. yesterday evening, 2 days ago…" autocomplete="off">
+        </div>
+      </div>
+      <div class="toggle-row">
         <label class="tog"><input type="checkbox" class="ml-gluten"><span class="tog-track"></span></label>
         <div class="toggle-label">Contains gluten
           <small>Wheat, barley, rye, spelt, or oats</small>
@@ -424,6 +436,13 @@ function addReactionEpisode() {
   updateMealSelect();
 }
 
+function toggleFreshFoodInput(checkbox) {
+  const card = checkbox.closest('.meal-card');
+  const row  = card.querySelector('.ml-cooked-when-row');
+  row.style.display = checkbox.checked ? 'none' : 'block';
+  if (checkbox.checked) card.querySelector('.ml-cooked-when').value = '';
+}
+
 function toggleNewFoodInput(checkbox) {
   const card = checkbox.closest('.meal-card');
   const row  = card.querySelector('.ml-new-food-row');
@@ -459,6 +478,8 @@ async function saveEntry() {
       foods:   card.querySelector('.ml-foods').value.trim(),
       heavy:   card.querySelector('.ml-heavy').value,
       amount:  card.querySelector('.ml-amount').value,
+      freshFood:  card.querySelector('.ml-fresh').checked,
+      cookedWhen: !card.querySelector('.ml-fresh').checked ? card.querySelector('.ml-cooked-when').value.trim() : '',
       newFood:     card.querySelector('.ml-new').checked,
       newFoodName: card.querySelector('.ml-new').checked ? card.querySelector('.ml-new-food-name').value.trim() : '',
       gluten:  card.querySelector('.ml-gluten').checked,
@@ -595,10 +616,11 @@ function renderHistory() {
 
   el.innerHTML = journal.map(e => {
     const hasReactions = e.reactions && e.reactions.length > 0;
-    const hadVomit = hasReactions || (e.vomit && e.vomit !== 'none');
-    const hasNew   = e.meals && e.meals.some(m => m.newFood);
-    const hasGluten= e.meals && e.meals.some(m => m.gluten);
-    const hasDairy = e.meals && e.meals.some(m => m.dairy);
+    const hadVomit    = hasReactions || (e.vomit && e.vomit !== 'none');
+    const hasNew      = e.meals && e.meals.some(m => m.newFood);
+    const hasGluten   = e.meals && e.meals.some(m => m.gluten);
+    const hasDairy    = e.meals && e.meals.some(m => m.dairy);
+    const hasLeftover = e.meals && e.meals.some(m => m.freshFood === false);
 
     const tags = [
       hadVomit
@@ -611,7 +633,8 @@ function renderHistory() {
       e.severity === '3' ? `<span class="tag bad">Severe day</span>` :
       e.severity === '2' ? `<span class="tag warn">Moderate day</span>` :
       e.severity === '1' ? `<span class="tag ok">Mild day</span>` : '',
-      hasNew    ? `<span class="tag warn">New food</span>` : '',
+      hasNew      ? `<span class="tag warn">New food</span>` : '',
+      hasLeftover ? `<span class="tag neutral">Leftover food</span>` : '',
       hasGluten ? `<span class="tag gluten">Gluten</span>` : '',
       hasDairy  ? `<span class="tag neutral">Dairy</span>` : '',
       e.newEnv  ? `<span class="tag neutral">Away from home</span>` : '',
@@ -625,6 +648,7 @@ function renderHistory() {
         <span class="meal-time">${m.time ? fmtTime(m.time) : '—'}</span>
         <span class="meal-foods-text">
           <strong>${typeName(m.type)}</strong> · ${m.foods || '(no detail)'}
+          ${m.freshFood === false ? ` · <em style="color:var(--ink3)">leftover${m.cookedWhen ? ' (' + m.cookedWhen + ')' : ''}</em>` : ''}
           ${m.newFood ? ` · <em style="color:var(--amber)">${m.newFoodName || 'new food'}</em>` : ''}
           ${m.gluten  ? ' · <em style="color:var(--purple)">gluten</em>' : ''}
         </span>
@@ -699,6 +723,11 @@ function renderPatterns() {
     {
       name: 'New food days with vomiting',
       filter: e => e.meals && e.meals.some(m => m.newFood),
+      react:  hadReaction
+    },
+    {
+      name: 'Leftover food days with vomiting',
+      filter: e => e.meals && e.meals.some(m => m.freshFood === false),
       react:  hadReaction
     },
     {
