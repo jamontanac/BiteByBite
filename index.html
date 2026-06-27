@@ -168,6 +168,7 @@ img{display:block}
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--r-lg);padding:1rem 1.25rem;
   margin-bottom:.75rem;box-shadow:var(--shadow);
+  overflow:hidden;
 }
 
 /* ── Form elements ───────────────────────────────────── */
@@ -186,6 +187,11 @@ img{display:block}
   border-color:var(--accent);
 }
 .f-group textarea{resize:vertical;min-height:64px;line-height:1.5}
+input[type="date"],input[type="time"]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;max-width:100%;min-width:0;
+  text-align:left;
+}
 
 /* ── Toggle ──────────────────────────────────────────── */
 .toggle-row{
