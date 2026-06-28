@@ -40,13 +40,43 @@
         "gluten": false,
         "dairy": false,
         "egg": false
+      },
+      {
+        "type": "lunch",
+        "time": "13:20",
+        "source": "homemade",
+        "foods": "Soup: corn, coliflower, grounded meat, cilantro, onion, spring onion, peas, garlic, fortini x 4; meat, arepa",
+        "heavy": "heavy",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      },
+      {
+        "type": "snack2",
+        "time": "15:36",
+        "source": "homemade",
+        "foods": "Yogurt, blueberries, cheese",
+        "heavy": "moderate",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
       }
     ],
     "reactions": [],
     "symptoms": [],
     "severity": "",
-    "notes": "",
-    "ts": 1782662257528
+    "notes": "We went to Neusa and to the downtown in Zipa",
+    "ts": 1782679095711
   },
   {
     "date": "2026-06-27",
