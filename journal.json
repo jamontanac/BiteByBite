@@ -1,5 +1,39 @@
 [
   {
+    "date": "2026-06-28",
+    "sleep": "poor",
+    "mood": "",
+    "activity": "",
+    "stool": "",
+    "hydration": "",
+    "newEnv": false,
+    "sick": false,
+    "meds": false,
+    "medName": "",
+    "meals": [
+      {
+        "type": "breakfast",
+        "time": "09:19",
+        "source": "homemade",
+        "foods": "Pancake: oatmeal, egg, banana, baking powder; fried egg",
+        "heavy": "moderate",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": true
+      }
+    ],
+    "reactions": [],
+    "symptoms": [],
+    "severity": "",
+    "notes": "",
+    "ts": 1782656517758
+  },
+  {
     "date": "2026-06-27",
     "sleep": "ok",
     "mood": "happy",
