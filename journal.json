@@ -15,7 +15,7 @@
         "type": "breakfast",
         "time": "09:19",
         "source": "homemade",
-        "foods": "Pancake: oatmeal, egg, banana, baking powder; fried egg",
+        "foods": "Pancake: oatmeal, egg, banana, baking powder; fried egg, tomato sauce.",
         "heavy": "moderate",
         "amount": "all",
         "freshFood": true,
@@ -31,7 +31,7 @@
     "symptoms": [],
     "severity": "",
     "notes": "",
-    "ts": 1782656517758
+    "ts": 1782658687508
   },
   {
     "date": "2026-06-27",
