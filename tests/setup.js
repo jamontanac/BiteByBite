@@ -24,29 +24,11 @@ function buildDOM() {
           <button onclick="cancelEdit()">Cancel ×</button>
         </div>
         <input id="e-date" type="date">
-        <select id="e-sleep">
-          <option value="">—</option><option value="great">Great</option>
-          <option value="ok">OK</option><option value="poor">Poor</option>
-          <option value="very-poor">Very poor</option>
-        </select>
-        <select id="e-mood">
-          <option value="">—</option><option value="happy">Happy</option>
-          <option value="normal">Normal</option><option value="fussy">Fussy</option>
-          <option value="tired">Tired</option>
-        </select>
-        <select id="e-activity">
-          <option value="">—</option><option value="low">Low</option>
-          <option value="normal">Normal</option><option value="high">High</option>
-        </select>
-        <select id="e-stool">
-          <option value="">—</option><option value="normal">Normal</option>
-          <option value="soft">Soft</option><option value="watery">Watery</option>
-          <option value="hard">Hard</option><option value="none">None</option>
-        </select>
-        <select id="e-hydration">
-          <option value="">—</option><option value="good">Good</option>
-          <option value="low">Low</option><option value="poor">Poor</option>
-        </select>
+        <select id="e-sleep"></select>
+        <select id="e-mood"></select>
+        <select id="e-activity"></select>
+        <select id="e-stool"></select>
+        <select id="e-hydration"></select>
 
         <label class="tog"><input type="checkbox" id="e-newenv"><span class="tog-track"></span></label>
         <label class="tog"><input type="checkbox" id="e-sick"><span class="tog-track"></span></label>
@@ -61,27 +43,12 @@ function buildDOM() {
         <div id="meals-container"></div>
         <div id="reactions-container"></div>
 
-        <div id="symptom-chips">
-          <span class="chip bad" data-v="bloating">Bloating</span>
-          <span class="chip bad" data-v="gas">Excess gas</span>
-          <span class="chip bad" data-v="cramps">Stomach cramps</span>
-          <span class="chip bad" data-v="rash">Skin rash</span>
-          <span class="chip bad" data-v="itching">Itching</span>
-          <span class="chip bad" data-v="swelling">Lip / face swelling</span>
-          <span class="chip bad" data-v="reflux">Reflux / spitting</span>
-          <span class="chip bad" data-v="crying">Inconsolable crying</span>
-          <span class="chip bad" data-v="constipation">Constipation</span>
-          <span class="chip bad" data-v="other">Other…</span>
-        </div>
+        <div id="symptom-chips"></div>
         <div id="other-symptom-row" style="display:none">
           <input id="e-symptom-other" type="text">
         </div>
 
-        <div class="sev-row">
-          <button class="sev-btn s1" data-s="1" onclick="selectSev(this)">Mild</button>
-          <button class="sev-btn s2" data-s="2" onclick="selectSev(this)">Moderate</button>
-          <button class="sev-btn s3" data-s="3" onclick="selectSev(this)">Severe</button>
-        </div>
+        <div class="sev-row"></div>
 
         <textarea id="e-notes"></textarea>
         <button id="save-btn"><span>Save entry</span></button>
@@ -109,6 +76,11 @@ function buildDOM() {
   `;
 }
 
+// Pristine copies of the config globals, captured at load time (before any test
+// mutates them) so resetState() can restore them.
+const _JCFG_DEFAULT    = JSON.parse(JSON.stringify(JCFG));
+const _FORMCFG_DEFAULT = JSON.parse(JSON.stringify(FORMCFG));
+
 // ── State reset ─────────────────────────────────────────
 // IMPORTANT: app.js uses `let` declarations, which do NOT appear on window.
 // We access them directly by name (same global lexical scope), NOT via window.X.
@@ -122,6 +94,9 @@ function resetState() {
   editIndex      = -1;
   activeSymptoms = new Set();
   activeSev      = '';
+  journalBranchReady = false;
+  JCFG    = JSON.parse(JSON.stringify(_JCFG_DEFAULT));
+  FORMCFG = JSON.parse(JSON.stringify(_FORMCFG_DEFAULT));
   localStorage.clear();
 
   // Reset DOM containers

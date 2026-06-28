@@ -19,26 +19,56 @@ A lightweight, data-driven food and symptom diary designed to track daily meals 
 ## Project structure
 
 ```
-index.html    — markup and styles
-app.js        — all application logic
-config.json   — default values pre-filled in the login form (edit this to configure)
-manifest.json — PWA metadata
+index.html                       — markup and styles (entry point)
+src/app.js                       — all application logic
+icons/icon.svg                   — app icon
+config/
+  journal_config.json            — GitHub user/repo prefill, save branch, filename, commit messages
+  day_overview_config.json       — Sleep / Mood / Activity / Stool / Hydration options
+  meals_feeds_config.json        — Meal type / Source / Heaviness / Amount options
+  vomiting_episode_config.json   — Times vomited / Delay options
+  symptoms_config.json           — symptom chips
+  severity_config.json           — severity levels
+  manifest.json                  — PWA metadata
 ```
 
 ### Configuring defaults
 
-Open `config.json` and set your GitHub username and data repository name:
+Open `config/journal_config.json` and set your GitHub username and data repository name:
 
 ```json
 {
   "github": {
     "username": "your-github-username",
     "reponame": "your-data-repo-name"
-  }
+  },
+  "branch": "journal",
+  "filename": "journal.json"
 }
 ```
 
-These values are fetched by `app.js` on load and pre-fill the login form so you don't have to type them every time. They are **not** credentials — the Personal Access Token is always entered manually and stored only in the browser.
+These values are fetched by `src/app.js` on load and pre-fill the login form so you don't have to type them every time. They are **not** credentials — the Personal Access Token is always entered manually and stored only in the browser.
+
+`branch` is where your entries are saved. The app **creates this branch automatically** on the first save if it doesn't exist. Keeping it separate from the branch GitHub Pages deploys means saving an entry does **not** trigger a site rebuild.
+
+### Editing the form options
+
+The dropdowns, symptom chips, and severity levels are defined in the `config/` JSON files, so you can add, remove, or rename choices **without touching code**. Each option is:
+
+```json
+{ "value": "homemade", "label": "Homemade" }
+```
+
+- **`label`** is the text shown in the app — edit it freely.
+- **`value`** is the code saved into your journal — keep it stable (changing a value you've already used detaches old entries from it).
+- **Add an option:** copy a line and give it a new, unique `value` and a `label`, e.g. `{ "value": "homemade-other", "label": "Homemade (other house)" }`. Keep commas between items; no comma after the last one.
+- **Remove an option:** delete its line. Safe if you never used it; old entries that used it keep the value, but you won't be able to re-pick it when editing them.
+- **Reorder:** move the lines — file order is the dropdown order.
+- **JSON tips:** wrap each item in `{ }`, use double quotes, separate items with commas, no trailing comma. If unsure, paste the file into jsonlint.com.
+- **If you make a typo:** the app falls back to its built-in defaults for that file (the form keeps working) and logs a warning in the browser console — your change just won't appear until the JSON is valid.
+- Don't rename the structural keys (`selects`, `sleep`, `symptoms`, `severity`, …) or the special `other` symptom value — the code relies on them.
+
+Config files are served with the site, so commit your edits to the branch GitHub Pages deploys from for them to take effect.
 
 ---
 
@@ -46,7 +76,7 @@ These values are fetched by `app.js` on load and pre-fill the login form so you 
 
 ### 1. Fork or copy this repository
 
-Click **Fork** on GitHub, or create a new repo and upload `index.html`, `app.js`, `config.json`, and `manifest.json`.
+Click **Fork** on GitHub, or create a new repo and upload `index.html` and the `src/`, `config/`, and `icons/` folders.
 
 ### 2. Create a separate private repo for your data
 

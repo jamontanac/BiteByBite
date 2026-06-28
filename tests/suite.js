@@ -56,25 +56,36 @@ await describe('buildCommitMessage()', async () => {
 // ════════════════════════════════════════════════════════
 // 2. CONFIG LOADING
 // ════════════════════════════════════════════════════════
-await describe('loadAppConfig()', async () => {
-  await it('returns github object from config.json', async () => {
+await describe('loadConfigs()', async () => {
+  await it('prefills JCFG.github from journal_config.json', async () => {
+    resetState();
     mockFetch();
-    const cfg = await loadAppConfig();
-    expect(cfg.github.username).toBe('testuser');
-    expect(cfg.github.reponame).toBe('testrepo');
+    await loadConfigs();
+    expect(JCFG.github.username).toBe('testuser');
+    expect(JCFG.github.reponame).toBe('testrepo');
     restoreFetch();
+    resetState();
   });
-  await it('returns empty object on 404', async () => {
-    mockFetch({ 'GET config.json': { status: 404, body: {} } });
-    const cfg = await loadAppConfig();
-    expect(cfg).toEqual({});
+  await it('overrides a form option list from its config file', async () => {
+    resetState();
+    mockFetch({
+      'GET config/day_overview_config.json':
+        { status: 200, body: { selects: { sleep: [ { value: 'x', label: 'X only' } ] } } }
+    });
+    await loadConfigs();
+    expect(FORMCFG.day.selects.sleep).toHaveLength(1);
+    expect(FORMCFG.day.selects.sleep[0].value).toBe('x');
     restoreFetch();
+    resetState();
   });
-  await it('returns empty object on network error', async () => {
+  await it('keeps baked-in defaults when config is unreachable', async () => {
+    resetState();
     window.fetch = async () => { throw new Error('Network error'); };
-    const cfg = await loadAppConfig();
-    expect(cfg).toEqual({});
+    await loadConfigs();
+    expect(FORMCFG.day.selects.sleep.length).toBeGreaterThan(1);
+    expect(JCFG.branch).toBe('journal');
     restoreFetch();
+    resetState();
   });
 });
 
@@ -1625,6 +1636,189 @@ await describe('renderPatterns()', async () => {
     const html = document.getElementById('patterns-content').innerHTML;
     expect(html).toContain('Leftover');
     expect(html).toContain('0 of 0');
+  });
+});
+
+
+// ════════════════════════════════════════════════════════
+// CONFIG-DRIVEN RENDERING
+// ════════════════════════════════════════════════════════
+await describe('optionsHtml()', async () => {
+  await it('builds <option> markup from value/label pairs', () => {
+    const html = optionsHtml([{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }]);
+    expect(html).toContain('<option value="a">A</option>');
+    expect(html).toContain('<option value="b">B</option>');
+  });
+  await it('marks the selected value', () => {
+    const html = optionsHtml([{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }], 'b');
+    expect(html).toContain('<option value="b" selected>B</option>');
+  });
+  await it('returns empty string for empty or undefined input', () => {
+    expect(optionsHtml([])).toBe('');
+    expect(optionsHtml(undefined)).toBe('');
+  });
+});
+
+await describe('populateDayOverview() – config-driven render', async () => {
+  await it('renders day-overview select options from FORMCFG (with blank placeholder)', () => {
+    resetState();
+    FORMCFG.day.selects.sleep = [{ value: 'zzz', label: 'Zzz label' }];
+    populateDayOverview();
+    const el = document.getElementById('e-sleep');
+    expect(el.innerHTML).toContain('value="zzz"');
+    expect(el.innerHTML).toContain('Zzz label');
+    expect(el.innerHTML).toContain('value=""');
+    resetState();
+  });
+  await it('renders severity buttons from FORMCFG', () => {
+    resetState();
+    FORMCFG.severity = [{ value: '9', label: 'Catastrophic', class: 's3' }];
+    populateDayOverview();
+    const btns = document.querySelectorAll('.sev-row .sev-btn');
+    expect(btns).toHaveLength(1);
+    expect(btns[0].dataset.s).toBe('9');
+    expect(btns[0].textContent).toBe('Catastrophic');
+    resetState();
+  });
+  await it('renders symptom chips from FORMCFG', () => {
+    resetState();
+    FORMCFG.symptoms = [{ value: 'foo', label: 'Foo' }, { value: 'other', label: 'Other…' }];
+    populateDayOverview();
+    const chips = document.querySelectorAll('#symptom-chips .chip');
+    expect(chips).toHaveLength(2);
+    expect(document.querySelector('#symptom-chips .chip[data-v="foo"]')).not.toBeNull();
+    resetState();
+  });
+});
+
+await describe('addMeal() / addReactionEpisode() – options from FORMCFG', async () => {
+  // Assert on parsed option .value (engine-independent) rather than serialized
+  // HTML, since browsers and jsdom escape special chars (>, <) in attributes
+  // differently.
+  const values = sel => [...sel.options].map(o => o.value).join(',');
+  await it('meal selects use the configured option values', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    expect(values(card.querySelector('.ml-source'))).toContain('homemade');
+    expect(values(card.querySelector('.ml-heavy'))).toContain('heavy');
+    expect(values(card.querySelector('.meal-type-sel'))).toContain('breakfast');
+  });
+  await it('reaction selects use the configured option values', () => {
+    resetState();
+    addReactionEpisode();
+    const card = document.querySelector('#reactions-container .meal-card');
+    expect(values(card.querySelector('.ep-count'))).toContain('3+');
+    expect(values(card.querySelector('.ep-delay'))).toContain('>4h');
+  });
+});
+
+await describe('typeName() – config fallback for new types', async () => {
+  await it('uses the config label for a type not in the short map', () => {
+    resetState();
+    FORMCFG.meals.selects.type = [{ value: 'brunch', label: 'Weekend brunch' }];
+    expect(typeName('brunch')).toBe('Weekend brunch');
+    resetState();
+  });
+});
+
+// ════════════════════════════════════════════════════════
+// BRANCH + FILENAME + COMMIT TEMPLATING
+// ════════════════════════════════════════════════════════
+await describe('buildCommitMessage() – templating', async () => {
+  await it('substitutes {ts} and {date} from JCFG templates', () => {
+    resetState();
+    JCFG.commitMessage = { new: 'NEW {ts}', edit: 'EDIT {date} {ts}' };
+    expect(buildCommitMessage(true, '2030-01-02')).toContain('EDIT 2030-01-02 ');
+    expect(buildCommitMessage(false, '')).toContain('NEW ');
+    resetState();
+  });
+});
+
+await describe('GitHub read/write uses the configured branch + filename', async () => {
+  await it('loadFromGitHub requests the configured branch via ?ref', async () => {
+    resetState();
+    CFG = { user: 'u', repo: 'r', token: 't' };
+    let calledUrl = '';
+    window.fetch = async (url) => {
+      calledUrl = url;
+      return { ok: true, status: 200, json: async () => ({ sha: 's1', content: b64([]) }) };
+    };
+    await loadFromGitHub();
+    expect(calledUrl).toContain('/contents/journal.json');
+    expect(calledUrl).toContain('ref=journal');
+    restoreFetch();
+  });
+  await it('saveToGitHub sends branch in the PUT body', async () => {
+    resetState();
+    CFG = { user: 'u', repo: 'r', token: 't' };
+    journalBranchReady = true; // skip branch-existence network in this test
+    let putBody = null;
+    window.fetch = async (url, opts) => {
+      putBody = JSON.parse(opts.body);
+      return { ok: true, status: 200, json: async () => ({ content: { sha: 's2' } }) };
+    };
+    await saveToGitHub('msg');
+    expect(putBody.branch).toBe('journal');
+    restoreFetch();
+  });
+});
+
+await describe('ensureJournalBranch()', async () => {
+  await it('is a no-op when the branch already exists', async () => {
+    resetState();
+    CFG = { user: 'u', repo: 'r', token: 't' };
+    let posted = false;
+    window.fetch = async (url, opts) => {
+      if ((opts && opts.method) === 'POST') posted = true;
+      return { ok: true, status: 200, json: async () => ({ ref: 'refs/heads/journal' }) };
+    };
+    await ensureJournalBranch();
+    expect(posted).toBeFalsy();
+    expect(journalBranchReady).toBeTruthy();
+    restoreFetch();
+  });
+  await it('creates the branch off the default branch when missing', async () => {
+    resetState();
+    CFG = { user: 'u', repo: 'r', token: 't' };
+    let createdRef = null;
+    window.fetch = async (url, opts) => {
+      const method = (opts && opts.method) || 'GET';
+      if (method === 'GET' && url.includes('/git/ref/heads/journal'))
+        return { ok: false, status: 404, statusText: 'Not Found', json: async () => ({ message: 'Not Found' }) };
+      if (method === 'GET' && /\/repos\/u\/r$/.test(url))
+        return { ok: true, status: 200, json: async () => ({ default_branch: 'main' }) };
+      if (method === 'GET' && url.includes('/git/ref/heads/main'))
+        return { ok: true, status: 200, json: async () => ({ object: { sha: 'base-sha' } }) };
+      if (method === 'POST' && url.includes('/git/refs')) {
+        createdRef = JSON.parse(opts.body);
+        return { ok: true, status: 201, json: async () => ({}) };
+      }
+      return { ok: false, status: 404, statusText: 'NF', json: async () => ({ message: 'Not Found' }) };
+    };
+    await ensureJournalBranch();
+    expect(createdRef.ref).toBe('refs/heads/journal');
+    expect(createdRef.sha).toBe('base-sha');
+    restoreFetch();
+  });
+  await it('tolerates a 422 already-exists race', async () => {
+    resetState();
+    CFG = { user: 'u', repo: 'r', token: 't' };
+    window.fetch = async (url, opts) => {
+      const method = (opts && opts.method) || 'GET';
+      if (method === 'GET' && url.includes('/git/ref/heads/journal'))
+        return { ok: false, status: 404, statusText: 'Not Found', json: async () => ({ message: 'Not Found' }) };
+      if (method === 'GET' && /\/repos\/u\/r$/.test(url))
+        return { ok: true, status: 200, json: async () => ({ default_branch: 'main' }) };
+      if (method === 'GET' && url.includes('/git/ref/heads/main'))
+        return { ok: true, status: 200, json: async () => ({ object: { sha: 'base-sha' } }) };
+      if (method === 'POST')
+        return { ok: false, status: 422, statusText: 'Unprocessable', json: async () => ({ message: 'Reference already exists' }) };
+      return { ok: false, status: 404, statusText: 'NF', json: async () => ({ message: 'Not Found' }) };
+    };
+    await ensureJournalBranch();   // must not throw
+    expect(journalBranchReady).toBeTruthy();
+    restoreFetch();
   });
 });
 

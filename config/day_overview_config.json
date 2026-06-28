@@ -1,0 +1,33 @@
+{
+  "selects": {
+    "sleep": [
+      { "value": "great",     "label": "Great" },
+      { "value": "ok",        "label": "OK (some waking)" },
+      { "value": "poor",      "label": "Poor" },
+      { "value": "very-poor", "label": "Very poor" }
+    ],
+    "mood": [
+      { "value": "happy",  "label": "Happy, energetic" },
+      { "value": "normal", "label": "Normal" },
+      { "value": "fussy",  "label": "Fussy, irritable" },
+      { "value": "tired",  "label": "Tired, lethargic" }
+    ],
+    "activity": [
+      { "value": "low",    "label": "Low / calm" },
+      { "value": "normal", "label": "Normal play" },
+      { "value": "high",   "label": "Very active" }
+    ],
+    "stool": [
+      { "value": "normal", "label": "Normal" },
+      { "value": "soft",   "label": "Soft / loose" },
+      { "value": "watery", "label": "Watery / diarrhea" },
+      { "value": "hard",   "label": "Hard / constipated" },
+      { "value": "none",   "label": "None today" }
+    ],
+    "hydration": [
+      { "value": "good", "label": "Good" },
+      { "value": "low",  "label": "Below normal" },
+      { "value": "poor", "label": "Poor / refused" }
+    ]
+  }
+}

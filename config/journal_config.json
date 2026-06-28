@@ -1,0 +1,12 @@
+{
+  "github": {
+    "username": "jamontanac",
+    "reponame": "BiteByBite"
+  },
+  "branch": "journal",
+  "filename": "journal.json",
+  "commitMessage": {
+    "new": "Adding new entry to journal at: {ts}",
+    "edit": "Editing/Adding the entry for the date {date} at: {ts}"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "selects": {
+    "count": [
+      { "value": "1",  "label": "Once" },
+      { "value": "2",  "label": "Twice" },
+      { "value": "3+", "label": "3 or more" }
+    ],
+    "delay": [
+      { "value": "",       "label": "Not applicable" },
+      { "value": "<30m",   "label": "Under 30 min" },
+      { "value": "30-60m", "label": "30 – 60 min" },
+      { "value": "1-2h",   "label": "1 – 2 hours" },
+      { "value": "2-3h",   "label": "2 – 3 hours" },
+      { "value": "3-4h",   "label": "3 – 4 hours" },
+      { "value": ">4h",    "label": "Over 4 hours" }
+    ]
+  }
+}

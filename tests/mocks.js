@@ -23,7 +23,7 @@ function makeResponse({ status = 200, body = {} }) {
 
 // Default responses for all GitHub endpoints the app uses
 const DEFAULT_RESPONSES = {
-  'GET config.json':
+  'GET config/journal_config.json':
     { status: 200, body: { github: { username: 'testuser', reponame: 'testrepo' } } },
 
   'GET api.github.com/repos/testuser/testrepo\n':  // repo check (no /contents)

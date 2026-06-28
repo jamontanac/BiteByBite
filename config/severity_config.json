@@ -1,0 +1,7 @@
+{
+  "severity": [
+    { "value": "1", "label": "Mild",     "class": "s1" },
+    { "value": "2", "label": "Moderate", "class": "s2" },
+    { "value": "3", "label": "Severe",   "class": "s3" }
+  ]
+}

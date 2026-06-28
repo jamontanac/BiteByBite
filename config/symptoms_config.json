@@ -1,0 +1,14 @@
+{
+  "symptoms": [
+    { "value": "bloating",     "label": "Bloating" },
+    { "value": "gas",          "label": "Excess gas" },
+    { "value": "cramps",       "label": "Stomach cramps" },
+    { "value": "rash",         "label": "Skin rash" },
+    { "value": "itching",      "label": "Itching" },
+    { "value": "swelling",     "label": "Lip / face swelling" },
+    { "value": "reflux",       "label": "Reflux / spitting" },
+    { "value": "crying",       "label": "Inconsolable crying" },
+    { "value": "constipation", "label": "Constipation" },
+    { "value": "other",        "label": "Other…" }
+  ]
+}

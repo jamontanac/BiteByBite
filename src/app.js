@@ -8,31 +8,172 @@ let editIndex = -1;
 let activeSymptoms = new Set();
 let activeSev = '';
 let syncTimer = null;
+let journalBranchReady = false;   // set once the data branch is confirmed/created
 
 const API = 'https://api.github.com';
-const FILE = 'journal.json';
 
-// ── Config ─────────────────────────────────────────────
-async function loadAppConfig() {
-  try {
-    const res = await fetch('config.json');
-    if (res.ok) return res.json();
-  } catch(e) {}
-  return {};
+// ── Config (baked-in defaults) ─────────────────────────
+// These mirror the JSON files in /config. The fetched JSON OVERRIDES them at
+// runtime (see loadConfigs); they exist so the form always renders if a config
+// file is unreachable or invalid, and so the test harness needs no network.
+// Keep them in sync when you change a JSON file.
+let JCFG = {
+  github: { username: '', reponame: '' },
+  branch: 'journal',
+  filename: 'journal.json',
+  commitMessage: {
+    new:  'Adding new entry to journal at: {ts}',
+    edit: 'Editing/Adding the entry for the date {date} at: {ts}'
+  }
+};
+
+let FORMCFG = {
+  day: { selects: {
+    sleep: [
+      { value: 'great',     label: 'Great' },
+      { value: 'ok',        label: 'OK (some waking)' },
+      { value: 'poor',      label: 'Poor' },
+      { value: 'very-poor', label: 'Very poor' }
+    ],
+    mood: [
+      { value: 'happy',  label: 'Happy, energetic' },
+      { value: 'normal', label: 'Normal' },
+      { value: 'fussy',  label: 'Fussy, irritable' },
+      { value: 'tired',  label: 'Tired, lethargic' }
+    ],
+    activity: [
+      { value: 'low',    label: 'Low / calm' },
+      { value: 'normal', label: 'Normal play' },
+      { value: 'high',   label: 'Very active' }
+    ],
+    stool: [
+      { value: 'normal', label: 'Normal' },
+      { value: 'soft',   label: 'Soft / loose' },
+      { value: 'watery', label: 'Watery / diarrhea' },
+      { value: 'hard',   label: 'Hard / constipated' },
+      { value: 'none',   label: 'None today' }
+    ],
+    hydration: [
+      { value: 'good', label: 'Good' },
+      { value: 'low',  label: 'Below normal' },
+      { value: 'poor', label: 'Poor / refused' }
+    ]
+  } },
+  meals: { selects: {
+    type: [
+      { value: 'breakfast', label: 'Breakfast' },
+      { value: 'snack',     label: 'Morning snack' },
+      { value: 'lunch',     label: 'Lunch' },
+      { value: 'snack2',    label: 'Afternoon snack' },
+      { value: 'dinner',    label: 'Dinner' },
+      { value: 'other',     label: 'Other' }
+    ],
+    source: [
+      { value: 'homemade',   label: 'Homemade' },
+      { value: 'packaged',   label: 'Packaged / commercial' },
+      { value: 'restaurant', label: 'Restaurant / outside' },
+      { value: 'formula',    label: 'Formula / breast milk' }
+    ],
+    heavy: [
+      { value: 'light',    label: 'Light' },
+      { value: 'moderate', label: 'Moderate' },
+      { value: 'heavy',    label: 'Heavy / rich / fatty' }
+    ],
+    amount: [
+      { value: 'all',     label: 'All / almost all' },
+      { value: 'half',    label: 'About half' },
+      { value: 'little',  label: 'Just a little' },
+      { value: 'refused', label: 'Refused' }
+    ]
+  } },
+  vomiting: { selects: {
+    count: [
+      { value: '1',  label: 'Once' },
+      { value: '2',  label: 'Twice' },
+      { value: '3+', label: '3 or more' }
+    ],
+    delay: [
+      { value: '',       label: 'Not applicable' },
+      { value: '<30m',   label: 'Under 30 min' },
+      { value: '30-60m', label: '30 – 60 min' },
+      { value: '1-2h',   label: '1 – 2 hours' },
+      { value: '2-3h',   label: '2 – 3 hours' },
+      { value: '3-4h',   label: '3 – 4 hours' },
+      { value: '>4h',    label: 'Over 4 hours' }
+    ]
+  } },
+  symptoms: [
+    { value: 'bloating',     label: 'Bloating' },
+    { value: 'gas',          label: 'Excess gas' },
+    { value: 'cramps',       label: 'Stomach cramps' },
+    { value: 'rash',         label: 'Skin rash' },
+    { value: 'itching',      label: 'Itching' },
+    { value: 'swelling',     label: 'Lip / face swelling' },
+    { value: 'reflux',       label: 'Reflux / spitting' },
+    { value: 'crying',       label: 'Inconsolable crying' },
+    { value: 'constipation', label: 'Constipation' },
+    { value: 'other',        label: 'Other…' }
+  ],
+  severity: [
+    { value: '1', label: 'Mild',     class: 's1' },
+    { value: '2', label: 'Moderate', class: 's2' },
+    { value: '3', label: 'Severe',   class: 's3' }
+  ]
+};
+
+// Fetches the config files from /config and overrides the baked-in defaults.
+// Each file is independent: a fetch error or invalid JSON is logged and that
+// slot keeps its default, so the form always renders.
+async function loadConfigs() {
+  const files = [
+    ['config/journal_config.json',          json => { JCFG = mergeJCFG(json); }],
+    ['config/day_overview_config.json',     json => { if (json.selects) FORMCFG.day      = { selects: json.selects }; }],
+    ['config/meals_feeds_config.json',      json => { if (json.selects) FORMCFG.meals    = { selects: json.selects }; }],
+    ['config/vomiting_episode_config.json', json => { if (json.selects) FORMCFG.vomiting = { selects: json.selects }; }],
+    ['config/symptoms_config.json',         json => { if (Array.isArray(json.symptoms)) FORMCFG.symptoms = json.symptoms; }],
+    ['config/severity_config.json',         json => { if (Array.isArray(json.severity)) FORMCFG.severity = json.severity; }],
+  ];
+  await Promise.all(files.map(async ([path, apply]) => {
+    try {
+      const res = await fetch(path);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      apply(await res.json());
+    } catch(e) {
+      console.warn(`Config: using built-in defaults for ${path} (${e.message})`);
+    }
+  }));
+}
+
+// Merge a fetched journal_config over the defaults so a partial file still works.
+function mergeJCFG(json) {
+  json = json || {};
+  const gh = json.github || {};
+  const cm = json.commitMessage || {};
+  return {
+    github: {
+      username: gh.username || JCFG.github.username,
+      reponame: gh.reponame || JCFG.github.reponame
+    },
+    branch:   json.branch   || JCFG.branch,
+    filename: json.filename || JCFG.filename,
+    commitMessage: {
+      new:  cm.new  || JCFG.commitMessage.new,
+      edit: cm.edit || JCFG.commitMessage.edit
+    }
+  };
 }
 
 // ── Boot ───────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  const appCfg = await loadAppConfig();
-  const github = appCfg.github || {};
+  await loadConfigs();
 
   const cfg = loadCfg();
   if (cfg) {
     CFG = cfg;
     await bootApp();
   } else {
-    if (github.username) document.getElementById('gh-user').value = github.username;
-    if (github.reponame) document.getElementById('gh-repo').value = github.reponame;
+    if (JCFG.github.username) document.getElementById('gh-user').value = JCFG.github.username;
+    if (JCFG.github.reponame) document.getElementById('gh-repo').value = JCFG.github.reponame;
     show('s-login');
   }
   document.getElementById('loading').style.display = 'none';
@@ -78,9 +219,26 @@ async function ghPut(path, body) {
   return r.json();
 }
 
+async function ghPost(path, body) {
+  const r = await fetch(`${API}${path}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${CFG.token}`,
+      Accept: 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.message || `GitHub ${r.status}`);
+  }
+  return r.json();
+}
+
 async function loadFromGitHub() {
   try {
-    const data = await ghGet(`/repos/${CFG.user}/${CFG.repo}/contents/${FILE}`);
+    const data = await ghGet(`/repos/${CFG.user}/${CFG.repo}/contents/${JCFG.filename}?ref=${encodeURIComponent(JCFG.branch)}`);
     ghSha = data.sha;
     const decoded = atob(data.content.replace(/\n/g, ''));
     return JSON.parse(decoded);
@@ -94,21 +252,22 @@ async function loadFromGitHub() {
 // day don't collapse into identical messages.
 function buildCommitMessage(isEdit, date) {
   const timestamp = new Date().toISOString();
-  return isEdit
-    ? `Editing/Adding the entry for the date ${date} at: ${timestamp}`
-    : `Adding new entry to journal at: ${timestamp}`;
+  const tmpl = isEdit ? JCFG.commitMessage.edit : JCFG.commitMessage.new;
+  return tmpl.replace(/{ts}/g, timestamp).replace(/{date}/g, date || '');
 }
 
 async function saveToGitHub(message) {
   setSyncState('syncing');
   try {
+    await ensureJournalBranch();
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(journal, null, 2))));
     const body = {
       message: message || `Update journal ${new Date().toISOString()}`,
       content,
+      branch: JCFG.branch,
       ...(ghSha ? { sha: ghSha } : {})
     };
-    const res = await ghPut(`/repos/${CFG.user}/${CFG.repo}/contents/${FILE}`, body);
+    const res = await ghPut(`/repos/${CFG.user}/${CFG.repo}/contents/${JCFG.filename}`, body);
     ghSha = res.content.sha;
     setSyncState('synced');
     localStorage.setItem('diario_last_sync', Date.now());
@@ -117,6 +276,34 @@ async function saveToGitHub(message) {
     setSyncState('error');
     throw e;
   }
+}
+
+// Ensures the data branch (JCFG.branch) exists, creating it off the repo's
+// default branch the first time it's needed. The GitHub contents API will not
+// create a branch on its own, so without this the first save would 404/422.
+async function ensureJournalBranch() {
+  if (journalBranchReady) return;
+  const base = `/repos/${CFG.user}/${CFG.repo}`;
+  try {
+    await ghGet(`${base}/git/ref/heads/${encodeURIComponent(JCFG.branch)}`);
+    journalBranchReady = true;            // branch already exists
+    return;
+  } catch(e) {
+    if (!e.message.includes('404')) throw e;
+  }
+  // Branch is missing → create it from the repo's default branch.
+  const repo    = await ghGet(base);
+  const baseRef = await ghGet(`${base}/git/ref/heads/${encodeURIComponent(repo.default_branch)}`);
+  try {
+    await ghPost(`${base}/git/refs`, {
+      ref: `refs/heads/${JCFG.branch}`,
+      sha: baseRef.object.sha
+    });
+  } catch(e) {
+    // 422 = reference already exists (race from another device) → fine.
+    if (!/422|already exists/i.test(e.message)) throw e;
+  }
+  journalBranchReady = true;
 }
 
 // ── Boot sequence ──────────────────────────────────────
@@ -186,7 +373,7 @@ function doLogout() {
   localStorage.removeItem('diario_cfg');
   localStorage.removeItem('diario_local');
   localStorage.removeItem('diario_last_sync');
-  CFG = {}; journal = []; ghSha = null;
+  CFG = {}; journal = []; ghSha = null; journalBranchReady = false;
   show('s-login');
   document.getElementById('gh-user').value = '';
   document.getElementById('gh-repo').value = '';
@@ -349,7 +536,7 @@ function loadEntryIntoForm(entry) {
   // Symptoms
   activeSymptoms = new Set();
   document.querySelectorAll('#symptom-chips .chip').forEach(c => c.classList.remove('active'));
-  const predefined = ['bloating','gas','cramps','rash','itching','swelling','reflux','crying','constipation'];
+  const predefined = FORMCFG.symptoms.map(s => s.value).filter(v => v !== 'other');
   (entry.symptoms || []).forEach(s => {
     if (predefined.includes(s)) {
       const chip = document.querySelector(`#symptom-chips .chip[data-v="${s}"]`);
@@ -381,6 +568,8 @@ function initLogTab() {
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('e-date').value = today;
 
+  populateDayOverview();
+
   document.querySelectorAll('#symptom-chips .chip').forEach(c => {
     c.addEventListener('click', () => {
       c.classList.toggle('active');
@@ -401,6 +590,31 @@ function initLogTab() {
   if (document.getElementById('meals-container').children.length === 0) addMeal();
 }
 
+// Renders the config-driven controls in the Log tab: the day-overview selects,
+// the symptom chips, and the severity buttons.
+function populateDayOverview() {
+  const blank = '<option value="">—</option>';
+  const sel = (FORMCFG.day && FORMCFG.day.selects) || {};
+  ['sleep','mood','activity','stool','hydration'].forEach(key => {
+    const el = document.getElementById('e-' + key);
+    if (el) el.innerHTML = blank + optionsHtml(sel[key] || []);
+  });
+
+  const chips = document.getElementById('symptom-chips');
+  if (chips) {
+    chips.innerHTML = (FORMCFG.symptoms || [])
+      .map(s => `<span class="chip bad" data-v="${s.value}">${s.label}</span>`)
+      .join('');
+  }
+
+  const sevRow = document.querySelector('.sev-row');
+  if (sevRow) {
+    sevRow.innerHTML = (FORMCFG.severity || [])
+      .map(s => `<button class="sev-btn ${s.class || ''}" data-s="${s.value}" onclick="selectSev(this)">${s.label}</button>`)
+      .join('');
+  }
+}
+
 function addMeal() {
   const id = 'ml-' + (mealCount++);
   const div = document.createElement('div');
@@ -414,12 +628,7 @@ function addMeal() {
   div.innerHTML = `
     <div class="meal-card-head">
       <select class="meal-type-sel" style="font-size:.8rem;padding:.3rem .6rem;border:1px solid var(--border);border-radius:20px;background:var(--bg)" onchange="updateMealSelect()">
-        <option value="breakfast">Breakfast</option>
-        <option value="snack">Morning snack</option>
-        <option value="lunch">Lunch</option>
-        <option value="snack2">Afternoon snack</option>
-        <option value="dinner">Dinner</option>
-        <option value="other">Other</option>
+        ${optionsHtml(FORMCFG.meals.selects.type)}
       </select>
       <button class="meal-remove" onclick="document.getElementById('${id}').remove(); updateMealSelect()">Remove</button>
     </div>
@@ -427,10 +636,7 @@ function addMeal() {
       <div class="f-group"><label>Time given</label><input type="time" class="ml-time" value="${hh}:${mm}"></div>
       <div class="f-group"><label>Source</label>
         <select class="ml-source">
-          <option value="homemade">Homemade</option>
-          <option value="packaged">Packaged / commercial</option>
-          <option value="restaurant">Restaurant / outside</option>
-          <option value="formula">Formula / breast milk</option>
+          ${optionsHtml(FORMCFG.meals.selects.source)}
         </select>
       </div>
     </div>
@@ -442,17 +648,12 @@ function addMeal() {
     <div class="f-row">
       <div class="f-group"><label>Meal heaviness</label>
         <select class="ml-heavy">
-          <option value="light">Light</option>
-          <option value="moderate">Moderate</option>
-          <option value="heavy">Heavy / rich / fatty</option>
+          ${optionsHtml(FORMCFG.meals.selects.heavy)}
         </select>
       </div>
       <div class="f-group"><label>Amount eaten</label>
         <select class="ml-amount">
-          <option value="all">All / almost all</option>
-          <option value="half">About half</option>
-          <option value="little">Just a little</option>
-          <option value="refused">Refused</option>
+          ${optionsHtml(FORMCFG.meals.selects.amount)}
         </select>
       </div>
     </div>
@@ -563,22 +764,14 @@ function addReactionEpisode() {
       </div>
       <div class="f-group"><label>Times vomited</label>
         <select class="ep-count">
-          <option value="1">Once</option>
-          <option value="2">Twice</option>
-          <option value="3+">3 or more</option>
+          ${optionsHtml(FORMCFG.vomiting.selects.count)}
         </select>
       </div>
     </div>
     <div class="f-row">
       <div class="f-group"><label>Delay after meal</label>
         <select class="ep-delay">
-          <option value="">Not applicable</option>
-          <option value="<30m">Under 30 min</option>
-          <option value="30-60m">30 – 60 min</option>
-          <option value="1-2h">1 – 2 hours</option>
-          <option value="2-3h">2 – 3 hours</option>
-          <option value="3-4h">3 – 4 hours</option>
-          <option value=">4h">Over 4 hours</option>
+          ${optionsHtml(FORMCFG.vomiting.selects.delay)}
         </select>
       </div>
       <div class="f-group"><label>What was vomited</label>
@@ -1020,9 +1213,19 @@ function exportJSON() {
 }
 
 // ── Util ────────────────────────────────────────────────
+// Builds <option> markup from a [{value,label}] array, optionally pre-selecting
+// one value. Config values/labels are trusted app config (not user input).
+function optionsHtml(arr, selected) {
+  return (arr || [])
+    .map(o => `<option value="${o.value}"${selected != null && o.value === selected ? ' selected' : ''}>${o.label}</option>`)
+    .join('');
+}
+
 function typeName(t) {
   const m = { breakfast:'Breakfast', snack:'Snack', snack2:'Snack', lunch:'Lunch', dinner:'Dinner', other:'Other' };
-  return m[t] || t;
+  if (m[t]) return m[t];
+  const opt = (FORMCFG.meals.selects.type || []).find(o => o.value === t);
+  return opt ? opt.label : t;
 }
 
 function fmtTime(t) {

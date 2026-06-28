@@ -8,9 +8,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BiteByBite">
 <title>BiteByBite · Food Journal</title>
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon.svg">
+<link rel="manifest" href="config/manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
@@ -499,56 +499,27 @@ input[type="date"],input[type="time"]{
         </div>
         <div class="f-group">
           <label>Sleep last night</label>
-          <select id="e-sleep">
-            <option value="">—</option>
-            <option value="great">Great</option>
-            <option value="ok">OK (some waking)</option>
-            <option value="poor">Poor</option>
-            <option value="very-poor">Very poor</option>
-          </select>
+          <select id="e-sleep"></select>
         </div>
       </div>
       <div class="f-row">
         <div class="f-group">
           <label>Mood / energy</label>
-          <select id="e-mood">
-            <option value="">—</option>
-            <option value="happy">Happy, energetic</option>
-            <option value="normal">Normal</option>
-            <option value="fussy">Fussy, irritable</option>
-            <option value="tired">Tired, lethargic</option>
-          </select>
+          <select id="e-mood"></select>
         </div>
         <div class="f-group">
           <label>Activity level</label>
-          <select id="e-activity">
-            <option value="">—</option>
-            <option value="low">Low / calm</option>
-            <option value="normal">Normal play</option>
-            <option value="high">Very active</option>
-          </select>
+          <select id="e-activity"></select>
         </div>
       </div>
       <div class="f-row">
         <div class="f-group">
           <label>Stool consistency</label>
-          <select id="e-stool">
-            <option value="">—</option>
-            <option value="normal">Normal</option>
-            <option value="soft">Soft / loose</option>
-            <option value="watery">Watery / diarrhea</option>
-            <option value="hard">Hard / constipated</option>
-            <option value="none">None today</option>
-          </select>
+          <select id="e-stool"></select>
         </div>
         <div class="f-group">
           <label>Hydration</label>
-          <select id="e-hydration">
-            <option value="">—</option>
-            <option value="good">Good</option>
-            <option value="low">Below normal</option>
-            <option value="poor">Poor / refused</option>
-          </select>
+          <select id="e-hydration"></select>
         </div>
       </div>
 
@@ -595,18 +566,7 @@ input[type="date"],input[type="time"]{
     <div class="sec-label">Other symptoms</div>
     <div class="card">
       <div class="f-group" style="margin-bottom:.875rem">
-        <div class="chip-grid" id="symptom-chips">
-          <span class="chip bad" data-v="bloating">Bloating</span>
-          <span class="chip bad" data-v="gas">Excess gas</span>
-          <span class="chip bad" data-v="cramps">Stomach cramps</span>
-          <span class="chip bad" data-v="rash">Skin rash</span>
-          <span class="chip bad" data-v="itching">Itching</span>
-          <span class="chip bad" data-v="swelling">Lip / face swelling</span>
-          <span class="chip bad" data-v="reflux">Reflux / spitting</span>
-          <span class="chip bad" data-v="crying">Inconsolable crying</span>
-          <span class="chip bad" data-v="constipation">Constipation</span>
-          <span class="chip bad" data-v="other">Other…</span>
-        </div>
+        <div class="chip-grid" id="symptom-chips"></div>
         <div id="other-symptom-row" style="display:none;margin-top:.5rem">
           <input class="f-group" type="text" id="e-symptom-other"
             placeholder="Describe the symptom…" autocomplete="off"
@@ -617,11 +577,7 @@ input[type="date"],input[type="time"]{
 
       <div class="f-group">
         <label>Overall severity</label>
-        <div class="sev-row" style="margin-top:.375rem">
-          <button class="sev-btn s1" data-s="1" onclick="selectSev(this)">Mild</button>
-          <button class="sev-btn s2" data-s="2" onclick="selectSev(this)">Moderate</button>
-          <button class="sev-btn s3" data-s="3" onclick="selectSev(this)">Severe</button>
-        </div>
+        <div class="sev-row" style="margin-top:.375rem"></div>
       </div>
     </div>
 
@@ -712,6 +668,6 @@ input[type="date"],input[type="time"]{
   </nav>
 </div>
 
-<script src="app.js"></script>
+<script src="src/app.js"></script>
 </body>
 </html>

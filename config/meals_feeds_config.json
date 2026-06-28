@@ -1,0 +1,29 @@
+{
+  "selects": {
+    "type": [
+      { "value": "breakfast", "label": "Breakfast" },
+      { "value": "snack",     "label": "Morning snack" },
+      { "value": "lunch",     "label": "Lunch" },
+      { "value": "snack2",    "label": "Afternoon snack" },
+      { "value": "dinner",    "label": "Dinner" },
+      { "value": "other",     "label": "Other" }
+    ],
+    "source": [
+      { "value": "homemade",   "label": "Homemade" },
+      { "value": "packaged",   "label": "Packaged / commercial" },
+      { "value": "restaurant", "label": "Restaurant / outside" },
+      { "value": "formula",    "label": "Formula / breast milk" }
+    ],
+    "heavy": [
+      { "value": "light",    "label": "Light" },
+      { "value": "moderate", "label": "Moderate" },
+      { "value": "heavy",    "label": "Heavy / rich / fatty" }
+    ],
+    "amount": [
+      { "value": "all",     "label": "All / almost all" },
+      { "value": "half",    "label": "About half" },
+      { "value": "little",  "label": "Just a little" },
+      { "value": "refused", "label": "Refused" }
+    ]
+  }
+}
