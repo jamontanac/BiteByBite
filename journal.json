@@ -25,13 +25,28 @@
         "gluten": false,
         "dairy": false,
         "egg": true
+      },
+      {
+        "type": "breakfast",
+        "time": "10:40",
+        "source": "homemade",
+        "foods": "Colada: peach, oatmeal, plantain flour, fortini x 4.",
+        "heavy": "heavy",
+        "amount": "all",
+        "freshFood": false,
+        "cookedWhen": "Yesterday",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
       }
     ],
     "reactions": [],
     "symptoms": [],
     "severity": "",
     "notes": "",
-    "ts": 1782658687508
+    "ts": 1782662246247
   },
   {
     "date": "2026-06-27",
