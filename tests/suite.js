@@ -37,6 +37,21 @@ await describe('fmtTime()', async () => {
   await it('returns empty for empty input', () => expect(fmtTime('')).toBe(''));
 });
 
+await describe('buildCommitMessage()', async () => {
+  await it('uses the "adding new entry" message when not editing', () => {
+    expect(buildCommitMessage(false, '2026-06-26'))
+      .toContain('Adding new entry to journal at: ');
+  });
+  await it('uses the "editing" message and includes the date when editing', () => {
+    const msg = buildCommitMessage(true, '2026-06-26');
+    expect(msg).toContain('Editing/Adding the entry for the date 2026-06-26 at: ');
+  });
+  await it('appends an ISO timestamp', () => {
+    expect(buildCommitMessage(false, '2026-06-26'))
+      .toContain('T'); // ISO timestamps separate date and time with "T"
+  });
+});
+
 
 // ════════════════════════════════════════════════════════
 // 2. CONFIG LOADING

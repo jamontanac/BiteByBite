@@ -90,12 +90,21 @@ async function loadFromGitHub() {
   }
 }
 
-async function saveToGitHub() {
+// Builds a unique, timestamped commit message so repeated saves on the same
+// day don't collapse into identical messages.
+function buildCommitMessage(isEdit, date) {
+  const timestamp = new Date().toISOString();
+  return isEdit
+    ? `Editing/Adding the entry for the date ${date} at: ${timestamp}`
+    : `Adding new entry to journal at: ${timestamp}`;
+}
+
+async function saveToGitHub(message) {
   setSyncState('syncing');
   try {
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(journal, null, 2))));
     const body = {
-      message: `Update journal ${new Date().toISOString().slice(0,10)}`,
+      message: message || `Update journal ${new Date().toISOString()}`,
       content,
       ...(ghSha ? { sha: ghSha } : {})
     };
@@ -718,7 +727,7 @@ async function saveEntry() {
   btn.querySelector('span').textContent = 'Saving to GitHub…';
 
   try {
-    await saveToGitHub();
+    await saveToGitHub(buildCommitMessage(isEdit, date));
     updateSettingsDisplay();
     if (isEdit) {
       toast('Entry updated ✓');
