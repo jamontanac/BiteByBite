@@ -179,21 +179,6 @@
         "gluten": false,
         "dairy": false,
         "egg": false
-      },
-      {
-        "type": "breakfast",
-        "time": "22:30",
-        "source": "homemade",
-        "foods": "",
-        "heavy": "light",
-        "amount": "all",
-        "freshFood": true,
-        "cookedWhen": "",
-        "newFood": false,
-        "newFoodName": "",
-        "gluten": false,
-        "dairy": false,
-        "egg": false
       }
     ],
     "reactions": [],
@@ -203,7 +188,7 @@
     ],
     "severity": "1",
     "notes": "",
-    "ts": 1782604238708
+    "ts": 1782656122945
   },
   {
     "date": "2026-06-25",
