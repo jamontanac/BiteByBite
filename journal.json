@@ -27,7 +27,7 @@
         "egg": true
       },
       {
-        "type": "breakfast",
+        "type": "snack",
         "time": "10:40",
         "source": "homemade",
         "foods": "Colada: peach, oatmeal, plantain flour, fortini x 4.",
@@ -46,7 +46,7 @@
     "symptoms": [],
     "severity": "",
     "notes": "",
-    "ts": 1782662246247
+    "ts": 1782662257528
   },
   {
     "date": "2026-06-27",
