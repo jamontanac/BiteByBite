@@ -931,6 +931,7 @@ async function saveEntry() {
       exitEditMode();
       resetLogForm();
       switchTab('history');
+      document.getElementById('tab-history').scrollTop = 0;  // show newest entry, not where we were
     } else {
       toast(isMerge ? 'Merged into existing day ✓' : 'Entry saved ✓');
       resetLogForm();

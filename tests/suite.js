@@ -1293,6 +1293,18 @@ await describe('saveEntry() – edit mode', async () => {
     restore();
     expect(document.getElementById('edit-banner').style.display).toBe('none');
   });
+  await it('scrolls the history tab to the top after update', async () => {
+    resetState();
+    setJournal(makeEntry({ date:'2026-06-26' }));
+    enterEditMode(0);
+    setupMinimalForm('2026-06-26');
+    document.getElementById('tab-history').scrollTop = 500;
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    expect(document.getElementById('tab-history').scrollTop).toBe(0);
+    expect(document.getElementById('tab-history').classList.contains('active')).toBeTruthy();
+  });
   await it('date field is unlocked after save', async () => {
     resetState();
     setJournal(makeEntry({ date:'2026-06-26' }));
