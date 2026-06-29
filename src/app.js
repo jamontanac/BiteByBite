@@ -310,6 +310,7 @@ async function ensureJournalBranch() {
 async function bootApp() {
   const local = localStorage.getItem('diario_local');
   if (local) { try { journal = JSON.parse(local); } catch(e) {} }
+  normalizeJournal();
 
   show('s-app');
   initLogTab();
@@ -319,6 +320,7 @@ async function bootApp() {
 
   try {
     journal = await loadFromGitHub();
+    normalizeJournal();
     localStorage.setItem('diario_local', JSON.stringify(journal));
     renderHistory();
     renderPatterns();
@@ -416,6 +418,7 @@ function setSyncState(state) {
 async function manualSync() {
   try {
     journal = await loadFromGitHub();
+    normalizeJournal();
     localStorage.setItem('diario_local', JSON.stringify(journal));
     renderHistory(); renderPatterns(); updateSettingsDisplay();
     setSyncState('synced');
@@ -834,6 +837,7 @@ async function saveEntry() {
       egg:     card.querySelector('.ml-egg').checked,
     });
   });
+  meals.sort(mealTimeCompare);
 
   const savedEntry = journal.find(e => e.date === date);
   const reactions = [];
@@ -890,7 +894,7 @@ async function saveEntry() {
     const existIdx = journal.findIndex(e => e.date === date);
     if (existIdx >= 0) {
       const ex = journal[existIdx];
-      ex.meals = [...(ex.meals || []), ...entry.meals];
+      ex.meals = [...(ex.meals || []), ...entry.meals].sort(mealTimeCompare);
       if (entry.sleep)     ex.sleep     = entry.sleep;
       if (entry.mood)      ex.mood      = entry.mood;
       if (entry.activity)  ex.activity  = entry.activity;
@@ -1003,7 +1007,7 @@ function renderHistory() {
       e.sleep   ? `<span class="tag neutral">Sleep: ${e.sleep}</span>` : '',
     ].filter(Boolean).join('');
 
-    const mealRows = (e.meals || []).map(m => `
+    const mealRows = (e.meals || []).slice().sort(mealTimeCompare).map(m => `
       <div class="meal-row">
         <span class="meal-time">${m.time ? fmtTime(m.time) : '—'}</span>
         <span class="meal-foods-text">
@@ -1219,6 +1223,20 @@ function optionsHtml(arr, selected) {
   return (arr || [])
     .map(o => `<option value="${o.value}"${selected != null && o.value === selected ? ' selected' : ''}>${o.label}</option>`)
     .join('');
+}
+
+// Orders meals chronologically by their HH:MM time. Meals with no time sort to
+// the end. Used so the day's meals always display in time order, regardless of
+// the order they were logged in.
+function mealTimeCompare(a, b) {
+  return (a.time || '99:99').localeCompare(b.time || '99:99');
+}
+
+// Sorts every entry's meals by time so the in-memory journal is canonical —
+// History, the edit form, and Export all read the same chronological order,
+// even for entries saved before meal-sorting existed. Called after each load.
+function normalizeJournal() {
+  journal.forEach(e => { if (Array.isArray(e.meals)) e.meals.sort(mealTimeCompare); });
 }
 
 function typeName(t) {

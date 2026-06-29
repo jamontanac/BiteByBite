@@ -1641,6 +1641,73 @@ await describe('renderPatterns()', async () => {
 
 
 // ════════════════════════════════════════════════════════
+// MEALS ORDERED BY TIME
+// ════════════════════════════════════════════════════════
+await describe('meals sorted by time (save + render)', async () => {
+  function fillMeal(i, time, type) {
+    const cards = document.querySelectorAll('#meals-container .meal-card');
+    cards[i].querySelector('.ml-time').value = time;
+    cards[i].querySelector('.meal-type-sel').value = type;
+  }
+  const mealAt = (time, type, foods) => ({
+    type, time, source: 'homemade', foods: foods || type, heavy: 'light', amount: 'all',
+    freshFood: true, cookedWhen: '', newFood: false, newFoodName: '',
+    gluten: false, dairy: false, egg: false
+  });
+
+  await it('new entry stores meals in chronological order', async () => {
+    resetState();
+    setupMinimalForm('2026-06-26');   // one card
+    addMeal();                         // second card
+    fillMeal(0, '19:00', 'dinner');
+    fillMeal(1, '08:00', 'breakfast');
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    expect(journal[0].meals.map(m => m.time)).toEqual(['08:00', '19:00']);
+  });
+
+  await it('a later-added earlier meal re-sorts the day on merge', async () => {
+    resetState();
+    setJournal(makeEntry({ date: '2026-06-26', meals: [ mealAt('12:30', 'lunch'), mealAt('19:00', 'dinner') ] }));
+    setupMinimalForm('2026-06-26');    // non-edit save → merge
+    fillMeal(0, '07:30', 'breakfast');
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    expect(journal[0].meals.map(m => m.time)).toEqual(['07:30', '12:30', '19:00']);
+  });
+
+  await it('renderHistory displays meals in time order regardless of stored order', () => {
+    resetState();
+    setJournal(makeEntry({ date: '2026-06-26', meals: [ mealAt('19:00', 'dinner', 'AAA'), mealAt('08:00', 'breakfast', 'BBB') ] }));
+    renderHistory();
+    const html = document.getElementById('history-list').innerHTML;
+    expect(html.indexOf('BBB')).toBeGreaterThan(-1);
+    expect(html.indexOf('BBB') < html.indexOf('AAA')).toBeTruthy();
+  });
+
+  await it('normalizeJournal() sorts stored meals in place (cache/export stay organised)', () => {
+    resetState();
+    setJournal(makeEntry({ date: '2026-06-26', meals: [ mealAt('19:00', 'dinner'), mealAt('08:00', 'breakfast') ] }));
+    normalizeJournal();
+    expect(journal[0].meals.map(m => m.time)).toEqual(['08:00', '19:00']);
+  });
+
+  await it('meals with no time sort to the end', async () => {
+    resetState();
+    setupMinimalForm('2026-06-26');
+    addMeal();
+    fillMeal(0, '', 'other');
+    fillMeal(1, '09:00', 'breakfast');
+    const restore = mockSave();
+    await saveEntry();
+    restore();
+    expect(journal[0].meals.map(m => m.time)).toEqual(['09:00', '']);
+  });
+});
+
+// ════════════════════════════════════════════════════════
 // CONFIG-DRIVEN RENDERING
 // ════════════════════════════════════════════════════════
 await describe('optionsHtml()', async () => {
