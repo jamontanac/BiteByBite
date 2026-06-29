@@ -40,13 +40,58 @@
         "gluten": false,
         "dairy": false,
         "egg": false
+      },
+      {
+        "type": "snack",
+        "time": "11:15",
+        "source": "homemade",
+        "foods": "Feijoa",
+        "heavy": "light",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      },
+      {
+        "type": "lunch",
+        "time": "13:03",
+        "source": "homemade",
+        "foods": "Soup: cilantro, garlic, chicken broth, uyuco, carrot, plantain, chicken, salt, fortini x4",
+        "heavy": "heavy",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      },
+      {
+        "type": "lunch",
+        "time": "13:14",
+        "source": "homemade",
+        "foods": "Chicken",
+        "heavy": "light",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
       }
     ],
     "reactions": [],
     "symptoms": [],
     "severity": "",
     "notes": "Acid poop.",
-    "ts": 1782746227762
+    "ts": 1782757092327
   },
   {
     "date": "2026-06-28",
