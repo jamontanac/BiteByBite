@@ -85,13 +85,28 @@
         "gluten": false,
         "dairy": false,
         "egg": false
+      },
+      {
+        "type": "breakfast",
+        "time": "15:36",
+        "source": "homemade",
+        "foods": "",
+        "heavy": "light",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
       }
     ],
     "reactions": [],
     "symptoms": [],
     "severity": "",
     "notes": "Acid poop.",
-    "ts": 1782760784215
+    "ts": 1782765443790
   },
   {
     "date": "2026-06-28",
