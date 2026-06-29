@@ -2,11 +2,11 @@
   {
     "date": "2026-06-28",
     "sleep": "poor",
-    "mood": "",
-    "activity": "",
-    "stool": "",
-    "hydration": "",
-    "newEnv": false,
+    "mood": "happy",
+    "activity": "high",
+    "stool": "normal",
+    "hydration": "good",
+    "newEnv": true,
     "sick": false,
     "meds": false,
     "medName": "",
@@ -70,13 +70,28 @@
         "gluten": false,
         "dairy": false,
         "egg": false
+      },
+      {
+        "type": "dinner",
+        "time": "19:20",
+        "source": "homemade",
+        "foods": "Tuna, tomatoes, rice, plantain, cream, mayonnaise.",
+        "heavy": "heavy",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
       }
     ],
     "reactions": [],
     "symptoms": [],
     "severity": "",
     "notes": "We went to Neusa and to the downtown in Zipa",
-    "ts": 1782679095711
+    "ts": 1782693190968
   },
   {
     "date": "2026-06-27",
