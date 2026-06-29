@@ -20,7 +20,14 @@ A lightweight, data-driven food and symptom diary designed to track daily meals 
 
 ```
 index.html                       — markup and styles (entry point)
-src/app.js                       — all application logic
+src/                             — application logic, split by concern (loaded as plain scripts, in order):
+  util.js                        — formatting / shared helpers
+  state.js                       — runtime state + baked-in config defaults + config loader
+  github.js                      — GitHub REST API + save/load persistence
+  ui.js                          — screen/tab chrome + settings display
+  render.js                      — History and Patterns views
+  log-form.js                    — the Log tab: form build, edit mode, save
+  lifecycle.js                   — boot sequence + sign in / out (loaded last)
 icons/icon.svg                   — app icon
 config/
   journal_config.json            — GitHub user/repo prefill, save branch, filename, commit messages
@@ -47,7 +54,7 @@ Open `config/journal_config.json` and set your GitHub username and data reposito
 }
 ```
 
-These values are fetched by `src/app.js` on load and pre-fill the login form so you don't have to type them every time. They are **not** credentials — the Personal Access Token is always entered manually and stored only in the browser.
+These values are fetched by the app on load and pre-fill the login form so you don't have to type them every time. They are **not** credentials — the Personal Access Token is always entered manually and stored only in the browser.
 
 `branch` is where your entries are saved. The app **creates this branch automatically** on the first save if it doesn't exist. Keeping it separate from the branch GitHub Pages deploys means saving an entry does **not** trigger a site rebuild.
 
