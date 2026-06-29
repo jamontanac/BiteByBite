@@ -1,5 +1,39 @@
 [
   {
+    "date": "2026-06-29",
+    "sleep": "ok",
+    "mood": "",
+    "activity": "",
+    "stool": "",
+    "hydration": "",
+    "newEnv": false,
+    "sick": false,
+    "meds": false,
+    "medName": "",
+    "meals": [
+      {
+        "type": "breakfast",
+        "time": "09:33",
+        "source": "homemade",
+        "foods": "Colada: blueberries, raspberry, peach, plantain flour, oatmeal, fortini x3",
+        "heavy": "heavy",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      }
+    ],
+    "reactions": [],
+    "symptoms": [],
+    "severity": "",
+    "notes": "Acid poop.",
+    "ts": 1782743777889
+  },
+  {
     "date": "2026-06-28",
     "sleep": "poor",
     "mood": "happy",
