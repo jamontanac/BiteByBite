@@ -38,8 +38,8 @@
 <div id="app-root" style="position:absolute;left:-9999px;top:-9999px;overflow:hidden;width:1px;height:1px"></div>
 
 <!--
-  STEP 1 — Intercept window.addEventListener BEFORE app.js loads.
-  This prevents the DOMContentLoaded handler in app.js from firing,
+  STEP 1 — Intercept window.addEventListener BEFORE the app scripts load.
+  This prevents the DOMContentLoaded handler in lifecycle.js from firing,
   so the app does not auto-boot (which would need real network calls).
 -->
 <script>
@@ -52,8 +52,16 @@
 })();
 </script>
 
-<!-- STEP 2 — Load app.js; all its functions become global -->
-<script src="../src/app.js"></script>
+<!-- STEP 2 — Load the app; every file is a classic script, so all its
+     functions/globals share one global scope. state.js first (others read
+     JCFG/FORMCFG at load), lifecycle.js last (it owns the boot). -->
+<script src="../src/util.js"></script>
+<script src="../src/state.js"></script>
+<script src="../src/github.js"></script>
+<script src="../src/ui.js"></script>
+<script src="../src/render.js"></script>
+<script src="../src/log-form.js"></script>
+<script src="../src/lifecycle.js"></script>
 
 <!-- STEP 3 — Test infrastructure -->
 <script src="harness.js"></script>
