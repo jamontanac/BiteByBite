@@ -19,14 +19,16 @@ A lightweight, data-driven food and symptom diary designed to track daily meals 
 ## Project structure
 
 ```
-index.html                       — markup and styles (entry point)
+index.html                       — markup (entry point)
+styles.css                       — all app styles
 src/                             — application logic, split by concern (loaded as plain scripts, in order):
   util.js                        — formatting / shared helpers
   state.js                       — runtime state + baked-in config defaults + config loader
   github.js                      — GitHub REST API + save/load persistence
   ui.js                          — screen/tab chrome + settings display
   render.js                      — History and Patterns views
-  log-form.js                    — the Log tab: form build, edit mode, save
+  log-form.js                    — the Log tab: form build + interaction
+  edit-save.js                   — edit mode + saving an entry (form ⇄ journal)
   lifecycle.js                   — boot sequence + sign in / out (loaded last)
 icons/icon.svg                   — app icon
 config/
