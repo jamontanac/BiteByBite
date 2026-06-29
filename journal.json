@@ -15,7 +15,7 @@
         "type": "breakfast",
         "time": "09:33",
         "source": "homemade",
-        "foods": "Colada: blueberries, raspberry, peach, plantain flour, oatmeal, fortini x3",
+        "foods": "Colada: blueberries, raspberry, peach, plantain flour, oatmeal, fortini x3; Boiled Egg.",
         "heavy": "heavy",
         "amount": "all",
         "freshFood": true,
@@ -24,14 +24,14 @@
         "newFoodName": "",
         "gluten": false,
         "dairy": false,
-        "egg": false
+        "egg": true
       }
     ],
     "reactions": [],
     "symptoms": [],
     "severity": "",
     "notes": "Acid poop.",
-    "ts": 1782743777889
+    "ts": 1782745567394
   },
   {
     "date": "2026-06-28",
@@ -185,6 +185,21 @@
         "egg": false
       },
       {
+        "type": "other",
+        "time": "14:07",
+        "source": "homemade",
+        "foods": "Curuba",
+        "heavy": "light",
+        "amount": "little",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": true,
+        "newFoodName": "Curuba",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      },
+      {
         "type": "snack2",
         "time": "16:31",
         "source": "homemade",
@@ -210,21 +225,6 @@
         "cookedWhen": "",
         "newFood": false,
         "newFoodName": "",
-        "gluten": false,
-        "dairy": false,
-        "egg": false
-      },
-      {
-        "type": "other",
-        "time": "14:07",
-        "source": "homemade",
-        "foods": "Curuba",
-        "heavy": "light",
-        "amount": "little",
-        "freshFood": true,
-        "cookedWhen": "",
-        "newFood": true,
-        "newFoodName": "Curuba",
         "gluten": false,
         "dairy": false,
         "egg": false
