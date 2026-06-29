@@ -13,9 +13,24 @@
     "meals": [
       {
         "type": "breakfast",
+        "time": "09:32",
+        "source": "homemade",
+        "foods": "Boiled Egg.",
+        "heavy": "light",
+        "amount": "little",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": true
+      },
+      {
+        "type": "breakfast",
         "time": "09:33",
         "source": "homemade",
-        "foods": "Colada: blueberries, raspberry, peach, plantain flour, oatmeal, fortini x3; Boiled Egg.",
+        "foods": "Colada: blueberries, raspberry, peach, plantain flour, oatmeal, fortini x3.",
         "heavy": "heavy",
         "amount": "all",
         "freshFood": true,
@@ -24,14 +39,14 @@
         "newFoodName": "",
         "gluten": false,
         "dairy": false,
-        "egg": true
+        "egg": false
       }
     ],
     "reactions": [],
     "symptoms": [],
     "severity": "",
     "notes": "Acid poop.",
-    "ts": 1782745567394
+    "ts": 1782746227762
   },
   {
     "date": "2026-06-28",
