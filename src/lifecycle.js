@@ -14,44 +14,32 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('loading').style.display = 'none';
 });
 
-function loadCfg() {
-  try {
-    const s = localStorage.getItem('diario_cfg');
-    if (!s) return null;
-    const c = JSON.parse(s);
-    if (c.user && c.repo && c.token) return c;
-  } catch(e) {}
-  return null;
-}
-
-function saveCfg() {
-  localStorage.setItem('diario_cfg', JSON.stringify(CFG));
-}
-
 // ── Boot sequence ──────────────────────────────────────
 async function bootApp() {
-  const local = localStorage.getItem('diario_local');
-  if (local) { try { journal = JSON.parse(local); } catch(e) {} }
+  const cached = getLocalJournal();
+  if (cached) journal = cached;
   normalizeJournal();
 
   show('s-app');
   initLogTab();
-  renderHistory();
-  renderPatterns();
-  updateSettingsDisplay();
+  refreshViews();
 
   try {
-    journal = await loadFromGitHub();
-    normalizeJournal();
-    localStorage.setItem('diario_local', JSON.stringify(journal));
-    renderHistory();
-    renderPatterns();
-    updateSettingsDisplay();
-    setSyncState('synced');
+    await pullFromGitHub();
   } catch(e) {
     setSyncState('error');
     toast('Could not reach GitHub. Working offline.', true);
   }
+}
+
+// Pulls the latest journal from GitHub, caches it, and refreshes the views.
+// Throws on failure so each caller can show its own message.
+async function pullFromGitHub() {
+  journal = await loadFromGitHub();
+  normalizeJournal();
+  cacheJournal();
+  refreshViews();
+  setSyncState('synced');
 }
 
 // ── Login ──────────────────────────────────────────────
@@ -94,9 +82,7 @@ async function doLogin() {
 
 function doLogout() {
   if (!confirm('Sign out? Your data stays on GitHub. Local cache will be cleared.')) return;
-  localStorage.removeItem('diario_cfg');
-  localStorage.removeItem('diario_local');
-  localStorage.removeItem('diario_last_sync');
+  clearStored();
   CFG = {}; journal = []; ghSha = null; journalBranchReady = false;
   show('s-login');
   document.getElementById('gh-user').value = '';
@@ -106,11 +92,7 @@ function doLogout() {
 
 async function manualSync() {
   try {
-    journal = await loadFromGitHub();
-    normalizeJournal();
-    localStorage.setItem('diario_local', JSON.stringify(journal));
-    renderHistory(); renderPatterns(); updateSettingsDisplay();
-    setSyncState('synced');
+    await pullFromGitHub();
     toast('Synced with GitHub');
   } catch(e) {
     setSyncState('error');

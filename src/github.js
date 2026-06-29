@@ -7,26 +7,12 @@ async function ghGet(path) {
   return r.json();
 }
 
-async function ghPut(path, body) {
+// Shared writer for PUT/POST (the two were byte-identical bar the verb). ghGet
+// stays separate: its `GitHub <status>: …` error text is what the 404 checks in
+// loadFromGitHub/ensureJournalBranch match on.
+async function ghSend(method, path, body) {
   const r = await fetch(`${API}${path}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${CFG.token}`,
-      Accept: 'application/vnd.github+json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  });
-  if (!r.ok) {
-    const err = await r.json().catch(() => ({}));
-    throw new Error(err.message || `GitHub ${r.status}`);
-  }
-  return r.json();
-}
-
-async function ghPost(path, body) {
-  const r = await fetch(`${API}${path}`, {
-    method: 'POST',
+    method,
     headers: {
       Authorization: `Bearer ${CFG.token}`,
       Accept: 'application/vnd.github+json',
@@ -72,11 +58,11 @@ async function saveToGitHub(message) {
       branch: JCFG.branch,
       ...(ghSha ? { sha: ghSha } : {})
     };
-    const res = await ghPut(`/repos/${CFG.user}/${CFG.repo}/contents/${JCFG.filename}`, body);
+    const res = await ghSend('PUT', `/repos/${CFG.user}/${CFG.repo}/contents/${JCFG.filename}`, body);
     ghSha = res.content.sha;
     setSyncState('synced');
-    localStorage.setItem('diario_last_sync', Date.now());
-    localStorage.setItem('diario_local', JSON.stringify(journal));
+    markSynced();
+    cacheJournal();
   } catch(e) {
     setSyncState('error');
     throw e;
@@ -100,7 +86,7 @@ async function ensureJournalBranch() {
   const repo    = await ghGet(base);
   const baseRef = await ghGet(`${base}/git/ref/heads/${encodeURIComponent(repo.default_branch)}`);
   try {
-    await ghPost(`${base}/git/refs`, {
+    await ghSend('POST', `${base}/git/refs`, {
       ref: `refs/heads/${JCFG.branch}`,
       sha: baseRef.object.sha
     });

@@ -41,3 +41,21 @@ function fmtDate(s) {
   const [y, mo, d] = s.split('-').map(Number);
   return new Date(y, mo - 1, d).toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 }
+
+// A meal's short label, e.g. "Breakfast · 8:00 AM" (time optional).
+function mealLabel(type, time) {
+  return typeName(type) + (time ? ' · ' + fmtTime(time) : '');
+}
+
+// Reaction/vomit detection. Current entries use a reactions[] array; older ones
+// used a flat `vomit` field — both must be recognised. History and Patterns
+// share these so the two screens never disagree about what counts as a reaction.
+function hasReactions(e) {
+  return !!(e.reactions && e.reactions.length > 0);
+}
+function hasLegacyVomit(e) {
+  return !!(e.vomit && e.vomit !== 'none');
+}
+function dayHadReaction(e) {
+  return hasReactions(e) || hasLegacyVomit(e);
+}

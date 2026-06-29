@@ -145,7 +145,7 @@ function updateMealSelect() {
     document.querySelectorAll('#meals-container .meal-card').forEach(card => {
       const type = card.querySelector('.meal-type-sel').value;
       const time = card.querySelector('.ml-time').value;
-      opts.push(`<option value="${card.id}">${typeName(type)}${time ? ' · ' + fmtTime(time) : ''}</option>`);
+      opts.push(`<option value="${card.id}">${mealLabel(type, time)}</option>`);
     });
   } else {
   // Meals already saved for this date (from a previous save earlier in the day)
@@ -154,7 +154,7 @@ function updateMealSelect() {
   if (savedEntry && savedEntry.meals && savedEntry.meals.length) {
     opts.push('<optgroup label="Already logged today">');
     savedEntry.meals.forEach((m, i) => {
-      opts.push(`<option value="saved:${i}">${typeName(m.type)}${m.time ? ' · ' + fmtTime(m.time) : ''}</option>`);
+      opts.push(`<option value="saved:${i}">${mealLabel(m.type, m.time)}</option>`);
     });
     opts.push('</optgroup>');
   }
@@ -168,7 +168,7 @@ function updateMealSelect() {
     formMeals.forEach(card => {
       const type = card.querySelector('.meal-type-sel').value;
       const time = card.querySelector('.ml-time').value;
-      opts.push(`<option value="${card.id}">${typeName(type)}${time ? ' · ' + fmtTime(time) : ''}</option>`);
+      opts.push(`<option value="${card.id}">${mealLabel(type, time)}</option>`);
     });
     if (savedEntry && savedEntry.meals && savedEntry.meals.length) {
       opts.push('</optgroup>');

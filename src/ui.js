@@ -31,6 +31,13 @@ function setSyncState(state) {
   lbl.textContent = state === 'syncing' ? 'Saving…' : state === 'error' ? 'Offline' : 'Saved';
 }
 
+// Re-renders every data-driven view after the journal changes.
+function refreshViews() {
+  renderHistory();
+  renderPatterns();
+  updateSettingsDisplay();
+}
+
 // ── Settings helpers ────────────────────────────────────
 function updateSettingsDisplay() {
   document.getElementById('cfg-repo-display').textContent =
@@ -38,7 +45,7 @@ function updateSettingsDisplay() {
   document.getElementById('cfg-count-display').textContent =
     `${journal.length} entr${journal.length === 1 ? 'y' : 'ies'}`;
 
-  const raw = localStorage.getItem('diario_last_sync');
+  const raw = localStorage.getItem(LS_SYNC);
   if (raw) {
     const d       = new Date(Number(raw));
     const today   = new Date();

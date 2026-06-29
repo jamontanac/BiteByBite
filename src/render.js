@@ -10,8 +10,8 @@ function renderHistory() {
   }
 
   el.innerHTML = journal.map((e, i) => {
-    const hasReactions = e.reactions && e.reactions.length > 0;
-    const hadVomit    = hasReactions || (e.vomit && e.vomit !== 'none');
+    const hasRx    = hasReactions(e);
+    const hadVomit = dayHadReaction(e);
     const hasNew      = e.meals && e.meals.some(m => m.newFood);
     const hasGluten   = e.meals && e.meals.some(m => m.gluten);
     const hasDairy    = e.meals && e.meals.some(m => m.dairy);
@@ -20,7 +20,7 @@ function renderHistory() {
     const tags = [
       hadVomit
         ? `<span class="tag bad">🤢 Vomited (${
-            hasReactions
+            hasRx
               ? e.reactions.length + (e.reactions.length === 1 ? ' episode' : ' episodes')
               : e.vomit + '×'
           })</span>`
@@ -50,14 +50,14 @@ function renderHistory() {
       </div>`).join('');
 
     let reactionHtml = '';
-    if (hasReactions) {
+    if (hasRx) {
       reactionHtml = e.reactions.map(r =>
         `<div class="reaction-bar ${e.severity === '3' ? 'severe' : ''}">
           ${r.count}× &nbsp;·&nbsp; ${r.delay || '—'} after ${r.meal ? `<strong>${r.meal}</strong>` : 'last meal'}
           ${r.content ? ` — <em>${r.content}</em>` : ''}
         </div>`
       ).join('');
-    } else if (e.vomit && e.vomit !== 'none' && e.delay) {
+    } else if (hasLegacyVomit(e) && e.delay) {
       reactionHtml = `<div class="reaction-bar ${e.severity === '3' ? 'severe' : ''}">
         Reaction ${e.delay} after ${e.mealVomited ? `<strong>${e.mealVomited}</strong>` : 'last meal'}
         ${e.vomitContent ? ` — <em>${e.vomitContent}</em>` : ''}
@@ -90,7 +90,7 @@ function renderPatterns() {
     return;
   }
 
-  const hadReaction = e => (e.reactions && e.reactions.length > 0) || (e.vomit && e.vomit !== 'none');
+  const hadReaction = dayHadReaction;
 
   const n = journal.length;
   const vomitDays = journal.filter(hadReaction).length;

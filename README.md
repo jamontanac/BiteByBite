@@ -24,6 +24,7 @@ styles.css                       — all app styles
 src/                             — application logic, split by concern (loaded as plain scripts, in order):
   util.js                        — formatting / shared helpers
   state.js                       — runtime state + baked-in config defaults + config loader
+  storage.js                     — all localStorage access (keys, credentials, journal cache)
   github.js                      — GitHub REST API + save/load persistence
   ui.js                          — screen/tab chrome + settings display
   render.js                      — History and Patterns views

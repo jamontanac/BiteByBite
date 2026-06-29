@@ -167,22 +167,22 @@ async function saveEntry() {
   const reactions = [];
   document.querySelectorAll('#reactions-container .meal-card').forEach(card => {
     const mealId = card.querySelector('.ep-meal').value;
-    let mealLabel = '';
+    let label = '';
     if (mealId.startsWith('saved:')) {
       const idx = parseInt(mealId.slice(6));
       if (savedEntry && savedEntry.meals && savedEntry.meals[idx]) {
         const m = savedEntry.meals[idx];
-        mealLabel = typeName(m.type) + (m.time ? ' · ' + fmtTime(m.time) : '');
+        label = mealLabel(m.type, m.time);
       }
     } else if (mealId) {
       const mealCard = document.getElementById(mealId);
       if (mealCard) {
         const mt = mealCard.querySelector('.ml-time').value;
-        mealLabel = typeName(mealCard.querySelector('.meal-type-sel').value) + (mt ? ' · ' + fmtTime(mt) : '');
+        label = mealLabel(mealCard.querySelector('.meal-type-sel').value, mt);
       }
     }
     reactions.push({
-      meal:    mealLabel,
+      meal:    label,
       count:   card.querySelector('.ep-count').value,
       delay:   card.querySelector('.ep-delay').value,
       content: card.querySelector('.ep-content').value.trim(),
