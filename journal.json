@@ -75,7 +75,7 @@
         "type": "lunch",
         "time": "13:14",
         "source": "homemade",
-        "foods": "Chicken",
+        "foods": "Chicken, lemonade",
         "heavy": "light",
         "amount": "all",
         "freshFood": true,
@@ -91,7 +91,7 @@
     "symptoms": [],
     "severity": "",
     "notes": "Acid poop.",
-    "ts": 1782757092327
+    "ts": 1782757154120
   },
   {
     "date": "2026-06-28",
