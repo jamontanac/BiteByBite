@@ -55,13 +55,28 @@
         "gluten": false,
         "dairy": false,
         "egg": false
+      },
+      {
+        "type": "snack2",
+        "time": "15:40",
+        "source": "homemade",
+        "foods": "Colada: peaches, apple, cinnamon, plantain flour, fortini x 2",
+        "heavy": "moderate",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
       }
     ],
     "reactions": [],
     "symptoms": [],
     "severity": "",
     "notes": "Appointment with doctor",
-    "ts": 1782842458798
+    "ts": 1782860182056
   },
   {
     "date": "2026-06-29",
