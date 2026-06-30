@@ -30,11 +30,26 @@
         "type": "snack",
         "time": "09:29",
         "source": "homemade",
-        "foods": "Colada: peaches, apple, cinnamon, plantain flour",
+        "foods": "Colada: peaches, apple, cinnamon, plantain flour, fortini x 4",
         "heavy": "heavy",
         "amount": "all",
         "freshFood": true,
         "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      },
+      {
+        "type": "breakfast",
+        "time": "13:00",
+        "source": "homemade",
+        "foods": "Soup: cilantro, garlic, chicken broth, uyuco, carrot, plantain, chicken, salt, fortini x2",
+        "heavy": "heavy",
+        "amount": "all",
+        "freshFood": false,
+        "cookedWhen": "Yesterday",
         "newFood": false,
         "newFoodName": "",
         "gluten": false,
@@ -45,8 +60,8 @@
     "reactions": [],
     "symptoms": [],
     "severity": "",
-    "notes": "",
-    "ts": 1782829802172
+    "notes": "Appointment with doctor",
+    "ts": 1782842458798
   },
   {
     "date": "2026-06-29",
