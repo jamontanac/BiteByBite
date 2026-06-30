@@ -30,7 +30,7 @@ function initLogTab() {
 function populateDayOverview() {
   const blank = '<option value="">—</option>';
   const sel = (FORMCFG.day && FORMCFG.day.selects) || {};
-  ['sleep','mood','activity','stool','hydration'].forEach(key => {
+  DAY_SELECT_KEYS.forEach(key => {
     const el = document.getElementById('e-' + key);
     if (el) el.innerHTML = blank + optionsHtml(sel[key] || []);
   });

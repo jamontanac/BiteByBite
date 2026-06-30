@@ -12,6 +12,11 @@ let journalBranchReady = false;   // set once the data branch is confirmed/creat
 
 const API = 'https://api.github.com';
 
+// The five Day-overview <select> keys — each maps to #e-<key> and to
+// FORMCFG.day.selects[<key>]. Shared by the form renderer, the edit loader,
+// and the merge logic so the list lives in one place.
+const DAY_SELECT_KEYS = ['sleep', 'mood', 'activity', 'stool', 'hydration'];
+
 // ── Config (baked-in defaults) ─────────────────────────
 // These mirror the JSON files in /config. The fetched JSON OVERRIDES them at
 // runtime (see loadConfigs); they exist so the form always renders if a config

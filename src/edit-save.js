@@ -35,40 +35,86 @@ function cancelEdit() {
   switchTab('history');
 }
 
+// ── Meal card serialization ─────────────────────────────
+// One descriptor drives BOTH directions (DOM ⇄ meal object) so each field is
+// declared once. `freshFood`/`newFood` are checkboxes that reveal a sub-input
+// whose value is only stored while that sub-row is active (see `sub`).
+const MEAL_FIELDS = [
+  { key: 'type',      sel: '.meal-type-sel', kind: 'value', def: 'breakfast' },
+  { key: 'time',      sel: '.ml-time',       kind: 'value', def: '' },
+  { key: 'source',    sel: '.ml-source',     kind: 'value', def: 'homemade' },
+  { key: 'foods',     sel: '.ml-foods',      kind: 'text',  def: '' },
+  { key: 'heavy',     sel: '.ml-heavy',      kind: 'value', def: 'light' },
+  { key: 'amount',    sel: '.ml-amount',     kind: 'value', def: 'all' },
+  { key: 'freshFood', sel: '.ml-fresh', kind: 'checked', defaultOn: true,
+    sub: { key: 'cookedWhen',  sel: '.ml-cooked-when',   row: '.ml-cooked-when-row', activeWhen: false } },
+  { key: 'newFood',   sel: '.ml-new',   kind: 'checked',
+    sub: { key: 'newFoodName', sel: '.ml-new-food-name', row: '.ml-new-food-row',   activeWhen: true } },
+  { key: 'gluten',    sel: '.ml-gluten', kind: 'checked' },
+  { key: 'dairy',     sel: '.ml-dairy',  kind: 'checked' },
+  { key: 'egg',       sel: '.ml-egg',    kind: 'checked' },
+];
+
+// Reads a meal object out of a meal card's DOM.
+function mealFromCard(card) {
+  const meal = {};
+  for (const f of MEAL_FIELDS) {
+    const el = card.querySelector(f.sel);
+    if (f.kind === 'value')      meal[f.key] = el.value;
+    else if (f.kind === 'text')  meal[f.key] = el.value.trim();
+    else {                                       // checkbox
+      meal[f.key] = el.checked;
+      if (f.sub) {
+        const active = el.checked === f.sub.activeWhen;
+        meal[f.sub.key] = active ? card.querySelector(f.sub.sel).value.trim() : '';
+      }
+    }
+  }
+  return meal;
+}
+
+// Writes a meal object into a meal card's DOM (used when editing an entry).
 function loadMealIntoCard(card, meal) {
-  card.querySelector('.meal-type-sel').value = meal.type    || 'breakfast';
-  card.querySelector('.ml-time').value       = meal.time    || '';
-  card.querySelector('.ml-source').value     = meal.source  || 'homemade';
-  card.querySelector('.ml-foods').value      = meal.foods   || '';
-  card.querySelector('.ml-heavy').value      = meal.heavy   || 'light';
-  card.querySelector('.ml-amount').value     = meal.amount  || 'all';
-
-  const freshCb = card.querySelector('.ml-fresh');
-  freshCb.checked = meal.freshFood !== false;
-  if (!freshCb.checked) {
-    card.querySelector('.ml-cooked-when-row').style.display = 'block';
-    card.querySelector('.ml-cooked-when').value = meal.cookedWhen || '';
+  for (const f of MEAL_FIELDS) {
+    const el = card.querySelector(f.sel);
+    if (f.kind === 'value' || f.kind === 'text') {
+      el.value = meal[f.key] || f.def;
+    } else {                                     // checkbox
+      // freshFood defaults to ON for legacy meals; every other box defaults OFF.
+      el.checked = f.defaultOn ? (meal[f.key] !== false) : !!meal[f.key];
+      if (f.sub && el.checked === f.sub.activeWhen) {
+        card.querySelector(f.sub.row).style.display = 'block';
+        card.querySelector(f.sub.sel).value = meal[f.sub.key] || '';
+      }
+    }
   }
+}
 
-  const newCb = card.querySelector('.ml-new');
-  newCb.checked = !!meal.newFood;
-  if (newCb.checked) {
-    card.querySelector('.ml-new-food-row').style.display = 'block';
-    card.querySelector('.ml-new-food-name').value = meal.newFoodName || '';
+// Reads a vomiting-episode object out of a reaction card. The "meal that
+// triggered it" dropdown points at either a meal saved earlier today
+// (`saved:<i>`) or a meal card currently in the form (by element id).
+function reactionFromCard(card, savedEntry) {
+  const mealId = card.querySelector('.ep-meal').value;
+  let label = '';
+  if (mealId.startsWith('saved:')) {
+    const m = savedEntry && savedEntry.meals && savedEntry.meals[parseInt(mealId.slice(6))];
+    if (m) label = mealLabel(m.type, m.time);
+  } else if (mealId) {
+    const mealCard = document.getElementById(mealId);
+    if (mealCard) label = mealLabel(mealCard.querySelector('.meal-type-sel').value,
+                                    mealCard.querySelector('.ml-time').value);
   }
-
-  card.querySelector('.ml-gluten').checked = !!meal.gluten;
-  card.querySelector('.ml-dairy').checked  = !!meal.dairy;
-  card.querySelector('.ml-egg').checked    = !!meal.egg;
+  return {
+    meal:    label,
+    count:   card.querySelector('.ep-count').value,
+    delay:   card.querySelector('.ep-delay').value,
+    content: card.querySelector('.ep-content').value.trim(),
+  };
 }
 
 function loadEntryIntoForm(entry) {
-  document.getElementById('e-date').value      = entry.date;
-  document.getElementById('e-sleep').value     = entry.sleep    || '';
-  document.getElementById('e-mood').value      = entry.mood     || '';
-  document.getElementById('e-activity').value  = entry.activity || '';
-  document.getElementById('e-stool').value     = entry.stool    || '';
-  document.getElementById('e-hydration').value = entry.hydration|| '';
+  document.getElementById('e-date').value = entry.date;
+  DAY_SELECT_KEYS.forEach(k => { document.getElementById('e-' + k).value = entry[k] || ''; });
 
   document.getElementById('e-newenv').checked = !!entry.newEnv;
   document.getElementById('e-sick').checked   = !!entry.sick;
@@ -144,50 +190,13 @@ async function saveEntry() {
   if (mealCards.length === 0) { toast('Add at least one meal', true); return; }
 
   const meals = [];
-  mealCards.forEach(card => {
-    meals.push({
-      type:    card.querySelector('.meal-type-sel').value,
-      time:    card.querySelector('.ml-time').value,
-      source:  card.querySelector('.ml-source').value,
-      foods:   card.querySelector('.ml-foods').value.trim(),
-      heavy:   card.querySelector('.ml-heavy').value,
-      amount:  card.querySelector('.ml-amount').value,
-      freshFood:  card.querySelector('.ml-fresh').checked,
-      cookedWhen: !card.querySelector('.ml-fresh').checked ? card.querySelector('.ml-cooked-when').value.trim() : '',
-      newFood:     card.querySelector('.ml-new').checked,
-      newFoodName: card.querySelector('.ml-new').checked ? card.querySelector('.ml-new-food-name').value.trim() : '',
-      gluten:  card.querySelector('.ml-gluten').checked,
-      dairy:   card.querySelector('.ml-dairy').checked,
-      egg:     card.querySelector('.ml-egg').checked,
-    });
-  });
+  mealCards.forEach(card => meals.push(mealFromCard(card)));
   meals.sort(mealTimeCompare);
 
   const savedEntry = journal.find(e => e.date === date);
   const reactions = [];
-  document.querySelectorAll('#reactions-container .meal-card').forEach(card => {
-    const mealId = card.querySelector('.ep-meal').value;
-    let label = '';
-    if (mealId.startsWith('saved:')) {
-      const idx = parseInt(mealId.slice(6));
-      if (savedEntry && savedEntry.meals && savedEntry.meals[idx]) {
-        const m = savedEntry.meals[idx];
-        label = mealLabel(m.type, m.time);
-      }
-    } else if (mealId) {
-      const mealCard = document.getElementById(mealId);
-      if (mealCard) {
-        const mt = mealCard.querySelector('.ml-time').value;
-        label = mealLabel(mealCard.querySelector('.meal-type-sel').value, mt);
-      }
-    }
-    reactions.push({
-      meal:    label,
-      count:   card.querySelector('.ep-count').value,
-      delay:   card.querySelector('.ep-delay').value,
-      content: card.querySelector('.ep-content').value.trim(),
-    });
-  });
+  document.querySelectorAll('#reactions-container .meal-card')
+    .forEach(card => reactions.push(reactionFromCard(card, savedEntry)));
 
   const medsChecked = document.getElementById('e-meds').checked;
   const entry = {
@@ -219,11 +228,7 @@ async function saveEntry() {
     if (existIdx >= 0) {
       const ex = journal[existIdx];
       ex.meals = [...(ex.meals || []), ...entry.meals].sort(mealTimeCompare);
-      if (entry.sleep)     ex.sleep     = entry.sleep;
-      if (entry.mood)      ex.mood      = entry.mood;
-      if (entry.activity)  ex.activity  = entry.activity;
-      if (entry.stool)     ex.stool     = entry.stool;
-      if (entry.hydration) ex.hydration = entry.hydration;
+      DAY_SELECT_KEYS.forEach(k => { if (entry[k]) ex[k] = entry[k]; });
       if (entry.newEnv)    ex.newEnv    = true;
       if (entry.sick)      ex.sick      = true;
       if (entry.meds)      { ex.meds = true; if (entry.medName) ex.medName = entry.medName; }

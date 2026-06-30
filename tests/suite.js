@@ -385,6 +385,40 @@ await describe('loadMealIntoCard()', async () => {
   });
 });
 
+await describe('mealFromCard() / loadMealIntoCard() round-trip', async () => {
+  await it('round-trips a leftover + new-food meal through the DOM', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    const meal = { type:'lunch', time:'12:30', source:'restaurant', foods:'pasta',
+                   heavy:'heavy', amount:'half', freshFood:false, cookedWhen:'yesterday',
+                   newFood:true, newFoodName:'mango', gluten:true, dairy:false, egg:true };
+    loadMealIntoCard(card, meal);
+    expect(mealFromCard(card)).toEqual(meal);
+  });
+  await it('round-trips a plain fresh meal (empty sub-fields)', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    const meal = { type:'breakfast', time:'08:00', source:'homemade', foods:'oatmeal',
+                   heavy:'light', amount:'all', freshFood:true, cookedWhen:'',
+                   newFood:false, newFoodName:'', gluten:false, dairy:false, egg:false };
+    loadMealIntoCard(card, meal);
+    expect(mealFromCard(card)).toEqual(meal);
+  });
+  await it('drops sub-field values that are not active', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    loadMealIntoCard(card, { type:'dinner', time:'18:00', source:'homemade', foods:'rice',
+                   heavy:'light', amount:'all', freshFood:true, cookedWhen:'ignored',
+                   newFood:false, newFoodName:'ignored', gluten:false, dairy:false, egg:false });
+    const out = mealFromCard(card);
+    expect(out.cookedWhen).toBe('');
+    expect(out.newFoodName).toBe('');
+  });
+});
+
 
 // ════════════════════════════════════════════════════════
 // 5d. loadEntryIntoForm()
