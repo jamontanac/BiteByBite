@@ -1,5 +1,54 @@
 [
   {
+    "date": "2026-06-30",
+    "sleep": "poor",
+    "mood": "",
+    "activity": "",
+    "stool": "",
+    "hydration": "",
+    "newEnv": false,
+    "sick": false,
+    "meds": false,
+    "medName": "",
+    "meals": [
+      {
+        "type": "breakfast",
+        "time": "08:03",
+        "source": "homemade",
+        "foods": "Egg",
+        "heavy": "moderate",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": true
+      },
+      {
+        "type": "snack",
+        "time": "09:29",
+        "source": "homemade",
+        "foods": "Colada: peaches, apple, cinnamon, plantain flour",
+        "heavy": "heavy",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      }
+    ],
+    "reactions": [],
+    "symptoms": [],
+    "severity": "",
+    "notes": "",
+    "ts": 1782829802172
+  },
+  {
     "date": "2026-06-29",
     "sleep": "ok",
     "mood": "happy",
