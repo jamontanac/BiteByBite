@@ -62,7 +62,7 @@ function addMeal() {
 
   div.innerHTML = `
     <div class="meal-card-head">
-      <select class="meal-type-sel" style="font-size:.8rem;padding:.3rem .6rem;border:1px solid var(--border);border-radius:20px;background:var(--bg)" onchange="updateMealSelect()">
+      <select class="meal-type-sel" onchange="updateMealSelect()">
         ${optionsHtml(FORMCFG.meals.selects.type)}
       </select>
       <button class="meal-remove" onclick="document.getElementById('${id}').remove(); updateMealSelect()">Remove</button>
@@ -92,14 +92,14 @@ function addMeal() {
         </select>
       </div>
     </div>
-    <div style="margin-top:.25rem">
+    <div class="toggle-group">
       <div class="toggle-row">
         <label class="tog"><input type="checkbox" class="ml-new" onchange="toggleNewFoodInput(this)"><span class="tog-track"></span></label>
         <div class="toggle-label">New food
           <small>Ingredient rarely or never eaten before</small>
         </div>
       </div>
-      <div class="ml-new-food-row" style="display:none;padding:.375rem 0 .25rem">
+      <div class="ml-new-food-row" style="display:none">
         <div class="f-group">
           <label>New ingredient</label>
           <input type="text" class="ml-new-food-name" placeholder="e.g. mango, wheat bread…" autocomplete="off">
@@ -111,7 +111,7 @@ function addMeal() {
           <small>Cooked today, not a leftover</small>
         </div>
       </div>
-      <div class="ml-cooked-when-row" style="display:none;padding:.375rem 0 .25rem">
+      <div class="ml-cooked-when-row" style="display:none">
         <div class="f-group">
           <label>When was it cooked?</label>
           <input type="text" class="ml-cooked-when" placeholder="e.g. yesterday evening, 2 days ago…" autocomplete="off">
@@ -190,7 +190,7 @@ function addReactionEpisode() {
   div.id = id;
   div.innerHTML = `
     <div class="meal-card-head">
-      <span style="font-size:.8rem;color:var(--ink2);font-weight:500">Vomiting episode</span>
+      <span class="episode-label">Vomiting episode</span>
       <button class="meal-remove" onclick="document.getElementById('${id}').remove()">Remove</button>
     </div>
     <div class="f-row">

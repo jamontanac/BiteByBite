@@ -1,5 +1,6 @@
 // ── Boot ───────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
+  applyTheme(loadTheme());
   await loadConfigs();
 
   const cfg = loadCfg();

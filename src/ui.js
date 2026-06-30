@@ -69,3 +69,34 @@ function exportJSON() {
   URL.revokeObjectURL(a.href);
   toast('Export downloaded');
 }
+
+// ── Theme ───────────────────────────────────────────────
+// 'auto' follows the OS (CSS color-scheme + light-dark() do the work);
+// 'light'/'dark' force a scheme by setting [data-theme] on <html>.
+const THEME_ICONS = { auto: '◐', light: '☀', dark: '☾' };
+
+function applyTheme(mode) {
+  const root = document.documentElement;
+  if (mode === 'auto') root.removeAttribute('data-theme');
+  else root.setAttribute('data-theme', mode);
+
+  const btn = document.getElementById('theme-btn');
+  if (btn) {
+    btn.textContent = THEME_ICONS[mode] || THEME_ICONS.auto;
+    btn.title = 'Theme: ' + mode;
+  }
+
+  // Keep the mobile status-bar colour in step with the resolved scheme.
+  const dark = mode === 'dark' ||
+    (mode === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const meta = document.getElementById('theme-color-meta');
+  if (meta) meta.setAttribute('content', dark ? '#16130F' : '#F7F4EF');
+}
+
+// Cycles auto → light → dark → auto and persists the choice.
+function cycleTheme() {
+  const order = ['auto', 'light', 'dark'];
+  const next  = order[(order.indexOf(loadTheme()) + 1) % order.length];
+  saveTheme(next);
+  applyTheme(next);
+}

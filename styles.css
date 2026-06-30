@@ -1,23 +1,32 @@
 /* ── Design tokens ───────────────────────────────────── */
+/* Each colour token carries BOTH a light and a dark value via light-dark().
+   `color-scheme: light dark` makes them follow the OS by default; the
+   [data-theme] rules below let the in-app toggle force one scheme. */
 :root {
-  --bg:       #F7F4EF;
-  --surface:  #FFFFFF;
-  --border:   #E2DDD6;
-  --ink:      #1A1714;
-  --ink2:     #6B6560;
-  --ink3:     #A8A39D;
-  --accent:   #2F6B4F;
-  --accent-l: #EAF3EC;
-  --warn:     #C4431A;
-  --warn-l:   #FCEEE9;
-  --amber:    #A0620A;
-  --amber-l:  #FEF3E2;
-  --purple:   #5347A0;
-  --purple-l: #EEECFB;
+  color-scheme: light dark;
+  --bg:       light-dark(#F7F4EF, #16130F);
+  --surface:  light-dark(#FFFFFF, #221E18);
+  --border:   light-dark(#E2DDD6, #38322A);
+  --ink:      light-dark(#1A1714, #F2EEE8);
+  --ink2:     light-dark(#6B6560, #ADA69D);
+  --ink3:     light-dark(#A8A39D, #6F6960);
+  --accent:   light-dark(#2F6B4F, #6CB68C);
+  --accent-l: light-dark(#EAF3EC, #1C2E24);
+  --warn:     light-dark(#C4431A, #E8794E);
+  --warn-l:   light-dark(#FCEEE9, #36211A);
+  --amber:    light-dark(#A0620A, #D2962F);
+  --amber-l:  light-dark(#FEF3E2, #342817);
+  --purple:   light-dark(#5347A0, #A99CEC);
+  --purple-l: light-dark(#EEECFB, #232046);
+  --on-ink:   light-dark(#FFFFFF, #1A1714);
   --r:        10px;
   --r-lg:     16px;
-  --shadow:   0 1px 4px rgba(0,0,0,.07);
+  --shadow:   light-dark(0 1px 4px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.45));
 }
+
+/* In-app theme override — the header button cycles auto → light → dark. */
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
 
 /* ── Reset ───────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -220,7 +229,7 @@ input[type="date"],input[type="time"]{
 }
 
 /* ── Severity row ────────────────────────────────────── */
-.sev-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem}
+.sev-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-top:.375rem}
 .sev-btn{
   padding:.55rem .5rem;border:1px solid var(--border);
   border-radius:var(--r);background:var(--surface);
@@ -246,7 +255,7 @@ input[type="date"],input[type="time"]{
   border-radius:12px;letter-spacing:.02em;
 }
 .meal-type-badge.breakfast{background:var(--accent-l);color:var(--accent)}
-.meal-type-badge.lunch{background:#E5F0FD;color:#1D5FA0}
+.meal-type-badge.lunch{background:light-dark(#E5F0FD,#1B3350);color:light-dark(#1D5FA0,#9CC2EC)}
 .meal-type-badge.dinner{background:var(--amber-l);color:var(--amber)}
 .meal-type-badge.snack{background:var(--purple-l);color:var(--purple)}
 .meal-remove{
@@ -268,7 +277,7 @@ input[type="date"],input[type="time"]{
 /* ── Save button ─────────────────────────────────────── */
 .save-btn{
   width:100%;padding:.875rem;border:none;
-  background:var(--ink);color:#fff;
+  background:var(--ink);color:var(--on-ink);
   border-radius:var(--r);font-size:.9rem;font-weight:500;
   display:flex;align-items:center;justify-content:center;gap:.5rem;
   transition:opacity .15s;
@@ -364,7 +373,7 @@ input[type="date"],input[type="time"]{
 #toast{
   position:fixed;bottom:calc(70px + env(safe-area-inset-bottom) + .75rem);
   left:50%;transform:translateX(-50%) translateY(20px);
-  background:var(--ink);color:#fff;
+  background:var(--ink);color:var(--on-ink);
   padding:.625rem 1.25rem;border-radius:20px;
   font-size:.8rem;white-space:nowrap;
   opacity:0;transition:all .25s;pointer-events:none;z-index:100;
@@ -405,3 +414,45 @@ input[type="date"],input[type="time"]{
   .f-row{grid-template-columns:1fr 1fr}
   .f-row.three{grid-template-columns:1fr 1fr 1fr}
 }
+
+/* ── De-inlined component & utility styles ───────────────
+   Moved here out of inline style="" attributes in index.html and the JS
+   template literals. `display:none` toggle state stays inline (the app and the
+   test harness flip element.style.display directly). */
+.spacer{height:1rem}
+.spacer-sm{height:.5rem}
+.toggle-group{margin-top:.25rem}
+.add-icon{font-size:1.1rem}
+.symptom-group{margin-bottom:.875rem}
+.settings-footer{text-align:center;padding:1.5rem 0;font-size:.75rem;color:var(--ink3)}
+
+/* Edit banner */
+.edit-banner{align-items:center;justify-content:space-between;background:var(--accent-l);border:1px solid var(--accent);border-radius:var(--r);padding:.625rem .875rem;margin-bottom:1rem}
+.edit-banner-label{font-size:.85rem;color:var(--accent);font-weight:500}
+.edit-banner-cancel{font-size:.8rem;color:var(--accent);background:none;border:none;cursor:pointer;padding:.2rem .5rem;border-radius:var(--r)}
+
+/* Conditional sub-rows (display:none stays inline as toggle state) */
+#med-name-row{padding:.5rem 0 .25rem}
+#other-symptom-row{margin-top:.5rem}
+.ml-new-food-row,.ml-cooked-when-row{padding:.375rem 0 .25rem}
+
+/* Free-text "other symptom" input */
+#e-symptom-other{width:100%;padding:.575rem .8rem;border:1px solid var(--border);border-radius:var(--r);background:var(--bg);color:var(--ink);font-size:.875rem;outline:none;transition:border-color .15s}
+#e-symptom-other:focus{border-color:var(--accent)}
+
+/* Meal & reaction cards */
+.meal-type-sel{font-size:.8rem;padding:.3rem .6rem;border:1px solid var(--border);border-radius:20px;background:var(--bg)}
+.episode-label{font-size:.8rem;color:var(--ink2);font-weight:500}
+
+/* History entry */
+.entry-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.375rem}
+.entry-head .entry-date-head{margin-bottom:0}
+.entry-edit-btn{font-size:.75rem;color:var(--ink3);border:none;background:none;padding:.2rem .5rem;border-radius:var(--r);cursor:pointer;flex-shrink:0}
+.leftover-note{color:var(--ink3)}
+.newfood-note{color:var(--amber)}
+.gluten-note{color:var(--purple)}
+.reaction-bar.symptoms-bar{border-left-color:var(--ink3);background:var(--bg)}
+
+/* Patterns */
+.timing-note{font-size:.82rem;color:var(--ink2);margin-bottom:.625rem;line-height:1.5}
+.insight-card.insight-howto{margin-top:.75rem;border-left:3px solid var(--border)}

@@ -5,6 +5,7 @@
 const LS_CFG   = 'diario_cfg';
 const LS_LOCAL = 'diario_local';
 const LS_SYNC  = 'diario_last_sync';
+const LS_THEME = 'diario_theme';
 
 // Returns the saved {user, repo, token}, or null if absent/incomplete.
 function loadCfg() {
@@ -36,6 +37,14 @@ function cacheJournal() {
 // Records the time of the last successful GitHub sync.
 function markSynced() {
   localStorage.setItem(LS_SYNC, Date.now());
+}
+
+// Theme preference: 'auto' | 'light' | 'dark' (defaults to 'auto').
+function loadTheme() {
+  return localStorage.getItem(LS_THEME) || 'auto';
+}
+function saveTheme(mode) {
+  localStorage.setItem(LS_THEME, mode);
 }
 
 // Clears all locally-cached data (used on sign-out).

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#F7F4EF">
+<meta name="theme-color" content="#F7F4EF" id="theme-color-meta">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BiteByBite">
@@ -71,15 +71,16 @@
         <span id="sync-label">Saved</span>
       </div>
       <button class="icon-btn" onclick="manualSync()" title="Sync now" aria-label="Sync now">↻</button>
+      <button class="icon-btn" onclick="cycleTheme()" id="theme-btn" title="Theme" aria-label="Toggle theme">◐</button>
     </div>
   </header>
 
   <!-- Log tab -->
   <div class="scroll-area active" id="tab-log">
 
-    <div id="edit-banner" style="display:none;align-items:center;justify-content:space-between;background:var(--accent-l);border:1px solid var(--accent);border-radius:var(--r);padding:.625rem .875rem;margin-bottom:1rem">
-      <span style="font-size:.85rem;color:var(--accent);font-weight:500">Editing <span id="edit-banner-date"></span></span>
-      <button onclick="cancelEdit()" style="font-size:.8rem;color:var(--accent);background:none;border:none;cursor:pointer;padding:.2rem .5rem;border-radius:var(--r)">Cancel ×</button>
+    <div id="edit-banner" class="edit-banner" style="display:none">
+      <span class="edit-banner-label">Editing <span id="edit-banner-date"></span></span>
+      <button onclick="cancelEdit()" class="edit-banner-cancel">Cancel ×</button>
     </div>
 
     <div class="sec-label">Day overview</div>
@@ -115,7 +116,7 @@
         </div>
       </div>
 
-      <div style="margin-top:.25rem">
+      <div class="toggle-group">
         <div class="toggle-row">
           <label class="tog"><input type="checkbox" id="e-newenv"><span class="tog-track"></span></label>
           <div class="toggle-label">Different environment
@@ -134,7 +135,7 @@
             <small>Outside usual routine</small>
           </div>
         </div>
-        <div id="med-name-row" style="display:none;padding:.5rem 0 .25rem">
+        <div id="med-name-row" style="display:none">
           <div class="f-group">
             <label>Medication name &amp; dose</label>
             <input type="text" id="e-med-name" placeholder="e.g. Amoxicillin 250mg" autocomplete="off">
@@ -146,30 +147,28 @@
     <div class="sec-label">Meals &amp; feeds</div>
     <div id="meals-container"></div>
     <button class="add-meal-btn" onclick="addMeal()">
-      <span style="font-size:1.1rem">+</span> Add meal or snack
+      <span class="add-icon">+</span> Add meal or snack
     </button>
 
     <div class="sec-label">Vomiting episodes</div>
     <div id="reactions-container"></div>
     <button class="add-meal-btn" onclick="addReactionEpisode()">
-      <span style="font-size:1.1rem">+</span> Add vomiting episode
+      <span class="add-icon">+</span> Add vomiting episode
     </button>
 
     <div class="sec-label">Other symptoms</div>
     <div class="card">
-      <div class="f-group" style="margin-bottom:.875rem">
+      <div class="f-group symptom-group">
         <div class="chip-grid" id="symptom-chips"></div>
-        <div id="other-symptom-row" style="display:none;margin-top:.5rem">
+        <div id="other-symptom-row" style="display:none">
           <input class="f-group" type="text" id="e-symptom-other"
-            placeholder="Describe the symptom…" autocomplete="off"
-            style="width:100%;padding:.575rem .8rem;border:1px solid var(--border);border-radius:var(--r);background:var(--bg);color:var(--ink);font-size:.875rem;outline:none;transition:border-color .15s"
-            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            placeholder="Describe the symptom…" autocomplete="off">
         </div>
       </div>
 
       <div class="f-group">
         <label>Overall severity</label>
-        <div class="sev-row" style="margin-top:.375rem"></div>
+        <div class="sev-row"></div>
       </div>
     </div>
 
@@ -184,7 +183,7 @@
       <span>Save entry</span>
     </button>
 
-    <div style="height:1rem"></div>
+    <div class="spacer"></div>
   </div>
 
   <!-- History tab -->
@@ -237,7 +236,7 @@
       <button class="danger-btn" onclick="doLogout()">Sign out &amp; clear local data</button>
     </div>
 
-    <div style="text-align:center;padding:1.5rem 0;font-size:.75rem;color:var(--ink3)">
+    <div class="settings-footer">
       BiteByBite · open source, no tracking<br>
       Data lives in your GitHub repo
     </div>

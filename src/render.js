@@ -43,9 +43,9 @@ function renderHistory() {
         <span class="meal-time">${m.time ? fmtTime(m.time) : '—'}</span>
         <span class="meal-foods-text">
           <strong>${typeName(m.type)}</strong> · ${m.foods || '(no detail)'}
-          ${m.freshFood === false ? ` · <em style="color:var(--ink3)">leftover${m.cookedWhen ? ' (' + m.cookedWhen + ')' : ''}</em>` : ''}
-          ${m.newFood ? ` · <em style="color:var(--amber)">${m.newFoodName || 'new food'}</em>` : ''}
-          ${m.gluten  ? ' · <em style="color:var(--purple)">gluten</em>' : ''}
+          ${m.freshFood === false ? ` · <em class="leftover-note">leftover${m.cookedWhen ? ' (' + m.cookedWhen + ')' : ''}</em>` : ''}
+          ${m.newFood ? ` · <em class="newfood-note">${m.newFoodName || 'new food'}</em>` : ''}
+          ${m.gluten  ? ' · <em class="gluten-note">gluten</em>' : ''}
         </span>
       </div>`).join('');
 
@@ -66,14 +66,14 @@ function renderHistory() {
     }
 
     return `<div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.375rem">
-        <div class="entry-date-head" style="margin-bottom:0">${fmtDate(e.date)}</div>
-        <button onclick="enterEditMode(${i})" style="font-size:.75rem;color:var(--ink3);border:none;background:none;padding:.2rem .5rem;border-radius:var(--r);cursor:pointer;flex-shrink:0" aria-label="Edit entry">Edit</button>
+      <div class="entry-head">
+        <div class="entry-date-head">${fmtDate(e.date)}</div>
+        <button onclick="enterEditMode(${i})" class="entry-edit-btn" aria-label="Edit entry">Edit</button>
       </div>
       <div class="tag-row">${tags}</div>
       <div>${mealRows}</div>
       ${reactionHtml}
-      ${e.symptoms && e.symptoms.length ? `<div class="reaction-bar" style="border-left-color:var(--ink3);background:var(--bg)">${e.symptoms.join(', ')}</div>` : ''}
+      ${e.symptoms && e.symptoms.length ? `<div class="reaction-bar symptoms-bar">${e.symptoms.join(', ')}</div>` : ''}
       ${e.notes ? `<div class="entry-note">${e.notes}</div>` : ''}
     </div>`;
   }).join('');
@@ -193,7 +193,7 @@ function renderPatterns() {
     ${vEntries.length ? `
     <div class="sec-label">Reaction timing</div>
     <div class="card">
-      <div style="font-size:.82rem;color:var(--ink2);margin-bottom:.625rem;line-height:1.5">
+      <div class="timing-note">
         Fast reactions (&lt;2 h) suggest IgE allergy. Delayed reactions (2–8 h) are more typical of non-IgE allergy, celiac, or intolerance.
       </div>
       <div class="chip-grid">${delayRows}</div>
@@ -205,12 +205,12 @@ function renderPatterns() {
       <div class="chip-grid">${sympRows}</div>
     </div>` : ''}
 
-    <div class="insight-card" style="margin-top:.75rem;border-left:3px solid var(--border)">
+    <div class="insight-card insight-howto">
       <h3>How to use these numbers</h3>
       <div class="insight-body">
         These percentages are descriptive, not diagnostic. A high correlation is a signal worth investigating — share this log with your pediatric gastroenterologist or allergist. They can order a targeted celiac panel (tTG-IgA, DGP-IgG) or design a supervised elimination diet based on the patterns you see here.
       </div>
     </div>
-    <div style="height:.5rem"></div>
+    <div class="spacer-sm"></div>
   `;
 }

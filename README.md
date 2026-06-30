@@ -13,6 +13,7 @@ A lightweight, data-driven food and symptom diary designed to track daily meals 
 - On every save, the app commits the updated file via the GitHub API.
 - Works offline (reads from local cache) and syncs when reconnected.
 - Install it on your phone like an app (PWA).
+- Dark mode: follows your system automatically, or tap the header button to cycle auto → light → dark.
 
 ---
 
