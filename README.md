@@ -14,6 +14,7 @@ A lightweight, data-driven food and symptom diary designed to track daily meals 
 - Works offline (reads from local cache) and syncs when reconnected.
 - Install it on your phone like an app (PWA).
 - Dark mode: follows your system automatically, or tap the header button to cycle auto → light → dark.
+- Bilingual (English & Spanish): switch in Settings → Preferences. Menus, labels, and dropdown options translate; your stored data stays language-independent, so a journal is portable across languages. Edit `config/i18n_es.json` to tweak the Spanish wording.
 
 ---
 
