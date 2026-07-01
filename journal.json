@@ -1,5 +1,39 @@
 [
   {
+    "date": "2026-07-01",
+    "sleep": "",
+    "mood": "",
+    "activity": "",
+    "stool": "",
+    "hydration": "",
+    "newEnv": false,
+    "sick": false,
+    "meds": false,
+    "medName": "",
+    "meals": [
+      {
+        "type": "breakfast",
+        "time": "00:15",
+        "source": "homemade",
+        "foods": "",
+        "heavy": "light",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      }
+    ],
+    "reactions": [],
+    "symptoms": [],
+    "severity": "",
+    "notes": "",
+    "ts": 1782882952390
+  },
+  {
     "date": "2026-06-30",
     "sleep": "poor",
     "mood": "happy",
