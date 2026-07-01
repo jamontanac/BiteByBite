@@ -2,11 +2,11 @@
   {
     "date": "2026-06-30",
     "sleep": "poor",
-    "mood": "",
-    "activity": "",
-    "stool": "",
-    "hydration": "",
-    "newEnv": false,
+    "mood": "happy",
+    "activity": "high",
+    "stool": "normal",
+    "hydration": "good",
+    "newEnv": true,
     "sick": false,
     "meds": false,
     "medName": "",
@@ -70,13 +70,28 @@
         "gluten": false,
         "dairy": false,
         "egg": false
+      },
+      {
+        "type": "dinner",
+        "time": "18:15",
+        "source": "homemade",
+        "foods": "Soup: cilantro, garlic, chicken broth, uyuco, carrot, plantain, chicken, salt.",
+        "heavy": "moderate",
+        "amount": "all",
+        "freshFood": false,
+        "cookedWhen": "Soup",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
       }
     ],
     "reactions": [],
     "symptoms": [],
     "severity": "",
-    "notes": "Appointment with doctor",
-    "ts": 1782860182056
+    "notes": "Appointment with doctor, whole day in Bogota",
+    "ts": 1782872010635
   },
   {
     "date": "2026-06-29",
