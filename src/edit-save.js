@@ -14,7 +14,7 @@ function enterEditMode(index) {
   dateEl.style.opacity = '0.6';
   dateEl.style.cursor  = 'default';
 
-  document.querySelector('#save-btn span').textContent = 'Update entry';
+  document.querySelector('#save-btn span').textContent = t('btn.update');
   switchTab('log');
   document.getElementById('tab-log').scrollTop = 0;
 }
@@ -26,7 +26,7 @@ function exitEditMode() {
   dateEl.readOnly = false;
   dateEl.style.opacity = '';
   dateEl.style.cursor  = '';
-  document.querySelector('#save-btn span').textContent = 'Save entry';
+  document.querySelector('#save-btn span').textContent = t('btn.save');
 }
 
 function cancelEdit() {
@@ -98,11 +98,11 @@ function reactionFromCard(card, savedEntry) {
   let label = '';
   if (mealId.startsWith('saved:')) {
     const m = savedEntry && savedEntry.meals && savedEntry.meals[parseInt(mealId.slice(6))];
-    if (m) label = mealLabel(m.type, m.time);
+    if (m) label = mealLabelCanonical(m.type, m.time);
   } else if (mealId) {
     const mealCard = document.getElementById(mealId);
-    if (mealCard) label = mealLabel(mealCard.querySelector('.meal-type-sel').value,
-                                    mealCard.querySelector('.ml-time').value);
+    if (mealCard) label = mealLabelCanonical(mealCard.querySelector('.meal-type-sel').value,
+                                             mealCard.querySelector('.ml-time').value);
   }
   return {
     meal:    label,
@@ -142,9 +142,12 @@ function loadEntryIntoForm(entry) {
     const cards = document.querySelectorAll('#reactions-container .meal-card');
     const card  = cards[cards.length - 1];
     const epSel = card.querySelector('.ep-meal');
-    // Match saved meal label text to option
+    // Match the stored (canonical) meal label to an option. We match on the
+    // option's canonical value (language-independent) OR its shown text, so
+    // re-selection works whatever language the reaction was logged in.
+    const stored = (reaction.meal || '').trim();
     for (const opt of epSel.options) {
-      if (opt.text.trim() === (reaction.meal || '').trim()) { epSel.value = opt.value; break; }
+      if ((opt.dataset.canon || '').trim() === stored || opt.text.trim() === stored) { epSel.value = opt.value; break; }
     }
     card.querySelector('.ep-count').value   = reaction.count   || '1';
     card.querySelector('.ep-delay').value   = reaction.delay   || '';
@@ -184,10 +187,10 @@ function loadEntryIntoForm(entry) {
 // ── Save entry ──────────────────────────────────────────
 async function saveEntry() {
   const date = document.getElementById('e-date').value;
-  if (!date) { toast('Please pick a date', true); return; }
+  if (!date) { toast(t('toast.pickDate'), true); return; }
 
   const mealCards = document.querySelectorAll('#meals-container .meal-card');
-  if (mealCards.length === 0) { toast('Add at least one meal', true); return; }
+  if (mealCards.length === 0) { toast(t('toast.addMeal'), true); return; }
 
   const meals = [];
   mealCards.forEach(card => meals.push(mealFromCard(card)));
@@ -250,25 +253,25 @@ async function saveEntry() {
 
   const btn = document.getElementById('save-btn');
   btn.disabled = true;
-  btn.querySelector('span').textContent = 'Saving to GitHub…';
+  btn.querySelector('span').textContent = t('btn.saving');
 
   try {
     await saveToGitHub(buildCommitMessage(isEdit, date));
     updateSettingsDisplay();
     if (isEdit) {
-      toast('Entry updated ✓');
+      toast(t('toast.updated'));
       exitEditMode();
       resetLogForm();
       switchTab('history');
       document.getElementById('tab-history').scrollTop = 0;  // show newest entry, not where we were
     } else {
-      toast(isMerge ? 'Merged into existing day ✓' : 'Entry saved ✓');
+      toast(isMerge ? t('toast.merged') : t('toast.saved'));
       resetLogForm();
     }
   } catch(e) {
-    toast('Save failed: ' + e.message, true);
+    toast(t('toast.saveFailed', { msg: e.message }), true);
   } finally {
     btn.disabled = false;
-    btn.querySelector('span').textContent = isEdit ? 'Update entry' : 'Save entry';
+    btn.querySelector('span').textContent = isEdit ? t('btn.update') : t('btn.save');
   }
 }

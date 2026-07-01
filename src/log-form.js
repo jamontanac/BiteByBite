@@ -4,7 +4,15 @@ function initLogTab() {
   document.getElementById('e-date').value = today;
 
   populateDayOverview();
+  attachChipListeners();
 
+  document.getElementById('e-date').addEventListener('change', updateMealSelect);
+
+  if (document.getElementById('meals-container').children.length === 0) addMeal();
+}
+
+// Attaches click handlers to the symptom chips (called after they're rendered).
+function attachChipListeners() {
   document.querySelectorAll('#symptom-chips .chip').forEach(c => {
     c.addEventListener('click', () => {
       c.classList.toggle('active');
@@ -19,10 +27,6 @@ function initLogTab() {
       }
     });
   });
-
-  document.getElementById('e-date').addEventListener('change', updateMealSelect);
-
-  if (document.getElementById('meals-container').children.length === 0) addMeal();
 }
 
 // Renders the config-driven controls in the Log tab: the day-overview selects,
@@ -32,20 +36,20 @@ function populateDayOverview() {
   const sel = (FORMCFG.day && FORMCFG.day.selects) || {};
   DAY_SELECT_KEYS.forEach(key => {
     const el = document.getElementById('e-' + key);
-    if (el) el.innerHTML = blank + optionsHtml(sel[key] || []);
+    if (el) el.innerHTML = blank + optionsHtml(sel[key] || [], null, 'opt.' + key);
   });
 
   const chips = document.getElementById('symptom-chips');
   if (chips) {
     chips.innerHTML = (FORMCFG.symptoms || [])
-      .map(s => `<span class="chip bad" data-v="${s.value}">${s.label}</span>`)
+      .map(s => `<span class="chip bad" data-v="${s.value}">${optLabel('opt.symptom', s)}</span>`)
       .join('');
   }
 
   const sevRow = document.querySelector('.sev-row');
   if (sevRow) {
     sevRow.innerHTML = (FORMCFG.severity || [])
-      .map(s => `<button class="sev-btn ${s.class || ''}" data-s="${s.value}" onclick="selectSev(this)">${s.label}</button>`)
+      .map(s => `<button class="sev-btn ${s.class || ''}" data-s="${s.value}" onclick="selectSev(this)">${optLabel('opt.severity', s)}</button>`)
       .join('');
   }
 }
@@ -63,73 +67,73 @@ function addMeal() {
   div.innerHTML = `
     <div class="meal-card-head">
       <select class="meal-type-sel" onchange="updateMealSelect()">
-        ${optionsHtml(FORMCFG.meals.selects.type)}
+        ${optionsHtml(FORMCFG.meals.selects.type, null, 'opt.mealType')}
       </select>
-      <button class="meal-remove" onclick="document.getElementById('${id}').remove(); updateMealSelect()">Remove</button>
+      <button class="meal-remove" onclick="document.getElementById('${id}').remove(); updateMealSelect()">${t('meal.remove')}</button>
     </div>
     <div class="f-row">
-      <div class="f-group"><label>Time given</label><input type="time" class="ml-time" value="${hh}:${mm}"></div>
-      <div class="f-group"><label>Source</label>
+      <div class="f-group"><label>${t('meal.time')}</label><input type="time" class="ml-time" value="${hh}:${mm}"></div>
+      <div class="f-group"><label>${t('meal.source')}</label>
         <select class="ml-source">
-          ${optionsHtml(FORMCFG.meals.selects.source)}
+          ${optionsHtml(FORMCFG.meals.selects.source, null, 'opt.source')}
         </select>
       </div>
     </div>
     <div class="f-row full">
-      <div class="f-group"><label>Foods eaten</label>
-        <textarea class="ml-foods" placeholder="e.g. oatmeal, banana, apple juice…" rows="2"></textarea>
+      <div class="f-group"><label>${t('meal.foods')}</label>
+        <textarea class="ml-foods" placeholder="${t('meal.foodsPh')}" rows="2"></textarea>
       </div>
     </div>
     <div class="f-row">
-      <div class="f-group"><label>Meal heaviness</label>
+      <div class="f-group"><label>${t('meal.heavy')}</label>
         <select class="ml-heavy">
-          ${optionsHtml(FORMCFG.meals.selects.heavy)}
+          ${optionsHtml(FORMCFG.meals.selects.heavy, null, 'opt.heavy')}
         </select>
       </div>
-      <div class="f-group"><label>Amount eaten</label>
+      <div class="f-group"><label>${t('meal.amount')}</label>
         <select class="ml-amount">
-          ${optionsHtml(FORMCFG.meals.selects.amount)}
+          ${optionsHtml(FORMCFG.meals.selects.amount, null, 'opt.amount')}
         </select>
       </div>
     </div>
     <div class="toggle-group">
       <div class="toggle-row">
         <label class="tog"><input type="checkbox" class="ml-new" onchange="toggleNewFoodInput(this)"><span class="tog-track"></span></label>
-        <div class="toggle-label">New food
-          <small>Ingredient rarely or never eaten before</small>
+        <div class="toggle-label">${t('meal.newFood')}
+          <small>${t('meal.newFoodHint')}</small>
         </div>
       </div>
       <div class="ml-new-food-row" style="display:none">
         <div class="f-group">
-          <label>New ingredient</label>
-          <input type="text" class="ml-new-food-name" placeholder="e.g. mango, wheat bread…" autocomplete="off">
+          <label>${t('meal.newIngredient')}</label>
+          <input type="text" class="ml-new-food-name" placeholder="${t('meal.newIngredientPh')}" autocomplete="off">
         </div>
       </div>
       <div class="toggle-row">
         <label class="tog"><input type="checkbox" class="ml-fresh" checked onchange="toggleFreshFoodInput(this)"><span class="tog-track"></span></label>
-        <div class="toggle-label">Fresh food
-          <small>Cooked today, not a leftover</small>
+        <div class="toggle-label">${t('meal.fresh')}
+          <small>${t('meal.freshHint')}</small>
         </div>
       </div>
       <div class="ml-cooked-when-row" style="display:none">
         <div class="f-group">
-          <label>When was it cooked?</label>
-          <input type="text" class="ml-cooked-when" placeholder="e.g. yesterday evening, 2 days ago…" autocomplete="off">
+          <label>${t('meal.cookedWhen')}</label>
+          <input type="text" class="ml-cooked-when" placeholder="${t('meal.cookedWhenPh')}" autocomplete="off">
         </div>
       </div>
       <div class="toggle-row">
         <label class="tog"><input type="checkbox" class="ml-gluten"><span class="tog-track"></span></label>
-        <div class="toggle-label">Contains gluten
-          <small>Wheat, barley, rye, spelt, or oats</small>
+        <div class="toggle-label">${t('meal.gluten')}
+          <small>${t('meal.glutenHint')}</small>
         </div>
       </div>
       <div class="toggle-row">
         <label class="tog"><input type="checkbox" class="ml-dairy"><span class="tog-track"></span></label>
-        <div class="toggle-label">Contains dairy</div>
+        <div class="toggle-label">${t('meal.dairy')}</div>
       </div>
       <div class="toggle-row">
         <label class="tog"><input type="checkbox" class="ml-egg"><span class="tog-track"></span></label>
-        <div class="toggle-label">Contains egg</div>
+        <div class="toggle-label">${t('meal.egg')}</div>
       </div>
     </div>
   `;
@@ -138,23 +142,23 @@ function addMeal() {
 }
 
 function updateMealSelect() {
-  const opts = ['<option value="">— select meal —</option>'];
+  const opts = [`<option value="">${t('rx.selectMeal')}</option>`];
 
   if (editIndex >= 0) {
     // Edit mode: form cards ARE the full day's meals — no separate saved-entry group
     document.querySelectorAll('#meals-container .meal-card').forEach(card => {
       const type = card.querySelector('.meal-type-sel').value;
       const time = card.querySelector('.ml-time').value;
-      opts.push(`<option value="${card.id}">${mealLabel(type, time)}</option>`);
+      opts.push(`<option value="${card.id}" data-canon="${mealLabelCanonical(type, time)}">${mealLabel(type, time)}</option>`);
     });
   } else {
   // Meals already saved for this date (from a previous save earlier in the day)
   const date = document.getElementById('e-date') ? document.getElementById('e-date').value : '';
   const savedEntry = date ? journal.find(e => e.date === date) : null;
   if (savedEntry && savedEntry.meals && savedEntry.meals.length) {
-    opts.push('<optgroup label="Already logged today">');
+    opts.push(`<optgroup label="${t('rx.alreadyLogged')}">`);
     savedEntry.meals.forEach((m, i) => {
-      opts.push(`<option value="saved:${i}">${mealLabel(m.type, m.time)}</option>`);
+      opts.push(`<option value="saved:${i}" data-canon="${mealLabelCanonical(m.type, m.time)}">${mealLabel(m.type, m.time)}</option>`);
     });
     opts.push('</optgroup>');
   }
@@ -163,12 +167,12 @@ function updateMealSelect() {
   const formMeals = document.querySelectorAll('#meals-container .meal-card');
   if (formMeals.length) {
     if (savedEntry && savedEntry.meals && savedEntry.meals.length) {
-      opts.push('<optgroup label="Adding now">');
+      opts.push(`<optgroup label="${t('rx.addingNow')}">`);
     }
     formMeals.forEach(card => {
       const type = card.querySelector('.meal-type-sel').value;
       const time = card.querySelector('.ml-time').value;
-      opts.push(`<option value="${card.id}">${mealLabel(type, time)}</option>`);
+      opts.push(`<option value="${card.id}" data-canon="${mealLabelCanonical(type, time)}">${mealLabel(type, time)}</option>`);
     });
     if (savedEntry && savedEntry.meals && savedEntry.meals.length) {
       opts.push('</optgroup>');
@@ -190,27 +194,27 @@ function addReactionEpisode() {
   div.id = id;
   div.innerHTML = `
     <div class="meal-card-head">
-      <span class="episode-label">Vomiting episode</span>
-      <button class="meal-remove" onclick="document.getElementById('${id}').remove()">Remove</button>
+      <span class="episode-label">${t('rx.title')}</span>
+      <button class="meal-remove" onclick="document.getElementById('${id}').remove()">${t('meal.remove')}</button>
     </div>
     <div class="f-row">
-      <div class="f-group"><label>Meal that triggered it</label>
-        <select class="ep-meal"><option value="">— select meal —</option></select>
+      <div class="f-group"><label>${t('rx.meal')}</label>
+        <select class="ep-meal"><option value="">${t('rx.selectMeal')}</option></select>
       </div>
-      <div class="f-group"><label>Times vomited</label>
+      <div class="f-group"><label>${t('rx.count')}</label>
         <select class="ep-count">
-          ${optionsHtml(FORMCFG.vomiting.selects.count)}
+          ${optionsHtml(FORMCFG.vomiting.selects.count, null, 'opt.count')}
         </select>
       </div>
     </div>
     <div class="f-row">
-      <div class="f-group"><label>Delay after meal</label>
+      <div class="f-group"><label>${t('rx.delay')}</label>
         <select class="ep-delay">
-          ${optionsHtml(FORMCFG.vomiting.selects.delay)}
+          ${optionsHtml(FORMCFG.vomiting.selects.delay, null, 'opt.delay')}
         </select>
       </div>
-      <div class="f-group"><label>What was vomited</label>
-        <input type="text" class="ep-content" placeholder="e.g. breakfast residue, mucus">
+      <div class="f-group"><label>${t('rx.content')}</label>
+        <input type="text" class="ep-content" placeholder="${t('rx.contentPh')}">
       </div>
     </div>
   `;
@@ -265,4 +269,24 @@ function resetLogForm() {
   activeSymptoms.clear();
   activeSev = '';
   addMeal();
+}
+
+// Re-renders the Log-tab config-driven controls (day-overview selects, symptom
+// chips, severity buttons) in the current language, preserving the user's
+// current selections. Meal & reaction cards keep their labels until the form is
+// next reset (after a save). Called by setLang().
+function retranslateLogForm() {
+  const chips = document.getElementById('symptom-chips');
+  if (!chips) return;                       // log form not built yet
+  const dayVals = {};
+  DAY_SELECT_KEYS.forEach(k => { const el = document.getElementById('e-' + k); if (el) dayVals[k] = el.value; });
+  const sev  = activeSev;
+  const syms = new Set(activeSymptoms);
+
+  populateDayOverview();
+  attachChipListeners();
+
+  DAY_SELECT_KEYS.forEach(k => { const el = document.getElementById('e-' + k); if (el && dayVals[k] != null) el.value = dayVals[k]; });
+  document.querySelectorAll('#symptom-chips .chip').forEach(c => { if (syms.has(c.dataset.v)) c.classList.add('active'); });
+  document.querySelectorAll('.sev-btn').forEach(b => { if (b.dataset.s === sev) b.classList.add('active'); });
 }

@@ -1935,4 +1935,36 @@ await describe('ensureJournalBranch()', async () => {
   });
 });
 
+await describe('i18n — t() / setLang() / applyI18n()', async () => {
+  await it('t() falls back current-lang → English → key', () => {
+    resetState();
+    expect(t('tab.history')).toBe('History');
+    LANG = 'es';
+    expect(t('tab.history')).toBe('Historial');
+    expect(t('does.not.exist')).toBe('does.not.exist');
+    LANG = 'en';
+  });
+  await it('t() interpolates {vars}', () => {
+    resetState();
+    I18N.en['test.hi'] = 'Hi {name}';
+    expect(t('test.hi', { name: 'Ana' })).toBe('Hi Ana');
+  });
+  await it('setLang persists the choice and syncs the selector', () => {
+    resetState();
+    setLang('es');
+    expect(localStorage.getItem('diario_lang')).toBe('es');
+    expect(document.getElementById('lang-select').value).toBe('es');
+    setLang('en');
+  });
+  await it('applyI18n fills [data-i18n] nodes for the active language', () => {
+    resetState();
+    LANG = 'es';
+    applyI18n(document);
+    expect(document.getElementById('lang-label').textContent).toBe('Idioma');
+    LANG = 'en';
+    applyI18n(document);
+    expect(document.getElementById('lang-label').textContent).toBe('Language');
+  });
+});
+
 } // end runSuite

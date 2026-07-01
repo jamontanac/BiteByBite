@@ -21,7 +21,7 @@
 <!-- Loading -->
 <div id="loading">
   <div class="ld-word">BiteByBite</div>
-  <div class="ld-sub">Loading journal…</div>
+  <div class="ld-sub" data-i18n="loading.sub">Loading journal…</div>
 </div>
 
 <!-- Toast -->
@@ -30,33 +30,33 @@
 <!-- ── Login screen ──────────────────────────────────── -->
 <div id="s-login" class="screen">
   <div class="login-logo">BiteByBite</div>
-  <div class="login-tagline">A lightweight, data-driven food and symptom diary designed to track daily meals and identify potential food allergies or sensitivities over time.</div>
+  <div class="login-tagline" data-i18n="login.tagline">A lightweight, data-driven food and symptom diary designed to track daily meals and identify potential food allergies or sensitivities over time.</div>
 
   <div class="login-card">
-    <h2>Connect your journal</h2>
-    <p>Entries are stored as a JSON file in a private GitHub repo — free, version-controlled, and accessible from any device.</p>
+    <h2 data-i18n="login.heading">Connect your journal</h2>
+    <p data-i18n="login.intro">Entries are stored as a JSON file in a private GitHub repo — free, version-controlled, and accessible from any device.</p>
 
     <div class="err-msg" id="login-err"></div>
 
     <div class="field">
-      <label>GitHub username</label>
+      <label data-i18n="login.username">GitHub username</label>
       <input type="text" id="gh-user" placeholder="your-username" autocomplete="off" autocapitalize="none" spellcheck="false">
     </div>
     <div class="field">
-      <label>Repository name</label>
+      <label data-i18n="login.repo">Repository name</label>
       <input type="text" id="gh-repo" placeholder="food-journal" autocomplete="off" autocapitalize="none" spellcheck="false">
-      <div class="hint">Create a <strong>private</strong> repo on GitHub first. The data file will be stored at <code>journal.json</code>.</div>
+      <div class="hint" data-i18n-html="login.repoHint">Create a <strong>private</strong> repo on GitHub first. The data file will be stored at <code>journal.json</code>.</div>
     </div>
     <div class="field">
-      <label>Personal Access Token</label>
+      <label data-i18n="login.token">Personal Access Token</label>
       <input type="password" id="gh-token" placeholder="ghp_…" autocomplete="off" spellcheck="false">
-      <div class="hint">
+      <div class="hint" data-i18n-html="login.tokenHint">
         Generate one at <a href="https://github.com/settings/tokens/new" target="_blank">GitHub → Settings → Tokens</a>.
         Scope needed: <code>repo</code>. The token is stored only in this browser.
       </div>
     </div>
 
-    <button class="btn-primary" id="login-btn" onclick="doLogin()">Connect &amp; open journal</button>
+    <button class="btn-primary" id="login-btn" onclick="doLogin()" data-i18n="login.button">Connect &amp; open journal</button>
   </div>
 </div>
 
@@ -70,7 +70,7 @@
         <div class="sync-dot synced" id="sync-dot"></div>
         <span id="sync-label">Saved</span>
       </div>
-      <button class="icon-btn" onclick="manualSync()" title="Sync now" aria-label="Sync now">↻</button>
+      <button class="icon-btn" onclick="manualSync()" data-i18n-title="header.syncNow" title="Sync now" aria-label="Sync now">↻</button>
       <button class="icon-btn" onclick="cycleTheme()" id="theme-btn" title="Theme" aria-label="Toggle theme">◐</button>
     </div>
   </header>
@@ -79,39 +79,39 @@
   <div class="scroll-area active" id="tab-log">
 
     <div id="edit-banner" class="edit-banner" style="display:none">
-      <span class="edit-banner-label">Editing <span id="edit-banner-date"></span></span>
-      <button onclick="cancelEdit()" class="edit-banner-cancel">Cancel ×</button>
+      <span class="edit-banner-label"><span data-i18n="editbanner.editing">Editing</span> <span id="edit-banner-date"></span></span>
+      <button onclick="cancelEdit()" class="edit-banner-cancel" data-i18n="editbanner.cancel">Cancel ×</button>
     </div>
 
-    <div class="sec-label">Day overview</div>
+    <div class="sec-label" data-i18n="sec.dayOverview">Day overview</div>
     <div class="card">
       <div class="f-row">
         <div class="f-group">
-          <label>Date</label>
+          <label data-i18n="label.date">Date</label>
           <input type="date" id="e-date">
         </div>
         <div class="f-group">
-          <label>Sleep last night</label>
+          <label data-i18n="label.sleep">Sleep last night</label>
           <select id="e-sleep"></select>
         </div>
       </div>
       <div class="f-row">
         <div class="f-group">
-          <label>Mood / energy</label>
+          <label data-i18n="label.mood">Mood / energy</label>
           <select id="e-mood"></select>
         </div>
         <div class="f-group">
-          <label>Activity level</label>
+          <label data-i18n="label.activity">Activity level</label>
           <select id="e-activity"></select>
         </div>
       </div>
       <div class="f-row">
         <div class="f-group">
-          <label>Stool consistency</label>
+          <label data-i18n="label.stool">Stool consistency</label>
           <select id="e-stool"></select>
         </div>
         <div class="f-group">
-          <label>Hydration</label>
+          <label data-i18n="label.hydration">Hydration</label>
           <select id="e-hydration"></select>
         </div>
       </div>
@@ -119,68 +119,68 @@
       <div class="toggle-group">
         <div class="toggle-row">
           <label class="tog"><input type="checkbox" id="e-newenv"><span class="tog-track"></span></label>
-          <div class="toggle-label">Different environment
-            <small>Travel, eating out, visiting family</small>
+          <div class="toggle-label"><span data-i18n="toggle.newenv">Different environment</span>
+            <small data-i18n="toggle.newenv.hint">Travel, eating out, visiting family</small>
           </div>
         </div>
         <div class="toggle-row">
           <label class="tog"><input type="checkbox" id="e-sick"><span class="tog-track"></span></label>
-          <div class="toggle-label">Signs of illness / teething
-            <small>Runny nose, fever, inflamed gums</small>
+          <div class="toggle-label"><span data-i18n="toggle.sick">Signs of illness / teething</span>
+            <small data-i18n="toggle.sick.hint">Runny nose, fever, inflamed gums</small>
           </div>
         </div>
         <div class="toggle-row">
           <label class="tog"><input type="checkbox" id="e-meds" onchange="toggleMedInput(this)"><span class="tog-track"></span></label>
-          <div class="toggle-label">New medication today
-            <small>Outside usual routine</small>
+          <div class="toggle-label"><span data-i18n="toggle.meds">New medication today</span>
+            <small data-i18n="toggle.meds.hint">Outside usual routine</small>
           </div>
         </div>
         <div id="med-name-row" style="display:none">
           <div class="f-group">
-            <label>Medication name &amp; dose</label>
-            <input type="text" id="e-med-name" placeholder="e.g. Amoxicillin 250mg" autocomplete="off">
+            <label data-i18n="label.medName">Medication name &amp; dose</label>
+            <input type="text" id="e-med-name" placeholder="e.g. Amoxicillin 250mg" data-i18n-placeholder="ph.medName" autocomplete="off">
           </div>
         </div>
       </div>
     </div>
 
-    <div class="sec-label">Meals &amp; feeds</div>
+    <div class="sec-label" data-i18n="sec.meals">Meals &amp; feeds</div>
     <div id="meals-container"></div>
     <button class="add-meal-btn" onclick="addMeal()">
-      <span class="add-icon">+</span> Add meal or snack
+      <span class="add-icon">+</span> <span data-i18n="btn.addMeal">Add meal or snack</span>
     </button>
 
-    <div class="sec-label">Vomiting episodes</div>
+    <div class="sec-label" data-i18n="sec.vomiting">Vomiting episodes</div>
     <div id="reactions-container"></div>
     <button class="add-meal-btn" onclick="addReactionEpisode()">
-      <span class="add-icon">+</span> Add vomiting episode
+      <span class="add-icon">+</span> <span data-i18n="btn.addVomiting">Add vomiting episode</span>
     </button>
 
-    <div class="sec-label">Other symptoms</div>
+    <div class="sec-label" data-i18n="sec.symptoms">Other symptoms</div>
     <div class="card">
       <div class="f-group symptom-group">
         <div class="chip-grid" id="symptom-chips"></div>
         <div id="other-symptom-row" style="display:none">
           <input class="f-group" type="text" id="e-symptom-other"
-            placeholder="Describe the symptom…" autocomplete="off">
+            placeholder="Describe the symptom…" data-i18n-placeholder="ph.symptomOther" autocomplete="off">
         </div>
       </div>
 
       <div class="f-group">
-        <label>Overall severity</label>
+        <label data-i18n="label.severity">Overall severity</label>
         <div class="sev-row"></div>
       </div>
     </div>
 
-    <div class="sec-label">Notes</div>
+    <div class="sec-label" data-i18n="sec.notes">Notes</div>
     <div class="card">
       <div class="f-group">
-        <textarea id="e-notes" placeholder="Doctor's observations, new foods introduced, anything unusual…"></textarea>
+        <textarea id="e-notes" placeholder="Doctor's observations, new foods introduced, anything unusual…" data-i18n-placeholder="ph.notes"></textarea>
       </div>
     </div>
 
     <button class="save-btn" id="save-btn" onclick="saveEntry()">
-      <span>Save entry</span>
+      <span data-i18n="btn.save">Save entry</span>
     </button>
 
     <div class="spacer"></div>
@@ -198,45 +198,58 @@
 
   <!-- Settings tab -->
   <div class="scroll-area" id="tab-settings">
-    <div class="sec-label">Account</div>
+    <div class="sec-label" data-i18n="sec.account">Account</div>
     <div class="card">
       <div class="settings-row">
         <div class="settings-row-left">
-          <div class="settings-row-label">GitHub repository</div>
+          <div class="settings-row-label" data-i18n="settings.repo">GitHub repository</div>
           <div class="settings-row-value" id="cfg-repo-display">—</div>
         </div>
       </div>
       <div class="settings-row">
         <div class="settings-row-left">
-          <div class="settings-row-label">Entries stored</div>
+          <div class="settings-row-label" data-i18n="settings.entries">Entries stored</div>
           <div class="settings-row-sub" id="cfg-count-display">0</div>
         </div>
       </div>
       <div class="settings-row">
         <div class="settings-row-left">
-          <div class="settings-row-label">Last synced</div>
+          <div class="settings-row-label" data-i18n="settings.lastSync">Last synced</div>
           <div class="settings-row-sub" id="cfg-sync-display">Never</div>
         </div>
         <button class="icon-btn" onclick="manualSync()" aria-label="Sync now">↻</button>
       </div>
     </div>
 
-    <div class="sec-label">Data</div>
+    <div class="sec-label" data-i18n="sec.preferences">Preferences</div>
     <div class="card">
       <div class="settings-row">
         <div class="settings-row-left">
-          <div class="settings-row-label">Export as JSON</div>
-          <div class="settings-row-sub">Download a local backup</div>
+          <div class="settings-row-label" data-i18n="settings.language">Language</div>
+        </div>
+        <select id="lang-select" onchange="setLang(this.value)">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sec-label" data-i18n="sec.data">Data</div>
+    <div class="card">
+      <div class="settings-row">
+        <div class="settings-row-left">
+          <div class="settings-row-label" data-i18n="settings.export">Export as JSON</div>
+          <div class="settings-row-sub" data-i18n="settings.exportSub">Download a local backup</div>
         </div>
         <button class="icon-btn" onclick="exportJSON()" aria-label="Export">↓</button>
       </div>
     </div>
 
     <div class="card">
-      <button class="danger-btn" onclick="doLogout()">Sign out &amp; clear local data</button>
+      <button class="danger-btn" onclick="doLogout()" data-i18n="settings.logout">Sign out &amp; clear local data</button>
     </div>
 
-    <div class="settings-footer">
+    <div class="settings-footer" data-i18n-html="settings.footer">
       BiteByBite · open source, no tracking<br>
       Data lives in your GitHub repo
     </div>
@@ -245,16 +258,16 @@
   <!-- Tab bar -->
   <nav class="tab-bar">
     <button class="tab-item active" data-tab="log" onclick="switchTab('log')">
-      <span class="tab-icon">✏️</span>Log
+      <span class="tab-icon">✏️</span><span data-i18n="tab.log">Log</span>
     </button>
     <button class="tab-item" data-tab="history" onclick="switchTab('history')">
-      <span class="tab-icon">📋</span>History
+      <span class="tab-icon">📋</span><span data-i18n="tab.history">History</span>
     </button>
     <button class="tab-item" data-tab="patterns" onclick="switchTab('patterns')">
-      <span class="tab-icon">📊</span>Patterns
+      <span class="tab-icon">📊</span><span data-i18n="tab.patterns">Patterns</span>
     </button>
     <button class="tab-item" data-tab="settings" onclick="switchTab('settings')">
-      <span class="tab-icon">⚙️</span>Settings
+      <span class="tab-icon">⚙️</span><span data-i18n="tab.settings">Settings</span>
     </button>
   </nav>
 </div>
@@ -262,6 +275,7 @@
 <script src="src/util.js"></script>
 <script src="src/state.js"></script>
 <script src="src/storage.js"></script>
+<script src="src/i18n.js"></script>
 <script src="src/github.js"></script>
 <script src="src/ui.js"></script>
 <script src="src/render.js"></script>

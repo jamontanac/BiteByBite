@@ -28,7 +28,7 @@ function setSyncState(state) {
   const dot = document.getElementById('sync-dot');
   const lbl = document.getElementById('sync-label');
   dot.className = 'sync-dot ' + state;
-  lbl.textContent = state === 'syncing' ? 'Saving…' : state === 'error' ? 'Offline' : 'Saved';
+  lbl.textContent = state === 'syncing' ? t('sync.saving') : state === 'error' ? t('sync.offline') : t('sync.saved');
 }
 
 // Re-renders every data-driven view after the journal changes.
@@ -43,7 +43,7 @@ function updateSettingsDisplay() {
   document.getElementById('cfg-repo-display').textContent =
     CFG.user ? `${CFG.user}/${CFG.repo}` : '—';
   document.getElementById('cfg-count-display').textContent =
-    `${journal.length} entr${journal.length === 1 ? 'y' : 'ies'}`;
+    journal.length === 1 ? t('settings.entryOne', { n: 1 }) : t('settings.entryMany', { n: journal.length });
 
   const raw = localStorage.getItem(LS_SYNC);
   if (raw) {
@@ -52,11 +52,11 @@ function updateSettingsDisplay() {
     const isToday = d.toDateString() === today.toDateString();
     const time    = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const label   = isToday
-      ? `Today at ${time}`
-      : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ` at ${time}`;
+      ? t('settings.todayAt', { time })
+      : t('settings.dateAt', { date: d.toLocaleDateString(LANG, { month: 'short', day: 'numeric' }), time });
     document.getElementById('cfg-sync-display').textContent = label;
   } else {
-    document.getElementById('cfg-sync-display').textContent = 'Never';
+    document.getElementById('cfg-sync-display').textContent = t('settings.never');
   }
 }
 
@@ -67,7 +67,7 @@ function exportJSON() {
   a.download = `bitebybite-backup-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
-  toast('Export downloaded');
+  toast(t('toast.exported'));
 }
 
 // ── Theme ───────────────────────────────────────────────

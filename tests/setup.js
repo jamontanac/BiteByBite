@@ -64,6 +64,11 @@ function buildDOM() {
         <div id="cfg-repo-display"></div>
         <div id="cfg-count-display"></div>
         <div id="cfg-sync-display"></div>
+        <label id="lang-label" data-i18n="settings.language">Language</label>
+        <select id="lang-select" onchange="setLang(this.value)">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
       </div>
 
       <nav class="tab-bar">
@@ -80,6 +85,7 @@ function buildDOM() {
 // mutates them) so resetState() can restore them.
 const _JCFG_DEFAULT    = JSON.parse(JSON.stringify(JCFG));
 const _FORMCFG_DEFAULT = JSON.parse(JSON.stringify(FORMCFG));
+const _I18N_DEFAULT    = JSON.parse(JSON.stringify(I18N));
 
 // ── State reset ─────────────────────────────────────────
 // IMPORTANT: app.js uses `let` declarations, which do NOT appear on window.
@@ -97,6 +103,8 @@ function resetState() {
   journalBranchReady = false;
   JCFG    = JSON.parse(JSON.stringify(_JCFG_DEFAULT));
   FORMCFG = JSON.parse(JSON.stringify(_FORMCFG_DEFAULT));
+  LANG    = 'en';
+  I18N    = JSON.parse(JSON.stringify(_I18N_DEFAULT));
   localStorage.clear();
 
   // Reset DOM containers

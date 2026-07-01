@@ -6,6 +6,7 @@ const LS_CFG   = 'diario_cfg';
 const LS_LOCAL = 'diario_local';
 const LS_SYNC  = 'diario_last_sync';
 const LS_THEME = 'diario_theme';
+const LS_LANG  = 'diario_lang';
 
 // Returns the saved {user, repo, token}, or null if absent/incomplete.
 function loadCfg() {
@@ -45,6 +46,14 @@ function loadTheme() {
 }
 function saveTheme(mode) {
   localStorage.setItem(LS_THEME, mode);
+}
+
+// Language preference: 'en' | 'es' (defaults to 'en').
+function loadLang() {
+  return localStorage.getItem(LS_LANG) || 'en';
+}
+function saveLang(lang) {
+  localStorage.setItem(LS_LANG, lang);
 }
 
 // Clears all locally-cached data (used on sign-out).

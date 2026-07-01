@@ -4,7 +4,7 @@ function renderHistory() {
   if (!journal.length) {
     el.innerHTML = `<div class="empty">
       <div class="empty-icon">📖</div>
-      <p>No entries yet.<br>Log your first day using the ✏️ tab.</p>
+      <p>${t('hist.empty')}</p>
     </div>`;
     return;
   }
@@ -17,35 +17,34 @@ function renderHistory() {
     const hasDairy    = e.meals && e.meals.some(m => m.dairy);
     const hasLeftover = e.meals && e.meals.some(m => m.freshFood === false);
 
+    const detail = hasRx
+      ? e.reactions.length + ' ' + (e.reactions.length === 1 ? t('hist.episode') : t('hist.episodes'))
+      : e.vomit + '×';
     const tags = [
       hadVomit
-        ? `<span class="tag bad">🤢 Vomited (${
-            hasRx
-              ? e.reactions.length + (e.reactions.length === 1 ? ' episode' : ' episodes')
-              : e.vomit + '×'
-          })</span>`
-        : `<span class="tag ok">✓ No vomiting</span>`,
-      e.severity === '3' ? `<span class="tag bad">Severe day</span>` :
-      e.severity === '2' ? `<span class="tag warn">Moderate day</span>` :
-      e.severity === '1' ? `<span class="tag ok">Mild day</span>` : '',
-      hasNew      ? `<span class="tag warn">New food</span>` : '',
-      hasLeftover ? `<span class="tag neutral">Leftover food</span>` : '',
-      hasGluten ? `<span class="tag gluten">Gluten</span>` : '',
-      hasDairy  ? `<span class="tag neutral">Dairy</span>` : '',
-      e.newEnv  ? `<span class="tag neutral">Away from home</span>` : '',
-      e.sick    ? `<span class="tag warn">Illness signs</span>` : '',
-      e.meds    ? `<span class="tag neutral">💊 ${e.medName || 'Medication'}</span>` : '',
-      e.sleep   ? `<span class="tag neutral">Sleep: ${e.sleep}</span>` : '',
+        ? `<span class="tag bad">${t('hist.vomited', { detail })}</span>`
+        : `<span class="tag ok">${t('hist.noVomiting')}</span>`,
+      e.severity === '3' ? `<span class="tag bad">${t('hist.severeDay')}</span>` :
+      e.severity === '2' ? `<span class="tag warn">${t('hist.moderateDay')}</span>` :
+      e.severity === '1' ? `<span class="tag ok">${t('hist.mildDay')}</span>` : '',
+      hasNew      ? `<span class="tag warn">${t('hist.newFood')}</span>` : '',
+      hasLeftover ? `<span class="tag neutral">${t('hist.leftover')}</span>` : '',
+      hasGluten ? `<span class="tag gluten">${t('hist.gluten')}</span>` : '',
+      hasDairy  ? `<span class="tag neutral">${t('hist.dairy')}</span>` : '',
+      e.newEnv  ? `<span class="tag neutral">${t('hist.awayFromHome')}</span>` : '',
+      e.sick    ? `<span class="tag warn">${t('hist.illnessSigns')}</span>` : '',
+      e.meds    ? `<span class="tag neutral">💊 ${e.medName || t('hist.medication')}</span>` : '',
+      e.sleep   ? `<span class="tag neutral">${t('hist.sleepTag', { v: e.sleep })}</span>` : '',
     ].filter(Boolean).join('');
 
     const mealRows = (e.meals || []).slice().sort(mealTimeCompare).map(m => `
       <div class="meal-row">
         <span class="meal-time">${m.time ? fmtTime(m.time) : '—'}</span>
         <span class="meal-foods-text">
-          <strong>${typeName(m.type)}</strong> · ${m.foods || '(no detail)'}
-          ${m.freshFood === false ? ` · <em class="leftover-note">leftover${m.cookedWhen ? ' (' + m.cookedWhen + ')' : ''}</em>` : ''}
-          ${m.newFood ? ` · <em class="newfood-note">${m.newFoodName || 'new food'}</em>` : ''}
-          ${m.gluten  ? ' · <em class="gluten-note">gluten</em>' : ''}
+          <strong>${typeName(m.type)}</strong> · ${m.foods || t('hist.noDetail')}
+          ${m.freshFood === false ? ` · <em class="leftover-note">${t('hist.leftoverNote')}${m.cookedWhen ? ' (' + m.cookedWhen + ')' : ''}</em>` : ''}
+          ${m.newFood ? ` · <em class="newfood-note">${m.newFoodName || t('hist.newFoodFallback')}</em>` : ''}
+          ${m.gluten  ? ` · <em class="gluten-note">${t('hist.glutenNote')}</em>` : ''}
         </span>
       </div>`).join('');
 
@@ -53,13 +52,13 @@ function renderHistory() {
     if (hasRx) {
       reactionHtml = e.reactions.map(r =>
         `<div class="reaction-bar ${e.severity === '3' ? 'severe' : ''}">
-          ${r.count}× &nbsp;·&nbsp; ${r.delay || '—'} after ${r.meal ? `<strong>${r.meal}</strong>` : 'last meal'}
+          ${r.count}× &nbsp;·&nbsp; ${r.delay || '—'} ${t('hist.after')} ${r.meal ? `<strong>${r.meal}</strong>` : t('hist.lastMeal')}
           ${r.content ? ` — <em>${r.content}</em>` : ''}
         </div>`
       ).join('');
     } else if (hasLegacyVomit(e) && e.delay) {
       reactionHtml = `<div class="reaction-bar ${e.severity === '3' ? 'severe' : ''}">
-        Reaction ${e.delay} after ${e.mealVomited ? `<strong>${e.mealVomited}</strong>` : 'last meal'}
+        ${t('hist.reaction')} ${e.delay} ${t('hist.after')} ${e.mealVomited ? `<strong>${e.mealVomited}</strong>` : t('hist.lastMeal')}
         ${e.vomitContent ? ` — <em>${e.vomitContent}</em>` : ''}
         ${e.symptoms && e.symptoms.length ? ' · ' + e.symptoms.join(', ') : ''}
       </div>`;
@@ -68,7 +67,7 @@ function renderHistory() {
     return `<div class="card">
       <div class="entry-head">
         <div class="entry-date-head">${fmtDate(e.date)}</div>
-        <button onclick="enterEditMode(${i})" class="entry-edit-btn" aria-label="Edit entry">Edit</button>
+        <button onclick="enterEditMode(${i})" class="entry-edit-btn" aria-label="Edit entry">${t('hist.edit')}</button>
       </div>
       <div class="tag-row">${tags}</div>
       <div>${mealRows}</div>
@@ -85,7 +84,7 @@ function renderPatterns() {
   if (journal.length < 2) {
     el.innerHTML = `<div class="empty">
       <div class="empty-icon">📊</div>
-      <p>Log at least 2 days to start<br>seeing patterns.</p>
+      <p>${t('pat.empty')}</p>
     </div>`;
     return;
   }
@@ -103,51 +102,15 @@ function renderPatterns() {
   };
 
   const correlations = [
-    {
-      name: 'Gluten days with vomiting',
-      filter: e => e.meals && e.meals.some(m => m.gluten),
-      react:  hadReaction
-    },
-    {
-      name: 'Dairy days with vomiting',
-      filter: e => e.meals && e.meals.some(m => m.dairy),
-      react:  hadReaction
-    },
-    {
-      name: 'Egg days with vomiting',
-      filter: e => e.meals && e.meals.some(m => m.egg),
-      react:  hadReaction
-    },
-    {
-      name: 'New food days with vomiting',
-      filter: e => e.meals && e.meals.some(m => m.newFood),
-      react:  hadReaction
-    },
-    {
-      name: 'Leftover food days with vomiting',
-      filter: e => e.meals && e.meals.some(m => m.freshFood === false),
-      react:  hadReaction
-    },
-    {
-      name: 'Poor-sleep days with vomiting',
-      filter: e => e.sleep === 'poor' || e.sleep === 'very-poor',
-      react:  hadReaction
-    },
-    {
-      name: 'Away-from-home days with vomiting',
-      filter: e => e.newEnv,
-      react:  hadReaction
-    },
-    {
-      name: 'Illness-sign days with vomiting',
-      filter: e => e.sick,
-      react:  hadReaction
-    },
-    {
-      name: 'Heavy-meal days with vomiting',
-      filter: e => e.meals && e.meals.some(m => m.heavy === 'heavy'),
-      react:  hadReaction
-    },
+    { name: t('pat.corr.gluten'),    filter: e => e.meals && e.meals.some(m => m.gluten),               react: hadReaction },
+    { name: t('pat.corr.dairy'),     filter: e => e.meals && e.meals.some(m => m.dairy),                react: hadReaction },
+    { name: t('pat.corr.egg'),       filter: e => e.meals && e.meals.some(m => m.egg),                  react: hadReaction },
+    { name: t('pat.corr.newFood'),   filter: e => e.meals && e.meals.some(m => m.newFood),              react: hadReaction },
+    { name: t('pat.corr.leftover'),  filter: e => e.meals && e.meals.some(m => m.freshFood === false),  react: hadReaction },
+    { name: t('pat.corr.poorSleep'), filter: e => e.sleep === 'poor' || e.sleep === 'very-poor',        react: hadReaction },
+    { name: t('pat.corr.away'),      filter: e => e.newEnv,                                             react: hadReaction },
+    { name: t('pat.corr.illness'),   filter: e => e.sick,                                               react: hadReaction },
+    { name: t('pat.corr.heavy'),     filter: e => e.meals && e.meals.some(m => m.heavy === 'heavy'),     react: hadReaction },
   ];
 
   const corrRows = correlations.map(c => {
@@ -158,7 +121,7 @@ function renderPatterns() {
     return `<div class="corr-row">
       <div class="corr-left">
         <div class="corr-name">${c.name}</div>
-        <div class="corr-sub">${hits} of ${subset.length} days</div>
+        <div class="corr-sub">${t('pat.corrSub', { hits, total: subset.length })}</div>
       </div>
       <div class="corr-pct ${cls}">${p}</div>
     </div>`;
@@ -181,34 +144,34 @@ function renderPatterns() {
 
   el.innerHTML = `
     <div class="stat-grid">
-      <div class="stat-card"><div class="stat-num">${n}</div><div class="stat-lbl">Days logged</div></div>
-      <div class="stat-card"><div class="stat-num bad">${vomitDays}</div><div class="stat-lbl">Days with vomiting</div></div>
-      <div class="stat-card"><div class="stat-num">${pct(vomitDays,n)}</div><div class="stat-lbl">Vomit rate</div></div>
-      <div class="stat-card"><div class="stat-num ok">${n - vomitDays}</div><div class="stat-lbl">Clear days</div></div>
+      <div class="stat-card"><div class="stat-num">${n}</div><div class="stat-lbl">${t('pat.daysLogged')}</div></div>
+      <div class="stat-card"><div class="stat-num bad">${vomitDays}</div><div class="stat-lbl">${t('pat.daysVomiting')}</div></div>
+      <div class="stat-card"><div class="stat-num">${pct(vomitDays,n)}</div><div class="stat-lbl">${t('pat.vomitRate')}</div></div>
+      <div class="stat-card"><div class="stat-num ok">${n - vomitDays}</div><div class="stat-lbl">${t('pat.clearDays')}</div></div>
     </div>
 
-    <div class="sec-label">Possible correlations</div>
+    <div class="sec-label">${t('pat.corrTitle')}</div>
     ${corrRows}
 
     ${vEntries.length ? `
-    <div class="sec-label">Reaction timing</div>
+    <div class="sec-label">${t('pat.timingTitle')}</div>
     <div class="card">
       <div class="timing-note">
-        Fast reactions (&lt;2 h) suggest IgE allergy. Delayed reactions (2–8 h) are more typical of non-IgE allergy, celiac, or intolerance.
+        ${t('pat.timingNote')}
       </div>
       <div class="chip-grid">${delayRows}</div>
     </div>` : ''}
 
     ${sympRows ? `
-    <div class="sec-label">Most frequent symptoms</div>
+    <div class="sec-label">${t('pat.symptomsTitle')}</div>
     <div class="card">
       <div class="chip-grid">${sympRows}</div>
     </div>` : ''}
 
     <div class="insight-card insight-howto">
-      <h3>How to use these numbers</h3>
+      <h3>${t('pat.howtoTitle')}</h3>
       <div class="insight-body">
-        These percentages are descriptive, not diagnostic. A high correlation is a signal worth investigating — share this log with your pediatric gastroenterologist or allergist. They can order a targeted celiac panel (tTG-IgA, DGP-IgG) or design a supervised elimination diet based on the patterns you see here.
+        ${t('pat.howtoBody')}
       </div>
     </div>
     <div class="spacer-sm"></div>

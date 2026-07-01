@@ -456,3 +456,6 @@ input[type="date"],input[type="time"]{
 /* Patterns */
 .timing-note{font-size:.82rem;color:var(--ink2);margin-bottom:.625rem;line-height:1.5}
 .insight-card.insight-howto{margin-top:.75rem;border-left:3px solid var(--border)}
+
+/* Language selector (Settings) */
+#lang-select{padding:.4rem .6rem;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--ink);font-size:.85rem}

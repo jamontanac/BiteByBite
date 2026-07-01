@@ -137,6 +137,8 @@ async function loadConfigs() {
     ['config/vomiting_episode_config.json', json => { if (json.selects) FORMCFG.vomiting = { selects: json.selects }; }],
     ['config/symptoms_config.json',         json => { if (Array.isArray(json.symptoms)) FORMCFG.symptoms = json.symptoms; }],
     ['config/severity_config.json',         json => { if (Array.isArray(json.severity)) FORMCFG.severity = json.severity; }],
+    ['config/i18n_en.json',                 json => { if (json && typeof json === 'object') Object.assign(I18N.en, json); }],
+    ['config/i18n_es.json',                 json => { if (json && typeof json === 'object') Object.assign(I18N.es, json); }],
   ];
   await Promise.all(files.map(async ([path, apply]) => {
     try {

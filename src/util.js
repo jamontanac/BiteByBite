@@ -1,9 +1,9 @@
 // ── Util ────────────────────────────────────────────────
 // Builds <option> markup from a [{value,label}] array, optionally pre-selecting
 // one value. Config values/labels are trusted app config (not user input).
-function optionsHtml(arr, selected) {
+function optionsHtml(arr, selected, ns) {
   return (arr || [])
-    .map(o => `<option value="${o.value}"${selected != null && o.value === selected ? ' selected' : ''}>${o.label}</option>`)
+    .map(o => `<option value="${o.value}"${selected != null && o.value === selected ? ' selected' : ''}>${optLabel(ns, o)}</option>`)
     .join('');
 }
 
@@ -21,11 +21,11 @@ function normalizeJournal() {
   journal.forEach(e => { if (Array.isArray(e.meals)) e.meals.sort(mealTimeCompare); });
 }
 
-function typeName(t) {
-  const m = { breakfast:'Breakfast', snack:'Snack', snack2:'Snack', lunch:'Lunch', dinner:'Dinner', other:'Other' };
-  if (m[t]) return m[t];
-  const opt = (FORMCFG.meals.selects.type || []).find(o => o.value === t);
-  return opt ? opt.label : t;
+function typeName(type) {
+  const keys = { breakfast:'type.breakfast', snack:'type.snack', snack2:'type.snack', lunch:'type.lunch', dinner:'type.dinner', other:'type.other' };
+  if (keys[type]) return t(keys[type]);
+  const opt = (FORMCFG.meals.selects.type || []).find(o => o.value === type);
+  return opt ? opt.label : type;
 }
 
 function fmtTime(t) {
@@ -39,12 +39,27 @@ function fmtTime(t) {
 function fmtDate(s) {
   if (!s) return '';
   const [y, mo, d] = s.split('-').map(Number);
-  return new Date(y, mo - 1, d).toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  return new Date(y, mo - 1, d).toLocaleDateString(LANG, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 }
 
-// A meal's short label, e.g. "Breakfast · 8:00 AM" (time optional).
+// A meal's short label, e.g. "Breakfast · 8:00 AM" (time optional) — translated
+// for display.
 function mealLabel(type, time) {
   return typeName(type) + (time ? ' · ' + fmtTime(time) : '');
+}
+
+// Canonical (English) meal label, independent of the UI language. Used for the
+// value STORED in `reaction.meal` so a reaction logged in any language keeps a
+// stable, language-independent label in journal.json. Reproduces the pre-i18n
+// English label exactly.
+function mealLabelCanonical(type, time) {
+  const en = { breakfast:'Breakfast', snack:'Snack', snack2:'Snack', lunch:'Lunch', dinner:'Dinner', other:'Other' };
+  let name = en[type];
+  if (!name) {
+    const opt = (FORMCFG.meals.selects.type || []).find(o => o.value === type);
+    name = opt ? opt.label : type;
+  }
+  return name + (time ? ' · ' + fmtTime(time) : '');
 }
 
 // Reaction/vomit detection. Current entries use a reactions[] array; older ones

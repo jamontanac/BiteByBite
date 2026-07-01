@@ -1,6 +1,7 @@
 // ── Boot ───────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   applyTheme(loadTheme());
+  LANG = loadLang();
   await loadConfigs();
 
   const cfg = loadCfg();
@@ -12,6 +13,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (JCFG.github.reponame) document.getElementById('gh-repo').value = JCFG.github.reponame;
     show('s-login');
   }
+  applyI18n(document);
   document.getElementById('loading').style.display = 'none';
 });
 
@@ -29,7 +31,7 @@ async function bootApp() {
     await pullFromGitHub();
   } catch(e) {
     setSyncState('error');
-    toast('Could not reach GitHub. Working offline.', true);
+    toast(t('toast.offline'), true);
   }
 }
 
@@ -54,12 +56,12 @@ async function doLogin() {
   const token = document.getElementById('gh-token').value.trim();
 
   if (!user || !repo || !token) {
-    showErr('Please fill in all fields.');
+    showErr(t('login.errFields'));
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = 'Connecting…';
+  btn.textContent = t('login.connecting');
 
   CFG = { user, repo, token };
 
@@ -68,21 +70,21 @@ async function doLogin() {
     saveCfg();
     await bootApp();
   } catch(e) {
-    showErr('Could not connect. Check your username, repo name, and token permissions (needs "repo" scope).');
+    showErr(t('login.errConnect'));
     btn.disabled = false;
-    btn.textContent = 'Connect & open journal';
+    btn.textContent = t('login.button');
   }
 
   function showErr(msg) {
     errEl.textContent = msg;
     errEl.style.display = 'block';
     btn.disabled = false;
-    btn.textContent = 'Connect & open journal';
+    btn.textContent = t('login.button');
   }
 }
 
 function doLogout() {
-  if (!confirm('Sign out? Your data stays on GitHub. Local cache will be cleared.')) return;
+  if (!confirm(t('logout.confirm'))) return;
   clearStored();
   CFG = {}; journal = []; ghSha = null; journalBranchReady = false;
   show('s-login');
@@ -94,9 +96,9 @@ function doLogout() {
 async function manualSync() {
   try {
     await pullFromGitHub();
-    toast('Synced with GitHub');
+    toast(t('toast.synced'));
   } catch(e) {
     setSyncState('error');
-    toast('Sync failed — check connection', true);
+    toast(t('toast.syncFailed'), true);
   }
 }
