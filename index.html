@@ -72,6 +72,7 @@
       </div>
       <button class="icon-btn" onclick="manualSync()" data-i18n-title="header.syncNow" title="Sync now" aria-label="Sync now">↻</button>
       <button class="icon-btn" onclick="cycleTheme()" id="theme-btn" title="Theme" aria-label="Toggle theme">◐</button>
+      <button class="icon-btn" onclick="cycleLang()" id="lang-btn" title="Language" aria-label="Toggle language">EN</button>
     </div>
   </header>
 
@@ -218,19 +219,6 @@
           <div class="settings-row-sub" id="cfg-sync-display">Never</div>
         </div>
         <button class="icon-btn" onclick="manualSync()" aria-label="Sync now">↻</button>
-      </div>
-    </div>
-
-    <div class="sec-label" data-i18n="sec.preferences">Preferences</div>
-    <div class="card">
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-row-label" data-i18n="settings.language">Language</div>
-        </div>
-        <select id="lang-select" onchange="setLang(this.value)">
-          <option value="en">English</option>
-          <option value="es">Español</option>
-        </select>
       </div>
     </div>
 

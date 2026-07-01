@@ -459,3 +459,6 @@ input[type="date"],input[type="time"]{
 
 /* Language selector (Settings) */
 #lang-select{padding:.4rem .6rem;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--ink);font-size:.85rem}
+
+/* Header language button (shows EN / ES) */
+#lang-btn{font-size:.72rem;font-weight:600;letter-spacing:.03em}

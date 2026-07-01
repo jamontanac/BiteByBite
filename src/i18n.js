@@ -127,7 +127,7 @@ let I18N = {
     'label.date': 'Fecha', 'label.sleep': 'Sueño anoche', 'label.mood': 'Ánimo / energía',
     'label.activity': 'Nivel de actividad', 'label.stool': 'Consistencia de las heces', 'label.hydration': 'Hidratación',
     'toggle.newenv': 'Entorno diferente', 'toggle.newenv.hint': 'Viajes, comer fuera, visitar familia',
-    'toggle.sick': 'Signos de enfermedad / dentición', 'toggle.sick.hint': 'Mocos, fiebre, encías inflamadas',
+    'toggle.sick': 'Está enfermo o le están saliendo los dientes', 'toggle.sick.hint': 'Mocos, fiebre, encías inflamadas',
     'toggle.meds': 'Medicamento nuevo hoy', 'toggle.meds.hint': 'Fuera de la rutina habitual',
     'label.medName': 'Nombre y dosis del medicamento', 'ph.medName': 'p. ej. Amoxicilina 250mg',
     'btn.addMeal': 'Añadir comida o merienda', 'btn.addVomiting': 'Añadir episodio de vómito',
@@ -150,25 +150,25 @@ let I18N = {
     'hist.noVomiting': '✓ Sin vómito',
     'hist.severeDay': 'Día severo', 'hist.moderateDay': 'Día moderado', 'hist.mildDay': 'Día leve',
     'hist.newFood': 'Comida nueva', 'hist.leftover': 'Sobras', 'hist.gluten': 'Gluten', 'hist.dairy': 'Lácteos',
-    'hist.awayFromHome': 'Fuera de casa', 'hist.illnessSigns': 'Signos de enfermedad', 'hist.medication': 'Medicamento',
+    'hist.awayFromHome': 'Fuera de casa', 'hist.illnessSigns': 'Señales de enfermedad', 'hist.medication': 'Medicamento',
     'hist.sleepTag': 'Sueño: {v}', 'hist.noDetail': '(sin detalle)',
     'hist.leftoverNote': 'sobras', 'hist.newFoodFallback': 'comida nueva', 'hist.glutenNote': 'gluten',
     'hist.after': 'después de', 'hist.lastMeal': 'la última comida', 'hist.reaction': 'Reacción', 'hist.edit': 'Editar',
     'pat.empty': 'Registra al menos 2 días para empezar<br>a ver patrones.',
-    'pat.daysLogged': 'Días registrados', 'pat.daysVomiting': 'Días con vómito', 'pat.vomitRate': 'Tasa de vómito', 'pat.clearDays': 'Días despejados',
+    'pat.daysLogged': 'Días registrados', 'pat.daysVomiting': 'Días con vómito', 'pat.vomitRate': 'Tasa de vómito', 'pat.clearDays': 'Días sin vómito',
     'pat.corrTitle': 'Posibles correlaciones',
     'pat.corr.gluten': 'Días con gluten y vómito', 'pat.corr.dairy': 'Días con lácteos y vómito',
     'pat.corr.egg': 'Días con huevo y vómito', 'pat.corr.newFood': 'Días con comida nueva y vómito',
     'pat.corr.leftover': 'Días con sobras y vómito', 'pat.corr.poorSleep': 'Días con mal sueño y vómito',
-    'pat.corr.away': 'Días fuera de casa con vómito', 'pat.corr.illness': 'Días con signos de enfermedad y vómito',
+    'pat.corr.away': 'Días fuera de casa con vómito', 'pat.corr.illness': 'Días con señales de enfermedad y vómito',
     'pat.corr.heavy': 'Días con comida pesada y vómito',
     'pat.corrSub': '{hits} de {total} días', 'pat.timingTitle': 'Tiempo de reacción',
     'pat.timingNote': 'Las reacciones rápidas (&lt;2 h) sugieren alergia IgE. Las reacciones tardías (2–8 h) son más típicas de alergia no IgE, celiaquía o intolerancia.',
     'pat.symptomsTitle': 'Síntomas más frecuentes', 'pat.howtoTitle': 'Cómo usar estos números',
     'pat.howtoBody': 'Estos porcentajes son descriptivos, no diagnósticos. Una correlación alta es una señal que vale la pena investigar: comparte este registro con tu gastroenterólogo o alergólogo pediátrico. Pueden solicitar un panel de celiaquía específico (tTG-IgA, DGP-IgG) o diseñar una dieta de eliminación supervisada según los patrones que ves aquí.',
     'meal.remove': 'Quitar', 'meal.time': 'Hora', 'meal.source': 'Origen', 'meal.foods': 'Alimentos',
-    'meal.foodsPh': 'p. ej. avena, plátano, jugo de manzana…', 'meal.heavy': 'Pesadez de la comida', 'meal.amount': 'Cantidad comida',
-    'meal.newFood': 'Comida nueva', 'meal.newFoodHint': 'Ingrediente rara vez o nunca comido antes',
+    'meal.foodsPh': 'p. ej. avena, plátano, jugo de manzana…', 'meal.heavy': 'Pesadez de la comida', 'meal.amount': 'Cuánto comió',
+    'meal.newFood': 'Comida nueva', 'meal.newFoodHint': 'Un ingrediente que casi nunca o nunca ha comido',
     'meal.newIngredient': 'Ingrediente nuevo', 'meal.newIngredientPh': 'p. ej. mango, pan de trigo…',
     'meal.fresh': 'Comida fresca', 'meal.freshHint': 'Cocinada hoy, no son sobras',
     'meal.cookedWhen': '¿Cuándo se cocinó?', 'meal.cookedWhenPh': 'p. ej. ayer por la tarde, hace 2 días…',
@@ -180,7 +180,7 @@ let I18N = {
     'type.breakfast': 'Desayuno', 'type.snack': 'Merienda', 'type.lunch': 'Almuerzo', 'type.dinner': 'Cena', 'type.other': 'Otro',
     // Option labels (English falls back to config; Spanish provided here)
     'opt.sleep.great': 'Genial', 'opt.sleep.ok': 'Bien (algunos despertares)', 'opt.sleep.poor': 'Malo', 'opt.sleep.very-poor': 'Muy malo',
-    'opt.mood.happy': 'Feliz, con energía', 'opt.mood.normal': 'Normal', 'opt.mood.fussy': 'Irritable', 'opt.mood.tired': 'Cansado, apático',
+    'opt.mood.happy': 'Feliz, con energía', 'opt.mood.normal': 'Normal', 'opt.mood.fussy': 'Molesto, irritable', 'opt.mood.tired': 'Cansado, apático',
     'opt.activity.low': 'Baja / tranquila', 'opt.activity.normal': 'Juego normal', 'opt.activity.high': 'Muy activo',
     'opt.stool.normal': 'Normal', 'opt.stool.soft': 'Blanda / suelta', 'opt.stool.watery': 'Líquida / diarrea', 'opt.stool.hard': 'Dura / estreñido', 'opt.stool.none': 'Ninguna hoy',
     'opt.hydration.good': 'Buena', 'opt.hydration.low': 'Por debajo de lo normal', 'opt.hydration.poor': 'Mala / rechazó',
@@ -222,6 +222,8 @@ function applyI18n(root) {
   root.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
   const sel = document.getElementById('lang-select');
   if (sel) sel.value = LANG;
+  const langBtn = document.getElementById('lang-btn');
+  if (langBtn) { langBtn.textContent = LANG.toUpperCase(); langBtn.title = t('settings.language'); }
 }
 
 // Switches language: persists it, re-fills static text, and re-renders the
@@ -232,4 +234,12 @@ function setLang(lang) {
   applyI18n(document);
   refreshViews();
   retranslateLogForm();
+}
+
+// Toggles through the available languages (en ⇄ es) and applies the choice.
+// The header language button uses this, mirroring the theme toggle.
+function cycleLang() {
+  const langs = ['en', 'es'];
+  const next = langs[(langs.indexOf(LANG) + 1) % langs.length];
+  setLang(next);
 }

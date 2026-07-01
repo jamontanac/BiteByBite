@@ -17,6 +17,7 @@ function buildDOM() {
     <div id="s-app" class="screen">
       <div class="sync-dot synced" id="sync-dot"></div>
       <span id="sync-label">Saved</span>
+      <button id="lang-btn"></button>
 
       <div id="tab-log" class="scroll-area active">
         <div id="edit-banner" style="display:none">

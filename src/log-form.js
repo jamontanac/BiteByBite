@@ -271,22 +271,52 @@ function resetLogForm() {
   addMeal();
 }
 
-// Re-renders the Log-tab config-driven controls (day-overview selects, symptom
-// chips, severity buttons) in the current language, preserving the user's
-// current selections. Meal & reaction cards keep their labels until the form is
-// next reset (after a save). Called by setLang().
+// Re-renders every config-driven Log-tab control (day-overview selects, symptom
+// chips, severity buttons, and the meal & reaction cards) in the current
+// language, preserving the user's in-progress data. Called by setLang().
 function retranslateLogForm() {
   const chips = document.getElementById('symptom-chips');
   if (!chips) return;                       // log form not built yet
+
+  // Capture current state BEFORE re-rendering anything (reactionFromCard reads
+  // the meal cards, so grab both while they still exist).
   const dayVals = {};
   DAY_SELECT_KEYS.forEach(k => { const el = document.getElementById('e-' + k); if (el) dayVals[k] = el.value; });
   const sev  = activeSev;
   const syms = new Set(activeSymptoms);
+  const date = document.getElementById('e-date') ? document.getElementById('e-date').value : '';
+  const savedEntry = date ? journal.find(e => e.date === date) : null;
+  const mealsData     = [...document.querySelectorAll('#meals-container .meal-card')].map(mealFromCard);
+  const reactionsData = [...document.querySelectorAll('#reactions-container .meal-card')].map(c => reactionFromCard(c, savedEntry));
 
+  // Day overview / chips / severity
   populateDayOverview();
   attachChipListeners();
-
   DAY_SELECT_KEYS.forEach(k => { const el = document.getElementById('e-' + k); if (el && dayVals[k] != null) el.value = dayVals[k]; });
   document.querySelectorAll('#symptom-chips .chip').forEach(c => { if (syms.has(c.dataset.v)) c.classList.add('active'); });
   document.querySelectorAll('.sev-btn').forEach(b => { if (b.dataset.s === sev) b.classList.add('active'); });
+
+  // Meal & reaction cards — rebuild from the captured data so their dropdowns
+  // pick up the new language while keeping every field the user entered.
+  document.getElementById('reactions-container').innerHTML = ''; reactionCount = 0;
+  document.getElementById('meals-container').innerHTML = '';     mealCount = 0;
+  mealsData.forEach(m => {
+    addMeal();
+    const cards = document.querySelectorAll('#meals-container .meal-card');
+    loadMealIntoCard(cards[cards.length - 1], m);
+  });
+  updateMealSelect();
+  reactionsData.forEach(r => {
+    addReactionEpisode();
+    const cards  = document.querySelectorAll('#reactions-container .meal-card');
+    const card   = cards[cards.length - 1];
+    const epSel  = card.querySelector('.ep-meal');
+    const stored = (r.meal || '').trim();
+    for (const opt of epSel.options) {
+      if ((opt.dataset.canon || '').trim() === stored || opt.text.trim() === stored) { epSel.value = opt.value; break; }
+    }
+    card.querySelector('.ep-count').value   = r.count   || '1';
+    card.querySelector('.ep-delay').value   = r.delay   || '';
+    card.querySelector('.ep-content').value = r.content || '';
+  });
 }

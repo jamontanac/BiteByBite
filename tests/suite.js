@@ -1965,6 +1965,17 @@ await describe('i18n — t() / setLang() / applyI18n()', async () => {
     applyI18n(document);
     expect(document.getElementById('lang-label').textContent).toBe('Language');
   });
+  await it('cycleLang toggles en ⇄ es and updates the header button', () => {
+    resetState();
+    LANG = 'en'; applyI18n(document);
+    expect(document.getElementById('lang-btn').textContent).toBe('EN');
+    cycleLang();
+    expect(LANG).toBe('es');
+    expect(localStorage.getItem('diario_lang')).toBe('es');
+    expect(document.getElementById('lang-btn').textContent).toBe('ES');
+    cycleLang();
+    expect(LANG).toBe('en');
+  });
 });
 
 } // end runSuite
