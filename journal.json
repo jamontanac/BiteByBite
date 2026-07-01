@@ -70,13 +70,28 @@
         "gluten": true,
         "dairy": false,
         "egg": false
+      },
+      {
+        "type": "breakfast",
+        "time": "16:50",
+        "source": "homemade",
+        "foods": "colada: oatmeal, apple, cinnamon, plantain flour.",
+        "heavy": "moderate",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
       }
     ],
     "reactions": [],
     "symptoms": [],
     "severity": "",
-    "notes": "Ate a bit of regular pasta of my plate while o wasn’t seeing him",
-    "ts": 1782941904778
+    "notes": "Ate a bit of regular pasta of my plate while o wasnât seeing him",
+    "ts": 1782946349711
   },
   {
     "date": "2026-06-30",
