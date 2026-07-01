@@ -1,11 +1,11 @@
 [
   {
     "date": "2026-07-01",
-    "sleep": "",
-    "mood": "",
-    "activity": "",
-    "stool": "",
-    "hydration": "",
+    "sleep": "poor",
+    "mood": "happy",
+    "activity": "normal",
+    "stool": "soft",
+    "hydration": "good",
     "newEnv": false,
     "sick": false,
     "meds": false,
@@ -13,9 +13,39 @@
     "meals": [
       {
         "type": "breakfast",
-        "time": "00:15",
+        "time": "08:10",
         "source": "homemade",
-        "foods": "",
+        "foods": "Fried eggs in butter; colada: oatmeal, apple, cinnamon, plantain flour, fortini x 3",
+        "heavy": "heavy",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": true
+      },
+      {
+        "type": "snack",
+        "time": "09:30",
+        "source": "homemade",
+        "foods": "Arepa; cheese; eggs",
+        "heavy": "light",
+        "amount": "little",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": true,
+        "egg": true
+      },
+      {
+        "type": "snack",
+        "time": "11:00",
+        "source": "homemade",
+        "foods": "Feijoa",
         "heavy": "light",
         "amount": "all",
         "freshFood": true,
@@ -25,13 +55,28 @@
         "gluten": false,
         "dairy": false,
         "egg": false
+      },
+      {
+        "type": "lunch",
+        "time": "13:00",
+        "source": "homemade",
+        "foods": "Soup: carrot, pumpkin, spring onion, red onion, garlic, chicken, corn, fortini x 4; steam chicken; avocado; pasta: egg plant, tomato, peppers, garlic, basil, rice pasta. A bit of regular pasta.",
+        "heavy": "heavy",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": true,
+        "dairy": false,
+        "egg": false
       }
     ],
     "reactions": [],
     "symptoms": [],
     "severity": "",
     "notes": "",
-    "ts": 1782882952390
+    "ts": 1782941810929
   },
   {
     "date": "2026-06-30",
