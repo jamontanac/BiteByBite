@@ -40,13 +40,28 @@
         "gluten": false,
         "dairy": false,
         "egg": false
+      },
+      {
+        "type": "lunch",
+        "time": "12:29",
+        "source": "homemade",
+        "foods": "Soup: carrot, pumpkin, spring onion, red onion, garlic, chicken, corn, fortini x 4",
+        "heavy": "heavy",
+        "amount": "all",
+        "freshFood": false,
+        "cookedWhen": "Soup",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
       }
     ],
     "reactions": [],
     "symptoms": [],
     "severity": "",
     "notes": "",
-    "ts": 1783011670820
+    "ts": 1783013372363
   },
   {
     "date": "2026-07-01",
@@ -156,7 +171,7 @@
       "reflux"
     ],
     "severity": "1",
-    "notes": "Ate a bit of regular pasta of my plate while o wasn’t seeing him",
+    "notes": "Ate a bit of regular pasta of my plate while o wasnât seeing him",
     "ts": 1783013313060
   },
   {
