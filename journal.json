@@ -72,7 +72,7 @@
         "egg": false
       },
       {
-        "type": "breakfast",
+        "type": "snack2",
         "time": "16:50",
         "source": "homemade",
         "foods": "colada: oatmeal, apple, cinnamon, plantain flour.",
@@ -85,13 +85,30 @@
         "gluten": false,
         "dairy": false,
         "egg": false
+      },
+      {
+        "type": "dinner",
+        "time": "18:35",
+        "source": "homemade",
+        "foods": "Soup: carrot, pumpkin, spring onion, red onion, garlic, chicken, corn; Hen, corn cake.",
+        "heavy": "heavy",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
       }
     ],
     "reactions": [],
-    "symptoms": [],
-    "severity": "",
-    "notes": "Ate a bit of regular pasta of my plate while o wasn’t seeing him",
-    "ts": 1782946370834
+    "symptoms": [
+      "reflux"
+    ],
+    "severity": "1",
+    "notes": "Ate a bit of regular pasta of my plate while o wasnât seeing him",
+    "ts": 1782965062050
   },
   {
     "date": "2026-06-30",
