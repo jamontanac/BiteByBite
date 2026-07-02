@@ -799,6 +799,16 @@ await describe('selectSev()', async () => {
     selectSev(document.querySelector('.sev-btn.s1')); expect(activeSev).toBe('1');
     selectSev(document.querySelector('.sev-btn.s3')); expect(activeSev).toBe('3');
   });
+  await it('clicking the selected severity again clears it', () => {
+    resetState();
+    const s2 = document.querySelector('.sev-btn.s2');
+    selectSev(s2);
+    expect(activeSev).toBe('2');
+    expect(s2.classList.contains('active')).toBeTruthy();
+    selectSev(s2);
+    expect(activeSev).toBe('');
+    expect(s2.classList.contains('active')).toBeFalsy();
+  });
 });
 
 
@@ -1860,6 +1870,16 @@ await describe('GitHub read/write uses the configured branch + filename', async 
     await loadFromGitHub();
     expect(calledUrl).toContain('/contents/journal.json');
     expect(calledUrl).toContain('ref=journal');
+    restoreFetch();
+  });
+  await it('loadFromGitHub decodes UTF-8 (accents, ñ, curly quotes, em dash) correctly', async () => {
+    resetState();
+    CFG = { user: 'u', repo: 'r', token: 't' };
+    const note = "café ñoño — it wasn't good";
+    const entries = [{ date: '2026-07-01', notes: note, meals: [], reactions: [], symptoms: [] }];
+    window.fetch = async () => ({ ok: true, status: 200, json: async () => ({ sha: 's', content: b64(entries) }) });
+    const loaded = await loadFromGitHub();
+    expect(loaded[0].notes).toBe(note);
     restoreFetch();
   });
   await it('saveToGitHub sends branch in the PUT body', async () => {

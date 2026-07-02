@@ -31,7 +31,13 @@ async function loadFromGitHub() {
   try {
     const data = await ghGet(`/repos/${CFG.user}/${CFG.repo}/contents/${JCFG.filename}?ref=${encodeURIComponent(JCFG.branch)}`);
     ghSha = data.sha;
-    const decoded = atob(data.content.replace(/\n/g, ''));
+    // Base64 → UTF-8. `atob` alone yields raw bytes; escape + decodeURIComponent
+    // turns those bytes back into proper UTF-8 (accents, ñ, curly quotes, em
+    // dashes) — the inverse of the btoa(unescape(encodeURIComponent(...))) save.
+    const bytes = atob(data.content.replace(/\n/g, ''));
+    let decoded;
+    try { decoded = decodeURIComponent(escape(bytes)); }
+    catch (e) { decoded = bytes; }   // not valid UTF-8 (legacy content) — use as-is
     return JSON.parse(decoded);
   } catch(e) {
     if (e.message.includes('404')) return [];

@@ -242,9 +242,15 @@ function toggleMedInput(checkbox) {
 }
 
 function selectSev(btn) {
+  // Clicking the already-selected severity clears it, so a mistap can be undone.
+  const wasActive = btn.classList.contains('active');
   document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  activeSev = btn.dataset.s;
+  if (wasActive) {
+    activeSev = '';
+  } else {
+    btn.classList.add('active');
+    activeSev = btn.dataset.s;
+  }
 }
 
 function resetLogForm() {
