@@ -1,5 +1,54 @@
 [
   {
+    "date": "2026-07-02",
+    "sleep": "poor",
+    "mood": "",
+    "activity": "",
+    "stool": "",
+    "hydration": "",
+    "newEnv": false,
+    "sick": false,
+    "meds": false,
+    "medName": "",
+    "meals": [
+      {
+        "type": "breakfast",
+        "time": "08:30",
+        "source": "homemade",
+        "foods": "Fried Egg",
+        "heavy": "moderate",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      },
+      {
+        "type": "breakfast",
+        "time": "09:40",
+        "source": "homemade",
+        "foods": "Colada: Peaches, plantain flour, Fortini x 3, oatmeal, apples.",
+        "heavy": "heavy",
+        "amount": "all",
+        "freshFood": true,
+        "cookedWhen": "",
+        "newFood": false,
+        "newFoodName": "",
+        "gluten": false,
+        "dairy": false,
+        "egg": false
+      }
+    ],
+    "reactions": [],
+    "symptoms": [],
+    "severity": "",
+    "notes": "",
+    "ts": 1783011670820
+  },
+  {
     "date": "2026-07-01",
     "sleep": "poor",
     "mood": "happy",
@@ -107,7 +156,7 @@
       "reflux"
     ],
     "severity": "1",
-    "notes": "Ate a bit of regular pasta of my plate while o wasnât seeing him",
+    "notes": "Ate a bit of regular pasta of my plate while o wasnÃ¢ÂÂt seeing him",
     "ts": 1782965062050
   },
   {
