@@ -1,0 +1,14 @@
+{
+  "name": "bitebybite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Test/CI harness for BiteByBite. The app itself is a zero-build, dependency-free static PWA — this package.json exists ONLY so the browser test suite can also run headless in Node (jsdom) for CI. Do not add runtime/app dependencies here.",
+  "scripts": {
+    "test": "node tools/run-tests.js",
+    "test:i18n": "node tools/check-i18n.js",
+    "test:all": "node tools/check-i18n.js && node tools/run-tests.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}

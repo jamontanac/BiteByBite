@@ -1,87 +1,91 @@
 #!/usr/bin/env node
-// ── Headless Node test runner ───────────────────────────
-// Runs the Node-safe slice of the suite (tests/suite.node.js → runNodeSuite())
-// without a browser, so it works in CI. The app files are classic scripts that
-// share one global scope; we load them + the harness + the Node suite as a single
-// script (mirroring how the browser loads them) over a tiny DOM/localStorage stub.
+// ── Headless full-suite runner (jsdom) ──────────────────
+// Runs the ENTIRE browser suite (tests/suite.js) in Node, so CI covers the same
+// 200+ tests as tests/index.html. It builds a jsdom window and reproduces that
+// page's bootstrap: intercept DOMContentLoaded, load the app's classic scripts +
+// harness + suite as one script (so their shared `let`/`const` globals resolve),
+// then buildDOM() → initLogTab() → mockFetch() → runSuite().
 //
-//     node tools/run-tests.js
+//     npm test            (or: node tools/run-tests.js)
 //
-// Exits 0 when green, 1 on any failure. No dependencies. DOM-heavy tests (meal
-// cards, chips, edit mode, saveEntry) still run only in the browser via
-// tests/index.html until we add jsdom.
+// The app ships zero dependencies; jsdom is a dev-only dependency used only here.
+// Exits 0 when green, 1 on any failure.
 
 const fs = require('fs');
-const vm = require('vm');
 const path = require('path');
+const { JSDOM, VirtualConsole } = require('jsdom');
+
 const repo = path.join(__dirname, '..');
+const read = f => fs.readFileSync(path.join(repo, f), 'utf8');
 
-// ── Minimal shims: enough for pure logic + render-to-innerHTML ──
-globalThis.window = globalThis;
+// App scripts in the same order as tests/index.html, then the test infrastructure.
+const appFiles = ['util', 'state', 'storage', 'i18n', 'github', 'ui', 'render', 'log-form', 'edit-save', 'lifecycle']
+  .map(f => `src/${f}.js`);
+const testFiles = ['tests/harness.js', 'tests/mocks.js', 'tests/setup.js', 'tests/suite.js'];
 
-function stubEl() {
-  return {
-    innerHTML: '', textContent: '', value: '', checked: false, readOnly: false,
-    disabled: false, style: {}, dataset: {}, options: [],
-    classList: { add() {}, remove() {}, contains() { return false; }, toggle() {} },
-    querySelector() { return stubEl(); },
-    querySelectorAll() { return []; },
-    appendChild() {}, removeChild() {}, remove() {}, insertBefore() {},
-    addEventListener() {}, removeEventListener() {},
-    setAttribute() {}, getAttribute() { return null; }, focus() {}, click() {},
+// Mirrors tests/index.html STEP 1 — swallow the app's DOMContentLoaded boot.
+const intercept = `
+(function () {
+  var _orig = window.addEventListener.bind(window);
+  window.addEventListener = function (type, fn) {
+    if (type === 'DOMContentLoaded') return;
+    return _orig.apply(window, arguments);
   };
-}
-const _byId = {};
-const _bySel = {};
-globalThis.document = {
-  getElementById: id => _byId[id] || (_byId[id] = stubEl()),
-  querySelector: sel => _bySel[sel] || (_bySel[sel] = stubEl()),
-  querySelectorAll: () => [],
-  createElement: () => stubEl(),
-  addEventListener() {},
-  body: stubEl(),
-  documentElement: stubEl(),
-};
-globalThis.addEventListener = () => {};
-globalThis.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} });
-globalThis.navigator = { language: 'en' };
-globalThis.confirm = () => true;
-globalThis.alert = () => {};
-globalThis.fetch = async () => ({ ok: false, status: 0, json: async () => ({}), text: async () => '' });
-globalThis.localStorage = (() => {
-  let m = {};
-  return {
-    getItem: k => (k in m ? m[k] : null),
-    setItem: (k, v) => { m[k] = String(v); },
-    removeItem: k => { delete m[k]; },
-    clear: () => { m = {}; },
-  };
-})();
-// btoa / atob / unescape / encodeURIComponent are Node globals (v16+).
+})();`;
 
-// ── Load app + harness + Node suite as one shared-scope script ──
-const files = [
-  'src/util.js', 'src/state.js', 'src/storage.js', 'src/i18n.js', 'src/github.js',
-  'src/ui.js', 'src/render.js', 'src/log-form.js', 'src/edit-save.js',
-  'tests/harness.js', 'tests/mocks.js', 'tests/setup.js', 'tests/suite.node.js',
-];
-const bundle = files.map(f => fs.readFileSync(path.join(repo, f), 'utf8')).join('\n');
-const driver = '\n;globalThis.__run = (async () => { await runNodeSuite(); return results; })();';
+// Mirrors tests/index.html STEP 5 — bootstrap, then run. Appended to the bundle so
+// it closes over the app's shared globals (results, mealCount, buildDOM, …).
+const driver = `
+;window.__runAll = async function () {
+  buildDOM();
+  initLogTab();
+  document.getElementById('meals-container').innerHTML = '';
+  mealCount = 0;
+  mockFetch();
+  await runSuite();
+  restoreFetch();
+  return results;
+};`;
 
-try {
-  vm.runInThisContext(bundle + driver, { filename: 'node-suite-bundle.js' });
-} catch (e) {
-  console.error('Failed to load the suite:\n', e);
-  process.exit(1);
+const virtualConsole = new VirtualConsole();
+virtualConsole.on('jsdomError', e => console.error('[jsdom]', e.detail || e));
+
+const dom = new JSDOM(
+  `<!DOCTYPE html><html><body><div id="output"></div>
+   <div id="app-root"></div></body></html>`,
+  { runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://localhost/', virtualConsole }
+);
+const { window } = dom;
+
+// Fill the handful of globals jsdom doesn't provide but the app/tests touch.
+window.matchMedia = window.matchMedia || (() => ({
+  matches: false, media: '', onchange: null,
+  addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent() { return false; },
+}));
+window.escape = window.escape || global.escape;
+window.unescape = window.unescape || global.unescape;
+window.btoa = window.btoa || (s => Buffer.from(s, 'binary').toString('base64'));
+window.atob = window.atob || (s => Buffer.from(s, 'base64').toString('binary'));
+if (typeof window.fetch !== 'function') {
+  window.fetch = async () => ({ ok: false, status: 0, json: async () => ({}), text: async () => '' });
 }
+
+const bundle = [intercept, ...appFiles.map(read), ...testFiles.map(read), driver].join('\n');
 
 (async () => {
-  const results = await globalThis.__run;
-  for (const suite of results.suites) {
-    const fails = suite.tests.filter(t => t.status === 'fail');
-    console.log(`${fails.length ? '✗' : '✓'} ${suite.label}  (${suite.tests.length - fails.length}/${suite.tests.length})`);
-    for (const t of fails) console.log(`    ✗ ${t.label}\n      ${t.error}`);
+  try {
+    window.eval(bundle);
+    const results = await window.__runAll();
+
+    for (const suite of results.suites) {
+      const fails = suite.tests.filter(t => t.status === 'fail');
+      console.log(`${fails.length ? '✗' : '✓'} ${suite.label}  (${suite.tests.length - fails.length}/${suite.tests.length})`);
+      for (const t of fails) console.log(`    ✗ ${t.label}\n      ${t.error}`);
+    }
+    console.log(`\n${results.pass}/${results.pass + results.fail} passing` + (results.fail ? ` · ${results.fail} failed` : ' ✓'));
+    process.exit(results.fail ? 1 : 0);
+  } catch (e) {
+    console.error('Runner crashed:\n', e);
+    process.exit(1);
   }
-  console.log(`\n${results.pass}/${results.pass + results.fail} passing` + (results.fail ? ` · ${results.fail} failed` : ' ✓'));
-  process.exit(results.fail ? 1 : 0);
 })();
