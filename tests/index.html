@@ -71,7 +71,8 @@
 <script src="mocks.js"></script>
 <script src="setup.js"></script>
 
-<!-- STEP 4 — Test cases -->
+<!-- STEP 4 — Test cases (suite.node.js also runs headless via tools/run-tests.js) -->
+<script src="suite.node.js"></script>
 <script src="suite.js"></script>
 
 <!-- STEP 5 — Bootstrap: build DOM, attach chip listeners, run tests -->
@@ -89,7 +90,8 @@
   // Set up a default fetch mock so app code that leaks network calls fails gracefully
   mockFetch();
 
-  // Run all tests
+  // Run all tests (Node-shared slice first, then the DOM-heavy remainder)
+  await runNodeSuite();
   await runSuite();
 
   // Restore fetch and render results

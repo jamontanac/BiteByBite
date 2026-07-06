@@ -1,0 +1,21 @@
+name: tests
+
+# Runs the dependency-free Node checks on every push and pull request.
+# The browser test suite (tests/index.html) still covers the DOM-heavy cases;
+# these are the parts that run headless without a browser.
+on:
+  push:
+  pull_request:
+
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: i18n config parity guard
+        run: node tools/check-i18n.js
+      - name: Node test suite
+        run: node tools/run-tests.js
