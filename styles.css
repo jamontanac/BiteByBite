@@ -351,6 +351,7 @@ input[type="date"],input[type="time"]{
 .corr-pct.high{color:var(--warn)}
 .corr-pct.mid{color:var(--amber)}
 .corr-pct.low{color:var(--accent)}
+.corr-pct.muted{color:var(--ink2)}
 .insight-card{
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--r-lg);padding:1rem 1.25rem;

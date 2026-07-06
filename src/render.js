@@ -153,6 +153,8 @@ function renderPatterns() {
     <div class="sec-label">${t('pat.corrTitle')}</div>
     ${corrRows}
 
+    ${renderSleepPatterns()}
+
     ${vEntries.length ? `
     <div class="sec-label">${t('pat.timingTitle')}</div>
     <div class="card">
@@ -176,4 +178,88 @@ function renderPatterns() {
     </div>
     <div class="spacer-sm"></div>
   `;
+}
+
+// ── Sleep-influence section (Patterns tab) ──────────────
+// Flips the correlation direction: instead of "does poor sleep predict vomiting",
+// it asks "does a day's food / vomiting / illness lead to a bad NEXT night". Sleep
+// is logged as "last night", so day D's exposures are paired with the D+1 entry's
+// sleep (see nextDateStr). Needs consecutive logged days; below MIN_PAIRS it shows
+// a "log back-to-back days" prompt instead of numbers, so a sparse log can't fake
+// a finding.
+function renderSleepPatterns() {
+  const MIN_PAIRS = 5;
+
+  const byDate = new Map(journal.map(e => [e.date, e]));
+  const pairs = [];                          // { day, poor } — one per consecutive-day pair
+  journal.forEach(day => {
+    const night = byDate.get(nextDateStr(day.date));
+    if (night && night.sleep) pairs.push({ day, poor: dayPoorSleep(night) });
+  });
+
+  const title = `<div class="sec-label">${t('pat.sleep.title')}</div>`;
+
+  if (pairs.length < MIN_PAIRS) {
+    return `${title}
+    <div class="card">
+      <div class="timing-note">${t('pat.sleep.needMore', { min: MIN_PAIRS, n: pairs.length })}</div>
+    </div>`;
+  }
+
+  const baseRate = pairs.filter(p => p.poor).length / pairs.length;
+  const basePct  = Math.round(baseRate * 100) + '%';
+
+  const exposures = [
+    { key: 'vomiting', filter: dayHadReaction },
+    { key: 'illness',  filter: e => e.sick },
+    { key: 'heavy',    filter: e => e.meals && e.meals.some(m => m.heavy === 'heavy') },
+    { key: 'dairy',    filter: e => e.meals && e.meals.some(m => m.dairy) },
+    { key: 'gluten',   filter: e => e.meals && e.meals.some(m => m.gluten) },
+    { key: 'egg',      filter: e => e.meals && e.meals.some(m => m.egg) },
+    { key: 'newFood',  filter: e => e.meals && e.meals.some(m => m.newFood) },
+    { key: 'leftover', filter: e => e.meals && e.meals.some(m => m.freshFood === false) },
+    { key: 'away',     filter: e => e.newEnv },
+  ];
+
+  const rows = exposures.map(x => {
+    const subset = pairs.filter(p => x.filter(p.day));
+    const total  = subset.length;
+    const hits   = subset.filter(p => p.poor).length;
+    const rate   = total ? hits / total : 0;
+    const meaningful = total >= 2;            // 1-day exposures are noise, not a signal
+
+    let cls;
+    if (!meaningful)                cls = 'muted';
+    else if (baseRate === 0)        cls = rate > 0 ? 'high' : 'low';
+    else if (rate / baseRate > 1.3) cls = 'high';
+    else if (rate / baseRate < 0.8) cls = 'low';
+    else                            cls = 'mid';
+
+    let sub = t('pat.sleep.rowSub', { hits, total });
+    sub += ' · ' + (meaningful ? t('pat.sleep.vsBaseline', { p: basePct }) : t('pat.sleep.lowSample'));
+
+    return {
+      meaningful, rate,
+      html: `<div class="corr-row">
+      <div class="corr-left">
+        <div class="corr-name">${t('pat.sleep.exp.' + x.key)}</div>
+        <div class="corr-sub">${sub}</div>
+      </div>
+      <div class="corr-pct ${cls}">${total === 0 ? '—' : Math.round(rate * 100) + '%'}</div>
+    </div>`
+    };
+  })
+  .sort((a, b) => (b.meaningful - a.meaningful) || (b.rate - a.rate))  // meaningful first, then by rate
+  .map(r => r.html)
+  .join('');
+
+  return `${title}
+    <div class="card">
+      <div class="timing-note">${t('pat.sleep.intro')}</div>
+      <div class="chip-grid">
+        <span class="tag neutral">${t('pat.sleep.baseline', { p: basePct })}</span>
+        <span class="tag neutral">${t('pat.sleep.pairs', { n: pairs.length })}</span>
+      </div>
+    </div>
+    ${rows}`;
 }

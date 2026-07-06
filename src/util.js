@@ -74,3 +74,17 @@ function hasLegacyVomit(e) {
 function dayHadReaction(e) {
   return hasReactions(e) || hasLegacyVomit(e);
 }
+
+// Next calendar day for a 'YYYY-MM-DD' string. Uses UTC math so it never shifts
+// by a day near DST or local midnight. Used to line a day's food/vomiting/illness
+// up with the FOLLOWING night's sleep (sleep is logged as "last night").
+function nextDateStr(s) {
+  const [y, mo, d] = s.split('-').map(Number);
+  return new Date(Date.UTC(y, mo - 1, d + 1)).toISOString().slice(0, 10);
+}
+
+// A "bad night": sleep was poor or very poor. ok/great count as fine. Mirrors the
+// poor-sleep predicate used by the correlations block.
+function dayPoorSleep(e) {
+  return e.sleep === 'poor' || e.sleep === 'very-poor';
+}
