@@ -129,7 +129,16 @@ function renderPatterns() {
 
   const vEntries = journal.filter(hadReaction);
   const delayCounts = {};
-  vEntries.forEach(e => { delayCounts[e.delay] = (delayCounts[e.delay] || 0) + 1; });
+  vEntries.forEach(e => {
+    if (hasReactions(e)) {
+      e.reactions.forEach(r => {
+        const d = r.delay || '—';
+        delayCounts[d] = (delayCounts[d] || 0) + Number(r.count || 1);
+      });
+    } else if (hasLegacyVomit(e) && e.delay) {
+      delayCounts[e.delay] = (delayCounts[e.delay] || 0) + 1;
+    }
+  });
   const delayRows = Object.entries(delayCounts)
     .sort((a,b) => b[1] - a[1])
     .map(([k,v]) => `<span class="tag neutral">${k}: ${v}×</span>`)

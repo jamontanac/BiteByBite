@@ -1835,6 +1835,33 @@ await describe('renderPatterns() – sleep influence', async () => {
     expect(h).toContain('Most frequent symptoms');   // symptoms block (has 'gas')
   });
 
+  await it('timing chips show delays from reactions array, not undefined', () => {
+    resetState();
+    setJournal(...build([
+      { sleep:'', reactions:[{ meal:'Breakfast', count:'1', delay:'<30m', content:'' },
+                             { meal:'Lunch',    count:'2', delay:'2-4h',  content:'' }] },  // 20: two reactions
+      { sleep:'', reactions:[{ meal:'Breakfast', count:'1', delay:'<30m', content:'' }] },  // 21: one reaction
+    ]));
+    renderPatterns();
+    const h = html();
+    expect(h).toContain('&lt;30m: 2×');
+    expect(h).toContain('2-4h: 2×');
+    expect(h).not.toContain('undefined');
+  });
+
+  await it('timing chips handle legacy vomit format', () => {
+    resetState();
+    setJournal(
+      makeEntry({ date:'2026-06-26', vomit:'1', delay:'30m-1h' }),
+      makeEntry({ date:'2026-06-25', reactions:[{ meal:'Breakfast', count:'1', delay:'<30m', content:'' }] }),
+    );
+    renderPatterns();
+    const h = html();
+    expect(h).toContain('30m-1h: 1×');
+    expect(h).toContain('&lt;30m: 1×');
+    expect(h).not.toContain('undefined');
+  });
+
   await it('renders in Spanish under LANG = es', () => {
     resetState();
     const prev = LANG;
