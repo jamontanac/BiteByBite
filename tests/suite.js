@@ -421,6 +421,37 @@ await describe('mealFromCard() / loadMealIntoCard() round-trip', async () => {
 
 
 // ════════════════════════════════════════════════════════
+// 5c'. duplicateMeal()
+// ════════════════════════════════════════════════════════
+await describe('duplicateMeal()', async () => {
+  await it('appends a second card that clones every field', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    const meal = { type:'breakfast', time:'08:00', source:'homemade', foods:'oatmeal',
+                   heavy:'moderate', amount:'all', freshFood:false, cookedWhen:'yesterday',
+                   newFood:true, newFoodName:'mango', gluten:true, dairy:false, egg:false };
+    loadMealIntoCard(card, meal);
+    duplicateMeal(card.querySelector('.meal-dup'));
+    const cards = document.querySelectorAll('#meals-container .meal-card');
+    expect(cards.length).toBe(2);
+    expect(mealFromCard(cards[1])).toEqual(meal);
+  });
+  await it('leaves the original card untouched', () => {
+    resetState();
+    addMeal();
+    const card = document.querySelector('#meals-container .meal-card');
+    const meal = { type:'lunch', time:'12:30', source:'restaurant', foods:'pasta',
+                   heavy:'heavy', amount:'half', freshFood:true, cookedWhen:'',
+                   newFood:false, newFoodName:'', gluten:false, dairy:true, egg:false };
+    loadMealIntoCard(card, meal);
+    duplicateMeal(card.querySelector('.meal-dup'));
+    expect(mealFromCard(document.querySelector('#meals-container .meal-card'))).toEqual(meal);
+  });
+});
+
+
+// ════════════════════════════════════════════════════════
 // 5d. loadEntryIntoForm()
 // ════════════════════════════════════════════════════════
 await describe('loadEntryIntoForm()', async () => {
