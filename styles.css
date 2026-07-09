@@ -258,11 +258,15 @@ input[type="date"],input[type="time"]{
 .meal-type-badge.lunch{background:light-dark(#E5F0FD,#1B3350);color:light-dark(#1D5FA0,#9CC2EC)}
 .meal-type-badge.dinner{background:var(--amber-l);color:var(--amber)}
 .meal-type-badge.snack{background:var(--purple-l);color:var(--purple)}
-.meal-remove{
+.meal-actions{
+  display:flex;align-items:center;gap:.25rem;
+}
+.meal-remove,.meal-dup{
   font-size:.75rem;color:var(--ink3);border:none;background:none;
   padding:.25rem .5rem;border-radius:var(--r);
 }
 .meal-remove:active{color:var(--warn)}
+.meal-dup:active{color:var(--accent)}
 
 /* ── Add meal button ─────────────────────────────────── */
 .add-meal-btn{

@@ -162,8 +162,6 @@ function renderPatterns() {
     <div class="sec-label">${t('pat.corrTitle')}</div>
     ${corrRows}
 
-    ${renderSleepPatterns()}
-
     ${vEntries.length ? `
     <div class="sec-label">${t('pat.timingTitle')}</div>
     <div class="card">
@@ -178,6 +176,8 @@ function renderPatterns() {
     <div class="card">
       <div class="chip-grid">${sympRows}</div>
     </div>` : ''}
+
+    ${renderSleepPatterns()}
 
     <div class="insight-card insight-howto">
       <h3>${t('pat.howtoTitle')}</h3>

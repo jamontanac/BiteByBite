@@ -69,7 +69,10 @@ function addMeal() {
       <select class="meal-type-sel" onchange="updateMealSelect()">
         ${optionsHtml(FORMCFG.meals.selects.type, null, 'opt.mealType')}
       </select>
-      <button class="meal-remove" onclick="document.getElementById('${id}').remove(); updateMealSelect()">${t('meal.remove')}</button>
+      <div class="meal-actions">
+        <button class="meal-dup" onclick="duplicateMeal(this)">${t('meal.duplicate')}</button>
+        <button class="meal-remove" onclick="document.getElementById('${id}').remove(); updateMealSelect()">${t('meal.remove')}</button>
+      </div>
     </div>
     <div class="f-row">
       <div class="f-group"><label>${t('meal.time')}</label><input type="time" class="ml-time" value="${hh}:${mm}"></div>
@@ -138,6 +141,17 @@ function addMeal() {
     </div>
   `;
   document.getElementById('meals-container').appendChild(div);
+  updateMealSelect();
+}
+
+// Clones a meal card (e.g. the same dish served again as a later snack). Copies
+// every field via the shared serialization helpers, appends a fresh card at the
+// end, then refreshes the reaction dropdowns. The user tweaks type/time after.
+function duplicateMeal(btn) {
+  const meal = mealFromCard(btn.closest('.meal-card'));
+  addMeal();                                    // appends a new card at the end
+  const cards = document.querySelectorAll('#meals-container .meal-card');
+  loadMealIntoCard(cards[cards.length - 1], meal);
   updateMealSelect();
 }
 

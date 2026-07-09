@@ -96,7 +96,7 @@ let I18N = {
     'pat.sleep.exp.dairy': 'After dairy', 'pat.sleep.exp.gluten': 'After gluten', 'pat.sleep.exp.egg': 'After egg',
     'pat.sleep.exp.newFood': 'After a new food', 'pat.sleep.exp.leftover': 'After leftovers', 'pat.sleep.exp.away': 'After being away from home',
     // Meal card
-    'meal.remove': 'Remove', 'meal.time': 'Time given', 'meal.source': 'Source', 'meal.foods': 'Foods eaten',
+    'meal.remove': 'Remove', 'meal.duplicate': 'Duplicate', 'meal.time': 'Time given', 'meal.source': 'Source', 'meal.foods': 'Foods eaten',
     'meal.foodsPh': 'e.g. oatmeal, banana, apple juice…', 'meal.heavy': 'Meal heaviness', 'meal.amount': 'Amount eaten',
     'meal.newFood': 'New food', 'meal.newFoodHint': 'Ingredient rarely or never eaten before',
     'meal.newIngredient': 'New ingredient', 'meal.newIngredientPh': 'e.g. mango, wheat bread…',
@@ -184,7 +184,7 @@ let I18N = {
     'pat.sleep.exp.vomiting': 'Tras vómito', 'pat.sleep.exp.illness': 'Tras señales de enfermedad', 'pat.sleep.exp.heavy': 'Tras comida pesada',
     'pat.sleep.exp.dairy': 'Tras lácteos', 'pat.sleep.exp.gluten': 'Tras gluten', 'pat.sleep.exp.egg': 'Tras huevo',
     'pat.sleep.exp.newFood': 'Tras comida nueva', 'pat.sleep.exp.leftover': 'Tras sobras', 'pat.sleep.exp.away': 'Tras estar fuera de casa',
-    'meal.remove': 'Quitar', 'meal.time': 'Hora', 'meal.source': 'Origen', 'meal.foods': 'Alimentos',
+    'meal.remove': 'Quitar', 'meal.duplicate': 'Duplicar', 'meal.time': 'Hora', 'meal.source': 'Origen', 'meal.foods': 'Alimentos',
     'meal.foodsPh': 'p. ej. avena, plátano, jugo de manzana…', 'meal.heavy': 'Pesadez de la comida', 'meal.amount': 'Cuánto comió',
     'meal.newFood': 'Comida nueva', 'meal.newFoodHint': 'Un ingrediente que casi nunca o nunca ha comido',
     'meal.newIngredient': 'Ingrediente nuevo', 'meal.newIngredientPh': 'p. ej. mango, pan de trigo…',
