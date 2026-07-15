@@ -66,6 +66,7 @@
   "settings.dateAt": "{date} at {time}",
   "settings.entryOne": "{n} entry",
   "settings.entryMany": "{n} entries",
+  "settings.version": "App version",
   "toast.exported": "Export downloaded",
   "toast.offline": "Could not reach GitHub. Working offline.",
   "toast.synced": "Synced with GitHub",

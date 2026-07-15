@@ -65,6 +65,7 @@ function buildDOM() {
         <div id="cfg-repo-display"></div>
         <div id="cfg-count-display"></div>
         <div id="cfg-sync-display"></div>
+        <div id="cfg-version-display"></div>
         <label id="lang-label" data-i18n="settings.language">Language</label>
         <select id="lang-select" onchange="setLang(this.value)">
           <option value="en">English</option>

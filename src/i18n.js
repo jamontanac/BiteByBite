@@ -57,6 +57,7 @@ let I18N = {
     'settings.footer': 'BiteByBite · open source, no tracking<br>Data lives in your GitHub repo',
     'settings.never': 'Never', 'settings.todayAt': 'Today at {time}', 'settings.dateAt': '{date} at {time}',
     'settings.entryOne': '{n} entry', 'settings.entryMany': '{n} entries',
+    'settings.version': 'App version',
     // Toasts
     'toast.exported': 'Export downloaded', 'toast.offline': 'Could not reach GitHub. Working offline.',
     'toast.synced': 'Synced with GitHub', 'toast.syncFailed': 'Sync failed — check connection',
@@ -149,6 +150,7 @@ let I18N = {
     'settings.footer': 'BiteByBite · código abierto, sin rastreo<br>Tus datos viven en tu repositorio de GitHub',
     'settings.never': 'Nunca', 'settings.todayAt': 'Hoy a las {time}', 'settings.dateAt': '{date} a las {time}',
     'settings.entryOne': '{n} entrada', 'settings.entryMany': '{n} entradas',
+    'settings.version': 'Versión de la app',
     'toast.exported': 'Exportación descargada', 'toast.offline': 'No se pudo conectar con GitHub. Trabajando sin conexión.',
     'toast.synced': 'Sincronizado con GitHub', 'toast.syncFailed': 'Falló la sincronización — revisa la conexión',
     'toast.updated': 'Entrada actualizada ✓', 'toast.merged': 'Combinada con el día existente ✓', 'toast.saved': 'Entrada guardada ✓',

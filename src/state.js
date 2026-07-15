@@ -12,6 +12,13 @@ let journalBranchReady = false;   // set once the data branch is confirmed/creat
 
 const API = 'https://api.github.com';
 
+// Bump on every shipped app/config change. It's appended to the config fetches
+// as a cache-buster (so a browser never serves a stale config after a deploy) and
+// shown in the Settings tab so you can confirm which build the browser loaded.
+// Keep this in sync with the ?v= query params on the <script>/<link> tags in
+// index.html.
+const APP_VERSION = '1.1.0';
+
 // The five Day-overview <select> keys — each maps to #e-<key> and to
 // FORMCFG.day.selects[<key>]. Shared by the form renderer, the edit loader,
 // and the merge logic so the list lives in one place.
@@ -145,7 +152,8 @@ async function loadConfigs() {
   ];
   await Promise.all(files.map(async ([path, apply]) => {
     try {
-      const res = await fetch(path);
+      const sep = path.includes('?') ? '&' : '?';
+      const res = await fetch(`${path}${sep}v=${APP_VERSION}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       apply(await res.json());
     } catch(e) {

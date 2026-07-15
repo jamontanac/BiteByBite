@@ -87,6 +87,28 @@ await describe('loadConfigs()', async () => {
     restoreFetch();
     resetState();
   });
+  await it('appends ?v=APP_VERSION to config fetches (cache-buster)', async () => {
+    resetState();
+    const urls = [];
+    window.fetch = async (url) => {
+      urls.push(url);
+      return { ok: true, status: 200, json: async () => ({}) };
+    };
+    await loadConfigs();
+    expect(urls.length).toBeGreaterThan(0);
+    expect(urls.every(u => u.includes('v=' + APP_VERSION))).toBeTruthy();
+    restoreFetch();
+    resetState();
+  });
+});
+
+await describe('updateSettingsDisplay() – version', async () => {
+  await it('shows APP_VERSION in the settings tab', () => {
+    resetState();
+    document.getElementById('cfg-version-display').textContent = '';
+    updateSettingsDisplay();
+    expect(document.getElementById('cfg-version-display').textContent).toBe(APP_VERSION);
+  });
 });
 
 

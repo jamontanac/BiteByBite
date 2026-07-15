@@ -40,6 +40,9 @@ function refreshViews() {
 
 // ── Settings helpers ────────────────────────────────────
 function updateSettingsDisplay() {
+  const verEl = document.getElementById('cfg-version-display');
+  if (verEl) verEl.textContent = APP_VERSION;
+
   document.getElementById('cfg-repo-display').textContent =
     CFG.user ? `${CFG.user}/${CFG.repo}` : '—';
   document.getElementById('cfg-count-display').textContent =
