@@ -29,7 +29,10 @@ let JCFG = {
   commitMessage: {
     new:  'Adding new entry to journal at: {ts}',
     edit: 'Editing/Adding the entry for the date {date} at: {ts}'
-  }
+  },
+  // Stamped onto each commit as author + committer. Leave name/email blank to let
+  // GitHub attribute the commit to the Personal Access Token owner automatically.
+  commitAuthor: { name: '', email: '' }
 };
 
 let FORMCFG = {
@@ -156,6 +159,7 @@ function mergeJCFG(json) {
   json = json || {};
   const gh = json.github || {};
   const cm = json.commitMessage || {};
+  const ca = json.commitAuthor || {};
   return {
     github: {
       username: gh.username || JCFG.github.username,
@@ -166,6 +170,10 @@ function mergeJCFG(json) {
     commitMessage: {
       new:  cm.new  || JCFG.commitMessage.new,
       edit: cm.edit || JCFG.commitMessage.edit
+    },
+    commitAuthor: {
+      name:  ca.name  || JCFG.commitAuthor.name,
+      email: ca.email || JCFG.commitAuthor.email
     }
   };
 }

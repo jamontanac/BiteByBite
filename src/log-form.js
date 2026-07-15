@@ -145,13 +145,19 @@ function addMeal() {
 }
 
 // Clones a meal card (e.g. the same dish served again as a later snack). Copies
-// every field via the shared serialization helpers, appends a fresh card at the
-// end, then refreshes the reaction dropdowns. The user tweaks type/time after.
+// every field via the shared serialization helpers, then places the clone right
+// below the card it was copied from (so it's easy to spot) and refreshes the
+// reaction dropdowns. The final on-save order is decided by mealTimeCompare, so
+// the visual position here is just for editing convenience. The user tweaks
+// type/time after.
 function duplicateMeal(btn) {
-  const meal = mealFromCard(btn.closest('.meal-card'));
+  const sourceCard = btn.closest('.meal-card');
+  const meal = mealFromCard(sourceCard);
   addMeal();                                    // appends a new card at the end
   const cards = document.querySelectorAll('#meals-container .meal-card');
-  loadMealIntoCard(cards[cards.length - 1], meal);
+  const newCard = cards[cards.length - 1];
+  loadMealIntoCard(newCard, meal);
+  sourceCard.after(newCard);                     // move it directly below the source
   updateMealSelect();
 }
 

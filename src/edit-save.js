@@ -16,7 +16,11 @@ function enterEditMode(index) {
 
   document.querySelector('#save-btn span').textContent = t('btn.update');
   switchTab('log');
+  // The page body is what actually scrolls (the .screen uses min-height, so the
+  // .scroll-area never gets its own scroll region), so reset the window too — not
+  // just the scroll-area — to land on the date field at the top of the form.
   document.getElementById('tab-log').scrollTop = 0;
+  window.scrollTo(0, 0);
 }
 
 function exitEditMode() {
@@ -263,7 +267,10 @@ async function saveEntry() {
       exitEditMode();
       resetLogForm();
       switchTab('history');
-      document.getElementById('tab-history').scrollTop = 0;  // show newest entry, not where we were
+      // Show the newest entry (top of the list), not wherever the page was
+      // scrolled. The page body scrolls (not the .scroll-area), so reset both.
+      document.getElementById('tab-history').scrollTop = 0;
+      window.scrollTo(0, 0);
     } else {
       toast(isMerge ? t('toast.merged') : t('toast.saved'));
       resetLogForm();
