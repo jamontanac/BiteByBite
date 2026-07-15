@@ -1,9 +1,9 @@
 {
   "github": {
     "username": "jamontanac",
-    "reponame": "BiteByBite"
+    "reponame": "BiteByBite-journal"
   },
-  "branch": "journal",
+  "branch": "main",
   "filename": "journal.json",
   "commitMessage": {
     "new": "Adding new entry to journal at: {ts}",

@@ -24,7 +24,7 @@ const DAY_SELECT_KEYS = ['sleep', 'mood', 'activity', 'stool', 'hydration'];
 // Keep them in sync when you change a JSON file.
 let JCFG = {
   github: { username: '', reponame: '' },
-  branch: 'journal',
+  branch: 'main',
   filename: 'journal.json',
   commitMessage: {
     new:  'Adding new entry to journal at: {ts}',

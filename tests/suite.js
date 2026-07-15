@@ -83,7 +83,7 @@ await describe('loadConfigs()', async () => {
     window.fetch = async () => { throw new Error('Network error'); };
     await loadConfigs();
     expect(FORMCFG.day.selects.sleep.length).toBeGreaterThan(1);
-    expect(JCFG.branch).toBe('journal');
+    expect(JCFG.branch).toBe('main');
     restoreFetch();
     resetState();
   });
@@ -2116,6 +2116,7 @@ await describe('buildCommitMessage() – templating', async () => {
 await describe('GitHub read/write uses the configured branch + filename', async () => {
   await it('loadFromGitHub requests the configured branch via ?ref', async () => {
     resetState();
+    JCFG.branch = 'journal';           // use a concrete branch, independent of the shipped default
     CFG = { user: 'u', repo: 'r', token: 't' };
     let calledUrl = '';
     window.fetch = async (url) => {
@@ -2139,6 +2140,7 @@ await describe('GitHub read/write uses the configured branch + filename', async 
   });
   await it('saveToGitHub sends branch in the PUT body', async () => {
     resetState();
+    JCFG.branch = 'journal';           // use a concrete branch, independent of the shipped default
     CFG = { user: 'u', repo: 'r', token: 't' };
     journalBranchReady = true; // skip branch-existence network in this test
     let putBody = null;
@@ -2198,6 +2200,7 @@ await describe('GitHub read/write uses the configured branch + filename', async 
 await describe('ensureJournalBranch()', async () => {
   await it('is a no-op when the branch already exists', async () => {
     resetState();
+    JCFG.branch = 'journal';           // exercise the non-default data-branch path
     CFG = { user: 'u', repo: 'r', token: 't' };
     let posted = false;
     window.fetch = async (url, opts) => {
@@ -2211,6 +2214,7 @@ await describe('ensureJournalBranch()', async () => {
   });
   await it('creates the branch off the default branch when missing', async () => {
     resetState();
+    JCFG.branch = 'journal';           // exercise the non-default data-branch path
     CFG = { user: 'u', repo: 'r', token: 't' };
     let createdRef = null;
     window.fetch = async (url, opts) => {
@@ -2234,6 +2238,7 @@ await describe('ensureJournalBranch()', async () => {
   });
   await it('tolerates a 422 already-exists race', async () => {
     resetState();
+    JCFG.branch = 'journal';           // exercise the non-default data-branch path
     CFG = { user: 'u', repo: 'r', token: 't' };
     window.fetch = async (url, opts) => {
       const method = (opts && opts.method) || 'GET';
