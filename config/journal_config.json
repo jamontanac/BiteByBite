@@ -8,5 +8,9 @@
   "commitMessage": {
     "new": "Adding new entry to journal at: {ts}",
     "edit": "Editing/Adding the entry for the date {date} at: {ts}"
+  },
+  "commitAuthor": {
+    "name": "jamontanac",
+    "email": "jamontanac@unal.edu.co"
   }
 }

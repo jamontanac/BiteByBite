@@ -62,6 +62,7 @@ window.matchMedia = window.matchMedia || (() => ({
   matches: false, media: '', onchange: null,
   addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent() { return false; },
 }));
+window.scrollTo = () => {};   // jsdom ships a "not implemented" stub that logs noise
 window.escape = window.escape || global.escape;
 window.unescape = window.unescape || global.unescape;
 window.btoa = window.btoa || (s => Buffer.from(s, 'binary').toString('base64'));

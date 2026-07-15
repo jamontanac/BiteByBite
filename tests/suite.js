@@ -448,6 +448,23 @@ await describe('duplicateMeal()', async () => {
     duplicateMeal(card.querySelector('.meal-dup'));
     expect(mealFromCard(document.querySelector('#meals-container .meal-card'))).toEqual(meal);
   });
+  await it('inserts the clone directly below its source, not at the end', () => {
+    resetState();
+    addMeal(); addMeal(); addMeal();            // three cards
+    const cards = document.querySelectorAll('#meals-container .meal-card');
+    const middle = cards[1];
+    const meal = { type:'lunch', time:'12:30', source:'homemade', foods:'rice',
+                   heavy:'light', amount:'all', freshFood:true, cookedWhen:'',
+                   newFood:false, newFoodName:'', gluten:false, dairy:false, egg:false };
+    loadMealIntoCard(middle, meal);
+    duplicateMeal(middle.querySelector('.meal-dup'));
+    const after = document.querySelectorAll('#meals-container .meal-card');
+    expect(after.length).toBe(4);
+    // The clone should be at index 2 (right after the source at index 1),
+    // not appended at the end (index 3).
+    expect(mealFromCard(after[2])).toEqual(meal);
+    expect(after[1]).toBe(middle);              // source stays put
+  });
 });
 
 
@@ -2104,6 +2121,49 @@ await describe('GitHub read/write uses the configured branch + filename', async 
     };
     await saveToGitHub('msg');
     expect(putBody.branch).toBe('journal');
+    restoreFetch();
+  });
+  await it('omits author/committer when commitAuthor is not configured', async () => {
+    resetState();
+    CFG = { user: 'u', repo: 'r', token: 't' };
+    journalBranchReady = true;
+    let putBody = null;
+    window.fetch = async (url, opts) => {
+      putBody = JSON.parse(opts.body);
+      return { ok: true, status: 200, json: async () => ({ content: { sha: 's2' } }) };
+    };
+    await saveToGitHub('msg');
+    expect(putBody.author).toBe(undefined);
+    expect(putBody.committer).toBe(undefined);
+    restoreFetch();
+  });
+  await it('signs the commit with author + committer when commitAuthor is set', async () => {
+    resetState();
+    CFG = { user: 'u', repo: 'r', token: 't' };
+    JCFG.commitAuthor = { name: 'Jane Doe', email: 'jane@example.com' };
+    journalBranchReady = true;
+    let putBody = null;
+    window.fetch = async (url, opts) => {
+      putBody = JSON.parse(opts.body);
+      return { ok: true, status: 200, json: async () => ({ content: { sha: 's2' } }) };
+    };
+    await saveToGitHub('msg');
+    expect(putBody.author).toEqual({ name: 'Jane Doe', email: 'jane@example.com' });
+    expect(putBody.committer).toEqual({ name: 'Jane Doe', email: 'jane@example.com' });
+    restoreFetch();
+  });
+  await it('omits author when only one of name/email is set', async () => {
+    resetState();
+    CFG = { user: 'u', repo: 'r', token: 't' };
+    JCFG.commitAuthor = { name: 'Jane Doe', email: '' };
+    journalBranchReady = true;
+    let putBody = null;
+    window.fetch = async (url, opts) => {
+      putBody = JSON.parse(opts.body);
+      return { ok: true, status: 200, json: async () => ({ content: { sha: 's2' } }) };
+    };
+    await saveToGitHub('msg');
+    expect(putBody.author).toBe(undefined);
     restoreFetch();
   });
 });

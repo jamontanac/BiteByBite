@@ -53,6 +53,16 @@ function buildCommitMessage(isEdit, date) {
   return tmpl.replace(/{ts}/g, timestamp).replace(/{date}/g, date || '');
 }
 
+// Builds the `author`/`committer` fields for a commit from JCFG.commitAuthor.
+// Both need a name AND an email; if either is missing we send neither, so GitHub
+// falls back to attributing the commit to the Personal Access Token owner.
+function commitAuthorFields() {
+  const a = JCFG.commitAuthor || {};
+  if (!a.name || !a.email) return {};
+  const who = { name: a.name, email: a.email };
+  return { author: who, committer: who };
+}
+
 async function saveToGitHub(message) {
   setSyncState('syncing');
   try {
@@ -62,6 +72,7 @@ async function saveToGitHub(message) {
       message: message || `Update journal ${new Date().toISOString()}`,
       content,
       branch: JCFG.branch,
+      ...commitAuthorFields(),
       ...(ghSha ? { sha: ghSha } : {})
     };
     const res = await ghSend('PUT', `/repos/${CFG.user}/${CFG.repo}/contents/${JCFG.filename}`, body);
