@@ -460,6 +460,16 @@ input[type="date"],input[type="time"]{
 
 /* Patterns */
 .timing-note{font-size:.82rem;color:var(--ink2);margin-bottom:.625rem;line-height:1.5}
+
+/* Monthly episode chart. Bars are plain divs, so var(--warn) — a light-dark()
+   token — carries the theme for free; only the height is inline (it's data). */
+.bar-chart{display:flex;align-items:flex-end;gap:.5rem;height:132px;margin-bottom:.75rem}
+.bar-chart+.timing-note{margin-bottom:0}
+.bar-col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;gap:.25rem}
+.bar-val{font-size:.72rem;color:var(--ink2);font-variant-numeric:tabular-nums}
+.bar-track{flex:1;width:100%;display:flex;align-items:flex-end}
+.bar-fill{width:100%;min-height:2px;border-radius:4px 4px 0 0;background:var(--warn)}
+.bar-lbl{font-size:.7rem;color:var(--ink3)}
 .insight-card.insight-howto{margin-top:.75rem;border-left:3px solid var(--border)}
 
 /* Language selector (Settings) */
