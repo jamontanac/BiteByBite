@@ -1,7 +1,6 @@
 // ── Log tab ─────────────────────────────────────────────
 function initLogTab() {
-  const today = new Date().toISOString().slice(0, 10);
-  document.getElementById('e-date').value = today;
+  document.getElementById('e-date').value = todayStr();
 
   populateDayOverview();
   attachChipListeners();
@@ -274,7 +273,7 @@ function selectSev(btn) {
 }
 
 function resetLogForm() {
-  document.getElementById('e-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('e-date').value = todayStr();
   ['e-sleep','e-mood','e-activity','e-stool','e-hydration'].forEach(id => {
     document.getElementById(id).value = '';
   });

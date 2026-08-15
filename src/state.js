@@ -17,7 +17,7 @@ const API = 'https://api.github.com';
 // shown in the Settings tab so you can confirm which build the browser loaded.
 // Keep this in sync with the ?v= query params on the <script>/<link> tags in
 // index.html.
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 
 // The five Day-overview <select> keys — each maps to #e-<key> and to
 // FORMCFG.day.selects[<key>]. Shared by the form renderer, the edit loader,

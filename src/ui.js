@@ -67,7 +67,7 @@ function exportJSON() {
   const blob = new Blob([JSON.stringify(journal, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `bitebybite-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `bitebybite-backup-${todayStr()}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
   toast(t('toast.exported'));

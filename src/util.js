@@ -75,12 +75,41 @@ function dayHadReaction(e) {
   return hasReactions(e) || hasLegacyVomit(e);
 }
 
-// Next calendar day for a 'YYYY-MM-DD' string. Uses UTC math so it never shifts
-// by a day near DST or local midnight. Used to line a day's food/vomiting/illness
-// up with the FOLLOWING night's sleep (sleep is logged as "last night").
-function nextDateStr(s) {
+// How many vomiting episodes a day holds. Current entries list them in
+// reactions[]; a legacy `vomit` entry counts as one. Deliberately ignores
+// reaction.count — that field can be the string '3+', which has no numeric
+// value. Patterns' 30-day card and monthly chart both count in this unit, so
+// they always reconcile with History's "Vomited (2 episodes)".
+function episodeCount(e) {
+  return hasReactions(e) ? e.reactions.length : (hasLegacyVomit(e) ? 1 : 0);
+}
+
+// Today as 'YYYY-MM-DD', read off the LOCAL calendar. Not toISOString(), which
+// is UTC: west of Greenwich that returns tomorrow's date all evening, which
+// would pre-fill the log with the wrong day and push "days since last episode"
+// negative. Takes an optional Date so tests can pin "today".
+function todayStr(d = new Date()) {
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+// Shifts a 'YYYY-MM-DD' string by n calendar days (n may be negative), rolling
+// month and year over. UTC math so it never drifts across a DST boundary.
+function shiftDate(s, n) {
   const [y, mo, d] = s.split('-').map(Number);
-  return new Date(Date.UTC(y, mo - 1, d + 1)).toISOString().slice(0, 10);
+  return new Date(Date.UTC(y, mo - 1, d + n)).toISOString().slice(0, 10);
+}
+
+// Next calendar day. Used to line a day's food/vomiting/illness up with the
+// FOLLOWING night's sleep (sleep is logged as "last night").
+function nextDateStr(s) {
+  return shiftDate(s, 1);
+}
+
+// Whole days from date a to date b. A bare 'YYYY-MM-DD' parses as UTC midnight
+// per spec, so both ends are UTC and a DST change can't add or drop an hour.
+function daysBetween(a, b) {
+  return Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
 }
 
 // A "bad night": sleep was poor or very poor. ok/great count as fine. Mirrors the

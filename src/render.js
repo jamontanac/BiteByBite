@@ -94,6 +94,17 @@ function renderPatterns() {
   const n = journal.length;
   const vomitDays = journal.filter(hadReaction).length;
 
+  // Headline numbers. Both are relative to today, and both ignore future-dated
+  // entries — a mistyped date shouldn't inflate the 30-day count or produce a
+  // negative streak.
+  const today     = todayStr();
+  const lastVomit = journal.filter(e => hadReaction(e) && e.date <= today)
+                           .map(e => e.date).sort().pop();   // max date; journal order not assumed
+  const sinceLast = lastVomit ? daysBetween(lastVomit, today) : '—';
+  const since30   = shiftDate(today, -29);                   // today + the 29 days before it
+  const last30    = journal.filter(e => e.date >= since30 && e.date <= today)
+                           .reduce((sum, e) => sum + episodeCount(e), 0);
+
   const pct = (a, b) => b === 0 ? '—' : Math.round(a / b * 100) + '%';
   const pctClass = (a, b) => {
     if (b === 0) return 'low';
@@ -133,7 +144,9 @@ function renderPatterns() {
     if (hasReactions(e)) {
       e.reactions.forEach(r => {
         const d = r.delay || '—';
-        delayCounts[d] = (delayCounts[d] || 0) + Number(r.count || 1);
+        // parseInt, not Number: the count option '3+' is a valid stored value and
+        // Number('3+') is NaN, which poisoned the whole chip total.
+        delayCounts[d] = (delayCounts[d] || 0) + (parseInt(r.count, 10) || 1);
       });
     } else if (hasLegacyVomit(e) && e.delay) {
       delayCounts[e.delay] = (delayCounts[e.delay] || 0) + 1;
@@ -154,10 +167,12 @@ function renderPatterns() {
   el.innerHTML = `
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-num">${n}</div><div class="stat-lbl">${t('pat.daysLogged')}</div></div>
-      <div class="stat-card"><div class="stat-num bad">${vomitDays}</div><div class="stat-lbl">${t('pat.daysVomiting')}</div></div>
       <div class="stat-card"><div class="stat-num">${pct(vomitDays,n)}</div><div class="stat-lbl">${t('pat.vomitRate')}</div></div>
-      <div class="stat-card"><div class="stat-num ok">${n - vomitDays}</div><div class="stat-lbl">${t('pat.clearDays')}</div></div>
+      <div class="stat-card"><div class="stat-num ${sinceLast > 0 ? 'ok' : ''}">${sinceLast}</div><div class="stat-lbl">${t('pat.sinceLast')}</div></div>
+      <div class="stat-card"><div class="stat-num bad">${last30}</div><div class="stat-lbl">${t('pat.last30')}</div></div>
     </div>
+
+    ${renderMonthlyChart()}
 
     <div class="sec-label">${t('pat.corrTitle')}</div>
     ${corrRows}
@@ -187,6 +202,43 @@ function renderPatterns() {
     </div>
     <div class="spacer-sm"></div>
   `;
+}
+
+// ── Monthly episode chart (Patterns tab) ────────────────
+// Six bars, one per month, oldest → current. The bars are plain divs sized in
+// percent and filled with var(--warn) — a light-dark() token — so the theme
+// toggle repaints them with no JS here (a canvas would have to re-read the
+// computed tokens and redraw). Month names come from the locale, so they follow
+// the language without costing a translation key.
+function renderMonthlyChart() {
+  const [y, m] = todayStr().split('-').map(Number);
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(Date.UTC(y, m - 6 + i, 1));
+    return {
+      key:   d.toISOString().slice(0, 7),
+      // timeZone:'UTC' is load-bearing: without it, UTC midnight on the 1st
+      // renders as the PREVIOUS month for anyone west of Greenwich.
+      label: d.toLocaleDateString(LANG, { month: 'short', timeZone: 'UTC' }),
+    };
+  });
+
+  const counts = months.map(mo =>
+    journal.filter(e => e.date.slice(0, 7) === mo.key)
+           .reduce((sum, e) => sum + episodeCount(e), 0));
+  const max = Math.max(...counts, 1);          // never divide by zero on a clear window
+
+  const bars = months.map((mo, i) => `
+      <div class="bar-col">
+        <div class="bar-val">${counts[i]}</div>
+        <div class="bar-track"><div class="bar-fill" style="height:${counts[i] / max * 100}%"></div></div>
+        <div class="bar-lbl">${mo.label}</div>
+      </div>`).join('');
+
+  return `<div class="sec-label">${t('pat.monthlyTitle')}</div>
+    <div class="card">
+      <div class="bar-chart">${bars}</div>
+      <div class="timing-note">${t('pat.monthlyTotal', { n: counts.reduce((a, b) => a + b, 0) })}</div>
+    </div>`;
 }
 
 // ── Sleep-influence section (Patterns tab) ──────────────
