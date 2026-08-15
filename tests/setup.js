@@ -185,3 +185,17 @@ function mockSave() {
   window.saveToGitHub = async () => { ghSha = 'sha-saved'; };
   return () => { window.saveToGitHub = orig; };
 }
+
+// Pins "today" so the relative Patterns metrics (days-since-last, last-30-days,
+// the 6-month chart window) are deterministic. Same window-override trick as
+// mockSave. Returns a restore fn.
+function mockToday(dateStr) {
+  const orig = window.todayStr;
+  window.todayStr = () => dateStr;
+  return () => { window.todayStr = orig; };
+}
+
+// One reaction episode, shaped like the log form writes them.
+function episode(overrides = {}) {
+  return { meal: 'Breakfast', count: '1', delay: '<30m', content: '', ...overrides };
+}

@@ -1518,7 +1518,9 @@ await describe('resetLogForm()', async () => {
     resetState();
     document.getElementById('e-date').value = '2020-01-01';
     resetLogForm();
-    expect(document.getElementById('e-date').value).toBe(new Date().toISOString().slice(0, 10));
+    // Local calendar day, not toISOString() — that's UTC, and it disagrees with
+    // the user's own date for part of every day outside Greenwich.
+    expect(document.getElementById('e-date').value).toBe(todayStr());
   });
   await it('clears notes', () => {
     resetState();
@@ -1969,6 +1971,242 @@ await describe('nextDateStr() / dayPoorSleep()', async () => {
     expect(dayPoorSleep({ sleep:'ok' })).toBeFalsy();
     expect(dayPoorSleep({ sleep:'great' })).toBeFalsy();
     expect(dayPoorSleep({ sleep:'' })).toBeFalsy();
+  });
+});
+
+
+// ════════════════════════════════════════════════════════
+// 21d. shiftDate() / daysBetween() / todayStr() / episodeCount()
+// ════════════════════════════════════════════════════════
+await describe('date + episode primitives', async () => {
+  await it('shiftDate moves in both directions', () => {
+    expect(shiftDate('2026-08-15', 1)).toBe('2026-08-16');
+    expect(shiftDate('2026-08-15', -29)).toBe('2026-07-17');
+    expect(shiftDate('2026-01-01', -1)).toBe('2025-12-31');
+    expect(shiftDate('2028-02-28', 1)).toBe('2028-02-29');   // 2028 is a leap year
+    expect(shiftDate('2026-08-15', 0)).toBe('2026-08-15');
+  });
+
+  await it('nextDateStr still advances one day', () => {
+    expect(nextDateStr('2026-06-30')).toBe('2026-07-01');
+  });
+
+  await it('daysBetween counts whole days across a DST boundary', () => {
+    expect(daysBetween('2026-08-03', '2026-08-15')).toBe(12);
+    expect(daysBetween('2026-03-01', '2026-03-31')).toBe(30);  // US DST starts mid-March
+    expect(daysBetween('2026-08-15', '2026-08-15')).toBe(0);
+  });
+
+  await it('todayStr reads the local calendar day, not the UTC one', () => {
+    // 23:00 local. toISOString() rolls this to the 16th anywhere west of UTC.
+    expect(todayStr(new Date(2026, 7, 15, 23, 0, 0))).toBe('2026-08-15');
+    // 00:30 local. toISOString() rolls this back to the 31st anywhere east of UTC.
+    expect(todayStr(new Date(2026, 0, 1, 0, 30, 0))).toBe('2026-01-01');
+    expect(todayStr(new Date(2026, 8, 5, 12, 0, 0))).toBe('2026-09-05');  // zero-padding
+  });
+
+  await it('episodeCount counts logged episodes, never the "3+" string', () => {
+    expect(episodeCount({ reactions: [episode(), episode({ count:'3+' })] })).toBe(2);
+    expect(episodeCount({ reactions: [] })).toBe(0);
+    expect(episodeCount({ vomit: '3+' })).toBe(1);      // legacy entry = one episode
+    expect(episodeCount({ vomit: 'none' })).toBe(0);
+    expect(episodeCount({})).toBe(0);
+  });
+});
+
+
+// ════════════════════════════════════════════════════════
+// 21e. renderPatterns() – streak card, 30-day card, monthly chart
+// ════════════════════════════════════════════════════════
+await describe('renderPatterns() – streak, 30-day count, monthly chart', async () => {
+  const TODAY = '2027-08-15';
+  const el    = () => document.getElementById('patterns-content');
+  const texts = sel => [...el().querySelectorAll(sel)].map(n => n.textContent.trim());
+  // The stat card whose label matches `label`, as its big number.
+  const cardNum = label => {
+    const card = [...el().querySelectorAll('.stat-card')]
+      .find(c => c.querySelector('.stat-lbl').textContent.includes(label));
+    return card ? card.querySelector('.stat-num').textContent.trim() : null;
+  };
+
+  await it('days since last episode counts back from today', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(
+      makeEntry({ date:'2027-08-03', reactions:[episode()] }),   // 12 days before today
+      makeEntry({ date:'2027-08-10', reactions:[] })             // clear, and more recent
+    );
+    renderPatterns();
+    restore();
+    expect(cardNum('Days since last')).toBe('12');
+  });
+
+  await it('shows — when no episode has ever been logged', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(
+      makeEntry({ date:'2027-08-10', reactions:[] }),
+      makeEntry({ date:'2027-08-09', reactions:[] })
+    );
+    renderPatterns();
+    restore();
+    expect(cardNum('Days since last')).toBe('—');
+  });
+
+  await it('30-day count includes day 29 and excludes day 45', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(
+      makeEntry({ date:'2027-07-17', reactions:[episode()] }),   // 29 days back — inside
+      makeEntry({ date:'2027-07-16', reactions:[episode()] }),   // 30 days back — outside
+      makeEntry({ date:'2027-07-01', reactions:[episode()] })    // 45 days back — outside
+    );
+    renderPatterns();
+    restore();
+    expect(cardNum('last 30 days')).toBe('1');
+  });
+
+  await it('30-day count counts episodes, not affected days', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(
+      makeEntry({ date:'2027-08-14', reactions:[episode(), episode(), episode()] }),
+      makeEntry({ date:'2027-08-13', reactions:[episode()] })
+    );
+    renderPatterns();
+    restore();
+    expect(cardNum('last 30 days')).toBe('4');
+  });
+
+  await it('ignores a future-dated entry in the 30-day count', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(
+      makeEntry({ date:'2027-09-20', reactions:[episode()] }),   // typo'd into the future
+      makeEntry({ date:'2027-08-14', reactions:[episode()] })
+    );
+    renderPatterns();
+    restore();
+    expect(cardNum('last 30 days')).toBe('1');
+  });
+
+  await it('renders six month bars ending on the current month', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(makeEntry({ date:'2027-08-10' }), makeEntry({ date:'2027-08-09' }));
+    renderPatterns();
+    restore();
+    expect(texts('.bar-lbl')).toEqual(['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']);
+  });
+
+  await it('a month with no episodes still gets a bar showing 0', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(
+      makeEntry({ date:'2027-08-10', reactions:[episode(), episode()] }),
+      makeEntry({ date:'2027-06-10', reactions:[episode()] })
+    );
+    renderPatterns();
+    restore();
+    //            Mar  Apr  May  Jun  Jul  Aug
+    expect(texts('.bar-val')).toEqual(['0', '0', '0', '1', '0', '2']);
+  });
+
+  await it('totals the episodes across the six months', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(
+      makeEntry({ date:'2027-08-10', reactions:[episode(), episode()] }),
+      makeEntry({ date:'2027-06-10', reactions:[episode()] }),
+      makeEntry({ date:'2027-01-10', reactions:[episode()] })   // older than the window
+    );
+    renderPatterns();
+    restore();
+    expect(el().innerHTML).toContain('3 episodes in the last 6 months');
+  });
+
+  await it('month labels follow the language', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(makeEntry({ date:'2027-08-10' }), makeEntry({ date:'2027-08-09' }));
+    renderPatterns();
+    const en = texts('.bar-lbl').join(',');
+    LANG = 'es';
+    renderPatterns();
+    const es = texts('.bar-lbl').join(',');
+    restore();
+    expect(es).not.toBe(en);
+    expect(el().innerHTML).toContain('episodios');
+  });
+
+  await it('drops the old days-with-vomiting and clear-days cards', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(makeEntry({ date:'2027-08-10' }), makeEntry({ date:'2027-08-09' }));
+    renderPatterns();
+    restore();
+    const labels = texts('.stat-lbl').join('|');
+    expect(labels).not.toContain('Days with vomiting');
+    expect(labels).not.toContain('Clear days');
+    expect(labels).toContain('Days logged');
+    expect(labels).toContain('Vomit rate');
+  });
+
+  await it('counts a "3+" episode as 3 in the timing chips, never NaN', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(
+      makeEntry({ date:'2027-08-10', reactions:[episode({ delay:'2-3h', count:'3+' })] }),
+      makeEntry({ date:'2027-08-09', reactions:[] })
+    );
+    renderPatterns();
+    restore();
+    expect(el().innerHTML).not.toContain('NaN');
+    expect(el().innerHTML).toContain('2-3h: 3×');
+  });
+});
+
+
+// ════════════════════════════════════════════════════════
+// 21f. Today's date comes from the LOCAL calendar, not UTC
+// ════════════════════════════════════════════════════════
+await describe("today's date is local, not UTC", async () => {
+  await it('resetLogForm prefills the date from todayStr', () => {
+    resetState();
+    const restore = mockToday('2019-03-07');
+    resetLogForm();
+    restore();
+    expect(document.getElementById('e-date').value).toBe('2019-03-07');
+  });
+
+  await it('initLogTab prefills the date from todayStr', () => {
+    resetState();
+    const restore = mockToday('2019-03-07');
+    initLogTab();
+    restore();
+    expect(document.getElementById('e-date').value).toBe('2019-03-07');
+  });
+
+  await it('the export filename uses todayStr', () => {
+    resetState();
+    const restore   = mockToday('2019-03-07');
+    const origMake  = document.createElement.bind(document);
+    const origCreate = URL.createObjectURL, origRevoke = URL.revokeObjectURL;
+    let filename = null;
+    URL.createObjectURL = () => 'blob:stub';
+    URL.revokeObjectURL = () => {};
+    document.createElement = tag => {
+      const node = origMake(tag);
+      if (tag === 'a') node.click = () => { filename = node.download; };
+      return node;
+    };
+    try { exportJSON(); } finally {
+      document.createElement = origMake;
+      URL.createObjectURL  = origCreate;
+      URL.revokeObjectURL  = origRevoke;
+      restore();
+    }
+    expect(filename).toBe('bitebybite-backup-2019-03-07.json');
   });
 });
 
