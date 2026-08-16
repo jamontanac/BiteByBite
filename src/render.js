@@ -189,7 +189,8 @@ function renderPatterns() {
       <div class="stat-card"><div class="stat-num bad">${last30}</div><div class="stat-lbl">${t('pat.last30')}</div></div>
     </div>
 
-    ${renderMonthlyChart()}
+    <div class="sec-label">${t('pat.monthlyTitle')}</div>
+    ${renderMonthChart('vomit', episodeCount, 'pat.monthlyTotal', renderMonthPanel)}
 
     <div class="sec-label">${t('pat.corrTitle')}</div>
     ${corrRows}
@@ -221,13 +222,15 @@ function renderPatterns() {
   `;
 }
 
-// ── Monthly episode chart (Patterns tab) ────────────────
-// Six bars, one per month, oldest → current. The bars are plain divs sized in
-// percent and filled with var(--warn) — a light-dark() token — so the theme
-// toggle repaints them with no JS here (a canvas would have to re-read the
-// computed tokens and redraw). Month names come from the locale, so they follow
-// the language without costing a translation key.
-function renderMonthlyChart() {
+// ── Monthly bar chart (Patterns tab) ────────────────────
+// Six bars, one per month, oldest → current. Used twice: vomiting episodes and
+// poor nights. `id` scopes the open-panel state and picks the bar colour via a
+// CSS class, so the light-dark() tokens still carry the theme with no JS here (a
+// canvas would have to re-read the computed tokens and redraw). `count(entry)`
+// is what one day contributes; `panel(monthKey)` renders the tap-open detail.
+// Month names come from the locale, so they follow the language for free.
+function renderMonthChart(id, count, totalKey, panel) {
+  const open = chartOpen[id];
   const [y, m] = todayStr().split('-').map(Number);
   const months = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(Date.UTC(y, m - 6 + i, 1));
@@ -241,17 +244,17 @@ function renderMonthlyChart() {
 
   const counts = months.map(mo =>
     journal.filter(e => e.date.slice(0, 7) === mo.key)
-           .reduce((sum, e) => sum + episodeCount(e), 0));
+           .reduce((sum, e) => sum + count(e), 0));
   const max = Math.max(...counts, 1);          // never divide by zero on a clear window
 
   // Buttons, not divs: a bar is a control, so it has to be reachable by keyboard
   // and announced to a screen reader. Content is spans — a <button> may only
   // contain phrasing content.
   const bars = months.map((mo, i) => {
-    const on = chartMonth === mo.key;
+    const on = open === mo.key;
     return `
       <button type="button" class="bar-col${on ? ' sel' : ''}" aria-pressed="${on}"
-              data-month="${mo.key}" onclick="selectChartMonth('${mo.key}')">
+              data-chart="${id}" data-month="${mo.key}" onclick="selectChartMonth('${id}','${mo.key}')">
         <span class="bar-val">${counts[i]}</span>
         <span class="bar-track"><span class="bar-fill" style="height:${counts[i] / max * 100}%"></span></span>
         <span class="bar-lbl">${mo.label}</span>
@@ -260,25 +263,51 @@ function renderMonthlyChart() {
 
   const total = counts.reduce((a, b) => a + b, 0);
 
-  return `<div class="sec-label">${t('pat.monthlyTitle')}</div>
-    <div class="card">
-      <div class="bar-chart${chartMonth ? ' has-sel' : ''}">${bars}</div>
-      <div class="timing-note">${t('pat.monthlyTotal', { n: total })}${chartMonth ? '' : ' · ' + t('pat.month.hint')}</div>
-      ${chartMonth ? renderMonthPanel(chartMonth) : ''}
+  return `<div class="card chart-${id}">
+      <div class="bar-chart${open ? ' has-sel' : ''}">${bars}</div>
+      <div class="timing-note">${t(totalKey, { n: total })}${open ? '' : ' · ' + t('pat.month.hint')}</div>
+      ${open ? panel(open) : ''}
     </div>`;
 }
 
-// Opens a month's detail, or closes it if that month is already open. Re-renders
-// the whole Patterns tab rather than patching the DOM — it's cheap, the tab
-// already re-renders on every language change, and it keeps one render path.
-function selectChartMonth(key) {
-  chartMonth = (chartMonth === key) ? null : key;
+// Opens a month's detail on one chart, or closes it if that month is already
+// open. Re-renders the whole Patterns tab rather than patching the DOM — it's
+// cheap, the tab already re-renders on every language change, and it keeps one
+// render path.
+function selectChartMonth(id, key) {
+  chartOpen[id] = (chartOpen[id] === key) ? null : key;
   renderPatterns();
   // The re-render replaced the button that was just activated (and the close ×
   // belongs to this bar too), so hand focus back — otherwise every tap drops a
   // keyboard user at the top of the page.
-  const btn = document.querySelector(`.bar-col[data-month="${key}"]`);
+  const btn = document.querySelector(`.bar-col[data-chart="${id}"][data-month="${key}"]`);
   if (btn) btn.focus();
+}
+
+// Heading + close button shared by both month panels.
+function monthPanelHead(id, key) {
+  const [y, mo] = key.split('-').map(Number);
+  const title = new Date(Date.UTC(y, mo - 1, 1))
+    .toLocaleDateString(LANG, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  return { title, close: `<button type="button" class="month-close"
+      onclick="selectChartMonth('${id}','${key}')" aria-label="${t('pat.month.close')}">×</button>` };
+}
+
+// The exposure chips a single day carried, e.g. "Gluten · Away from home".
+function exposureTags(day) {
+  return EXPOSURES.filter(x => x.filter(day))
+    .map(x => `<span class="tag neutral">${t(x.tag)}</span>`).join('');
+}
+
+// "Gluten 2/3 · Dairy 1/3" — how often each exposure turned up across `days`.
+// Counts, never percentages: at these sample sizes a rate is noise dressed up.
+function exposureTally(days) {
+  return EXPOSURES
+    .map(x => ({ tag: x.tag, n: days.filter(x.filter).length }))
+    .filter(x => x.n > 0)
+    .sort((a, b) => b.n - a.n)
+    .map(x => `<span class="tag neutral">${t(x.tag)} ${x.n}/${days.length}</span>`)
+    .join('');
 }
 
 // ── Monthly detail panel (Patterns tab) ─────────────────
@@ -288,18 +317,14 @@ function selectChartMonth(key) {
 // "50%" is not. The day list scrolls inside the panel so a heavy month can't
 // push the heading and close button off a phone screen.
 function renderMonthPanel(key) {
-  const [y, mo] = key.split('-').map(Number);
-  const title   = new Date(Date.UTC(y, mo - 1, 1))
-    .toLocaleDateString(LANG, { month: 'long', year: 'numeric', timeZone: 'UTC' });
-  const close   = `<button type="button" class="month-close" onclick="selectChartMonth('${key}')"
-      aria-label="${t('pat.month.close')}">×</button>`;
+  const { title, close } = monthPanelHead('vomit', key);
 
   const days = journal
     .filter(e => e.date.slice(0, 7) === key && episodeCount(e) > 0)
     .sort((a, b) => a.date.localeCompare(b.date));
 
   if (!days.length) {
-    return `<div class="month-panel">
+    return `<div class="month-panel vomit">
       <div class="month-head"><span class="month-title">${title}</span>${close}</div>
       <div class="timing-note">${t('pat.month.none')}</div>
     </div>`;
@@ -310,27 +335,69 @@ function renderMonthPanel(key) {
       <div class="month-row">
         <span class="month-date">${fmtDateShort(e.date)}</span>
         <span class="month-count">${episodeCount(e)}×</span>
-        <span class="month-tags">${
-          EXPOSURES.filter(x => x.filter(e)).map(x => `<span class="tag neutral">${t(x.tag)}</span>`).join('')
-        }</span>
+        <span class="month-tags">${exposureTags(e)}</span>
       </div>`).join('');
+  const tally = exposureTally(days);
 
-  const present = EXPOSURES
-    .map(x => ({ tag: x.tag, n: days.filter(x.filter).length }))
-    .filter(x => x.n > 0)
-    .sort((a, b) => b.n - a.n)
-    .map(x => `<span class="tag neutral">${t(x.tag)} ${x.n}/${days.length}</span>`)
-    .join('');
-
-  return `<div class="month-panel">
+  return `<div class="month-panel vomit">
     <div class="month-head">
       <span class="month-title">${title} · ${total} ${total === 1 ? t('hist.episode') : t('hist.episodes')}</span>
       ${close}
     </div>
     <div class="month-rows">${rows}</div>
-    ${present ? `<div class="month-foot">
+    ${tally ? `<div class="month-foot">
       <div class="month-foot-lbl">${t('pat.month.onThoseDays')}</div>
-      <div class="chip-grid">${present}</div>
+      <div class="chip-grid">${tally}</div>
+    </div>` : ''}
+  </div>`;
+}
+
+// ── Sleep month detail panel ────────────────────────────
+// The poor nights in a month, each labelled with what the PRECEDING day carried —
+// sleep is logged as "last night", so a bad night on D follows day D-1. Nights
+// whose previous day was never logged are called out rather than silently
+// dropped, and they're excluded from the tally's denominator: counting them
+// would understate every exposure.
+function renderSleepMonthPanel(key) {
+  const { title, close } = monthPanelHead('sleep', key);
+
+  const nights = journal
+    .filter(e => e.date.slice(0, 7) === key && dayPoorSleep(e))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  if (!nights.length) {
+    return `<div class="month-panel sleep">
+      <div class="month-head"><span class="month-title">${title}</span>${close}</div>
+      <div class="timing-note">${t('pat.sleep.month.none')}</div>
+    </div>`;
+  }
+
+  const byDate = new Map(journal.map(e => [e.date, e]));
+  const dayBefore = n => byDate.get(shiftDate(n.date, -1));
+
+  const rows = nights.map(n => {
+    const day  = dayBefore(n);
+    const tags = day ? exposureTags(day) : '';
+    return `<div class="month-row">
+        <span class="month-date">${fmtDateShort(n.date)}</span>
+        ${!day    ? `<span class="month-unknown">${t('pat.sleep.month.unknown')}</span>`
+        : tags    ? `<span class="month-after">${t('hist.after')}</span><span class="month-tags">${tags}</span>`
+                  : ''}
+      </div>`;
+  }).join('');
+
+  const known = nights.map(dayBefore).filter(Boolean);
+  const tally = known.length ? exposureTally(known) : '';
+
+  return `<div class="month-panel sleep">
+    <div class="month-head">
+      <span class="month-title">${title} · ${nights.length} ${nights.length === 1 ? t('pat.sleep.nightOne') : t('pat.sleep.nightMany')}</span>
+      ${close}
+    </div>
+    <div class="month-rows">${rows}</div>
+    ${tally ? `<div class="month-foot">
+      <div class="month-foot-lbl">${t('pat.sleep.month.precededBy')}</div>
+      <div class="chip-grid">${tally}</div>
     </div>` : ''}
   </div>`;
 }
@@ -352,7 +419,10 @@ function renderSleepPatterns() {
     if (night && night.sleep) pairs.push({ day, poor: dayPoorSleep(night) });
   });
 
-  const title = `<div class="sec-label">${t('pat.sleep.title')}</div>`;
+  // The chart only needs a night's own `sleep` value, so it renders from day one —
+  // long before there are enough back-to-back pairs to say anything about causes.
+  const title = `<div class="sec-label">${t('pat.sleep.title')}</div>
+    ${renderMonthChart('sleep', e => dayPoorSleep(e) ? 1 : 0, 'pat.sleep.chartTotal', renderSleepMonthPanel)}`;
 
   if (pairs.length < MIN_PAIRS) {
     return `${title}
@@ -364,45 +434,50 @@ function renderSleepPatterns() {
   const baseRate = pairs.filter(p => p.poor).length / pairs.length;
   const basePct  = Math.round(baseRate * 100) + '%';
 
-  const rows = SLEEP_EXPOSURES.map(x => {
+  const stats = SLEEP_EXPOSURES.map(x => {
     const subset = pairs.filter(p => x.filter(p.day));
     const total  = subset.length;
     const hits   = subset.filter(p => p.poor).length;
     const rate   = total ? hits / total : 0;
-    const meaningful = total >= 2;            // 1-day exposures are noise, not a signal
+    return { key: x.key, total, hits, rate, dev: rate - baseRate, meaningful: total >= 2 };
+  });
 
-    let cls;
-    if (!meaningful)                cls = 'muted';
-    else if (baseRate === 0)        cls = rate > 0 ? 'high' : 'low';
-    else if (rate / baseRate > 1.3) cls = 'high';
-    else if (rate / baseRate < 0.8) cls = 'low';
-    else                            cls = 'mid';
+  // One exposure logged once is a coincidence, not a signal — those get named in a
+  // single trailing line instead of taking a full row each.
+  const shown = stats.filter(s => s.meaningful).sort((a, b) => b.dev - a.dev);   // worst first
+  const weak  = stats.filter(s => !s.meaningful);
 
-    let sub = t('pat.sleep.rowSub', { hits, total });
-    sub += ' · ' + (meaningful ? t('pat.sleep.vsBaseline', { p: basePct }) : t('pat.sleep.lowSample'));
+  // Deviation from baseline, scaled so the largest one fills half the track. The
+  // floor keeps a set of near-baseline rows from being blown up into fake signal.
+  const maxDev = Math.max(...shown.map(s => Math.abs(s.dev)), 0.1);
 
-    return {
-      meaningful, rate,
-      html: `<div class="corr-row">
-      <div class="corr-left">
-        <div class="corr-name">${t('pat.sleep.exp.' + x.key)}</div>
-        <div class="corr-sub">${sub}</div>
+  const dvRows = shown.map(s => {
+    const worse = s.dev > 0;
+    const w     = Math.abs(s.dev) / maxDev * 50;
+    return `<div class="dv-row">
+      <div class="dv-head">
+        <span class="dv-name">${t('pat.sleep.exp.' + s.key)}</span>
+        <span class="dv-pct ${worse ? 'high' : 'low'}">${Math.round(s.rate * 100)}%</span>
       </div>
-      <div class="corr-pct ${cls}">${total === 0 ? '—' : Math.round(rate * 100) + '%'}</div>
-    </div>`
-    };
-  })
-  .sort((a, b) => (b.meaningful - a.meaningful) || (b.rate - a.rate))  // meaningful first, then by rate
-  .map(r => r.html)
-  .join('');
+      <div class="dv-sub">${t('pat.sleep.rowSub', { hits: s.hits, total: s.total })}</div>
+      <div class="dv-track">
+        <span class="dv-bar ${worse ? 'worse' : 'better'}"
+              style="${worse ? 'left' : 'right'}:50%;width:${w}%"></span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const weakLine = weak.length
+    ? `<div class="dv-weak">${t('pat.sleep.lowSampleList', {
+        list: weak.map(s => t('pat.sleep.exp.' + s.key)).join(', ') })}</div>`
+    : '';
 
   return `${title}
     <div class="card">
       <div class="timing-note">${t('pat.sleep.intro')}</div>
-      <div class="chip-grid">
-        <span class="tag neutral">${t('pat.sleep.baseline', { p: basePct })}</span>
-        <span class="tag neutral">${t('pat.sleep.pairs', { n: pairs.length })}</span>
-      </div>
-    </div>
-    ${rows}`;
+      <div class="dv-base">${t('pat.sleep.baseline', { p: basePct })} · ${t('pat.sleep.pairs', { n: pairs.length })}</div>
+      ${dvRows}
+      <div class="dv-axis"><span>← ${t('pat.sleep.better')}</span><span>${t('pat.sleep.worse')} →</span></div>
+      ${weakLine}
+    </div>`;
 }

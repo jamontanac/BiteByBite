@@ -492,6 +492,32 @@ input[type="date"],input[type="time"]{
 .month-tags{display:flex;flex-wrap:wrap;gap:.25rem}
 .month-foot{margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)}
 .month-foot-lbl{font-size:.72rem;color:var(--ink3)}
+.month-after,.month-unknown{font-size:.78rem;color:var(--ink3)}
+
+/* The sleep chart shares the vomiting chart's markup; only the hue differs, so
+   the two stacked charts stay tellable apart. Still a theme token. */
+.chart-sleep .bar-fill{background:var(--purple)}
+.chart-sleep .month-count{color:var(--purple)}
+
+/* Diverging baseline rows: distance from his usual poor-night rate, worse to the
+   right, better to the left, with a neutral rule at the baseline itself. */
+.dv-base{font-size:.72rem;color:var(--ink3);text-align:center;margin:.25rem 0 .75rem}
+.dv-row{margin-bottom:.75rem}
+.dv-head{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem}
+.dv-name{font-size:.82rem}
+.dv-pct{font-size:.9rem;font-weight:500;font-variant-numeric:tabular-nums}
+.dv-pct.high{color:var(--warn)}
+.dv-pct.low{color:var(--accent)}
+.dv-sub{font-size:.72rem;color:var(--ink2);margin:.1rem 0 .3rem}
+.dv-track{position:relative;height:10px;background:var(--bg);border:1px solid var(--border);border-radius:5px}
+.dv-track::before{content:'';position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--ink3)}
+/* min-width so a row sitting on the baseline still shows a nub — a zero-width
+   bar reads as a rendering fault rather than as "no different from usual". */
+.dv-bar{position:absolute;top:0;bottom:0;border-radius:3px;min-width:2px}
+.dv-bar.worse{background:var(--warn)}
+.dv-bar.better{background:var(--accent)}
+.dv-axis{display:flex;justify-content:space-between;font-size:.68rem;color:var(--ink3);margin-top:.25rem}
+.dv-weak{font-size:.75rem;color:var(--ink3);line-height:1.45;margin-top:.625rem;padding-top:.625rem;border-top:1px solid var(--border)}
 .insight-card.insight-howto{margin-top:.75rem;border-left:3px solid var(--border)}
 
 /* Language selector (Settings) */

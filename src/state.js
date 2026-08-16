@@ -5,7 +5,9 @@ let ghSha = null;     // SHA of journal.json in GitHub (needed for updates)
 let mealCount = 0;
 let reactionCount = 0;
 let editIndex = -1;
-let chartMonth = null;  // 'YYYY-MM' of the open bar in the Patterns chart, or null
+// Which month each Patterns chart has open ('YYYY-MM'), or null. Kept per chart
+// so opening one doesn't silently collapse the other further up the page.
+let chartOpen = { vomit: null, sleep: null };
 let activeSymptoms = new Set();
 let activeSev = '';
 let syncTimer = null;

@@ -1850,9 +1850,11 @@ await describe('renderPatterns() – sleep influence', async () => {
       { sleep:'great' }, { sleep:'great' },
     ]));
     renderPatterns();
-    const h = html();
-    expect(h).toContain('After egg');
-    expect(h).toContain('not enough data yet');
+    // A one-off exposure gets named in the trailing low-sample line, not given a
+    // row of its own with a percentage attached.
+    const weak = document.querySelector('#patterns-content .dv-weak').textContent;
+    expect(weak).toContain('Not enough data yet');
+    expect(weak).toContain('After egg');
   });
 
   await it('a missing calendar day breaks the pair (date-based, not array order)', () => {
@@ -1870,10 +1872,13 @@ await describe('renderPatterns() – sleep influence', async () => {
       makeEntry({ date:'2026-06-21', sleep:'great' }),
       makeEntry({ date:'2026-06-20', sleep:'great' }),
     );
-    const section = renderSleepPatterns();
-    expect(section).toContain('After dairy');
-    expect(section).toContain('5 back-to-back day pairs');
-    expect(section).not.toContain('100%');   // dairy is unpaired, so nothing hits 100%
+    renderPatterns();
+    const el = document.getElementById('patterns-content');
+    expect(el.innerHTML).toContain('5 back-to-back day pairs');
+    // Dairy is unpaired, so it can never earn a rate — it belongs to the
+    // low-sample line, not to a scored row.
+    expect(el.querySelector('.dv-weak').textContent).toContain('After dairy');
+    expect([...el.querySelectorAll('.dv-name')].map(n => n.textContent)).toEqual([]);
   });
 
   await it('flags elevated (high), protective (low) and low-sample (muted) rows', () => {
@@ -1887,10 +1892,13 @@ await describe('renderPatterns() – sleep influence', async () => {
       { sleep:'poor' },                      // 25 plain; night=poor
       { sleep:'great' },                     // 26 night only
     ]));
-    const section = renderSleepPatterns();
-    expect(section).toContain('corr-pct high');   // dairy 100% vs 50% baseline
-    expect(section).toContain('corr-pct low');    // away 0% (below baseline)
-    expect(section).toContain('corr-pct muted');  // egg is a single day
+    renderPatterns();
+    const el = document.getElementById('patterns-content');
+    const row = name => [...el.querySelectorAll('.dv-row')]
+      .find(r => r.querySelector('.dv-name').textContent.includes(name));
+    expect(row('dairy').querySelector('.dv-bar').className).toContain('worse');  // 100% vs 50% baseline
+    expect(row('away').querySelector('.dv-bar').className).toContain('better');  // 0%, below baseline
+    expect(el.querySelector('.dv-weak').textContent).toContain('After egg');     // a single day
   });
 
   await it('renders alongside correlations, timing and symptoms', () => {
@@ -2096,7 +2104,7 @@ await describe('renderPatterns() – streak, 30-day count, monthly chart', async
     setJournal(makeEntry({ date:'2027-08-10' }), makeEntry({ date:'2027-08-09' }));
     renderPatterns();
     restore();
-    expect(texts('.bar-lbl')).toEqual(['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']);
+    expect(texts('.chart-vomit .bar-lbl')).toEqual(['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']);
   });
 
   await it('a month with no episodes still gets a bar showing 0', () => {
@@ -2109,7 +2117,7 @@ await describe('renderPatterns() – streak, 30-day count, monthly chart', async
     renderPatterns();
     restore();
     //            Mar  Apr  May  Jun  Jul  Aug
-    expect(texts('.bar-val')).toEqual(['0', '0', '0', '1', '0', '2']);
+    expect(texts('.chart-vomit .bar-val')).toEqual(['0', '0', '0', '1', '0', '2']);
   });
 
   await it('totals the episodes across the six months', () => {
@@ -2130,10 +2138,10 @@ await describe('renderPatterns() – streak, 30-day count, monthly chart', async
     const restore = mockToday(TODAY);
     setJournal(makeEntry({ date:'2027-08-10' }), makeEntry({ date:'2027-08-09' }));
     renderPatterns();
-    const en = texts('.bar-lbl').join(',');
+    const en = texts('.chart-vomit .bar-lbl').join(',');
     LANG = 'es';
     renderPatterns();
-    const es = texts('.bar-lbl').join(',');
+    const es = texts('.chart-vomit .bar-lbl').join(',');
     restore();
     expect(es).not.toBe(en);
     expect(el().innerHTML).toContain('episodios');
@@ -2173,8 +2181,8 @@ await describe('renderPatterns() – streak, 30-day count, monthly chart', async
 await describe('renderPatterns() – month detail panel', async () => {
   const TODAY = '2027-08-15';
   const el    = () => document.getElementById('patterns-content');
-  const bars  = () => [...el().querySelectorAll('.bar-col')];
-  const panel = () => el().querySelector('.month-panel');
+  const bars  = () => [...el().querySelectorAll('.chart-vomit .bar-col')];
+  const panel = () => el().querySelector('.month-panel.vomit');
   const texts = sel => [...el().querySelectorAll(sel)].map(n => n.textContent.trim());
 
   const mealWith = o => ({ type:'lunch', time:'12:00', source:'homemade', foods:'pasta',
@@ -2208,8 +2216,8 @@ await describe('renderPatterns() – month detail panel', async () => {
     bars()[3].click();                              // Mar Apr May [Jun] Jul Aug
     restore();
     expect(panel()).not.toBeNull();
-    expect(texts('.month-date')).toEqual(['Jun 4', 'Jun 17']);
-    expect(texts('.month-count')).toEqual(['2×', '1×']);
+    expect(texts('.chart-vomit .month-date')).toEqual(['Jun 4', 'Jun 17']);
+    expect(texts('.chart-vomit .month-count')).toEqual(['2×', '1×']);
     expect(panel().textContent).toContain('3 episodes');
   });
 
@@ -2219,7 +2227,7 @@ await describe('renderPatterns() – month detail panel', async () => {
     seed(); renderPatterns();
     bars()[3].click();
     restore();
-    const rows = [...el().querySelectorAll('.month-row')].map(r => r.textContent.replace(/\s+/g, ' ').trim());
+    const rows = [...el().querySelectorAll('.chart-vomit .month-row')].map(r => r.textContent.replace(/\s+/g, ' ').trim());
     expect(rows[0]).toContain('Gluten');
     expect(rows[0]).toContain('Away from home');
     expect(rows[1]).toContain('Dairy');
@@ -2232,7 +2240,7 @@ await describe('renderPatterns() – month detail panel', async () => {
     seed(); renderPatterns();
     bars()[3].click();
     restore();
-    const foot = el().querySelector('.month-foot').textContent;
+    const foot = el().querySelector('.chart-vomit .month-foot').textContent;
     expect(foot).toContain('Gluten 1/2');           // 1 of the 2 episode DAYS
     expect(foot).toContain('Dairy 1/2');
     expect(foot).not.toContain('%');                // n=2 percentages would be noise
@@ -2245,7 +2253,7 @@ await describe('renderPatterns() – month detail panel', async () => {
     bars()[3].click();                              // Jun
     bars()[5].click();                              // Aug
     restore();
-    expect(texts('.month-date')).toEqual(['Aug 4']);
+    expect(texts('.chart-vomit .month-date')).toEqual(['Aug 4']);
   });
 
   await it('tapping the open bar again closes the panel', () => {
@@ -2265,7 +2273,7 @@ await describe('renderPatterns() – month detail panel', async () => {
     bars()[0].click();                              // Mar — empty
     restore();
     expect(panel().textContent).toContain('No episodes this month');
-    expect(el().querySelectorAll('.month-row')).toHaveLength(0);
+    expect(el().querySelectorAll('.chart-vomit .month-row')).toHaveLength(0);
   });
 
   await it('marks the open bar and dims the rest', () => {
@@ -2274,7 +2282,7 @@ await describe('renderPatterns() – month detail panel', async () => {
     seed(); renderPatterns();
     bars()[3].click();
     restore();
-    expect(el().querySelector('.bar-chart').className).toContain('has-sel');
+    expect(el().querySelector('.chart-vomit .bar-chart').className).toContain('has-sel');
     expect(bars()[3].className).toContain('sel');
     expect(bars()[3].getAttribute('aria-pressed')).toBe('true');
     expect(bars()[5].getAttribute('aria-pressed')).toBe('false');
@@ -2318,6 +2326,194 @@ await describe('renderPatterns() – month detail panel', async () => {
       'Poor-sleep days with vomiting', 'Away-from-home days with vomiting',
       'Illness-sign days with vomiting', 'Heavy-meal days with vomiting',
     ]);
+  });
+});
+
+
+// ════════════════════════════════════════════════════════
+// 21e³. Sleep section — monthly chart + diverging baseline rows
+// ════════════════════════════════════════════════════════
+await describe('renderSleepPatterns() – chart + diverging rows', async () => {
+  const TODAY = '2027-08-15';
+  const el    = () => document.getElementById('patterns-content');
+  const scope = s => [...el().querySelectorAll('.chart-sleep ' + s)];
+  const texts = s => [...el().querySelectorAll(s)].map(n => n.textContent.trim());
+
+  const ml = o => ({ type:'lunch', time:'12:00', source:'homemade', foods:'x', heavy:'moderate',
+    amount:'all', freshFood:true, cookedWhen:'', newFood:false, newFoodName:'',
+    gluten:false, dairy:false, egg:false, ...o });
+
+  // 8 consecutive days from 2027-08-01. spec[i] = [sleepThatNight, overrides for that DAY].
+  // Day i's exposures pair with day i+1's sleep, so gluten on an odd day followed by a
+  // poor night makes "after gluten" look bad; dairy followed by great nights looks good.
+  const consecutive = specs => setJournal(...specs
+    .map(([sleep, over], i) => makeEntry({ date: shiftDate('2027-08-01', i), sleep, ...(over || {}) }))
+    .reverse());                                  // newest-first, as the app stores it
+
+  const GLUTEN_BAD = [
+    ['ok',   { meals:[ml({ gluten:true })] }],    // 08-01 gluten →
+    ['poor', { meals:[ml({ dairy:true })] }],     // 08-02 poor night; dairy →
+    ['great',{ meals:[ml({ gluten:true })] }],    // 08-03 great night; gluten →
+    ['poor', { meals:[ml({ dairy:true })] }],     // 08-04 poor night; dairy →
+    ['great',{ meals:[ml({ gluten:true })] }],    // 08-05 great night; gluten →
+    ['poor', { meals:[ml()] }],                   // 08-06 poor night
+    ['ok',   { meals:[ml()] }],                   // 08-07
+    ['ok',   { meals:[ml()] }],                   // 08-08
+  ];
+
+  await it('counts poor nights per month, not entries', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(
+      makeEntry({ date:'2027-08-10', sleep:'poor' }),
+      makeEntry({ date:'2027-08-09', sleep:'very-poor' }),
+      makeEntry({ date:'2027-08-08', sleep:'ok' }),
+      makeEntry({ date:'2027-08-07', sleep:'great' }),
+      makeEntry({ date:'2027-06-05', sleep:'poor' })
+    );
+    renderPatterns();
+    restore();
+    //                              Mar  Apr  May  Jun  Jul  Aug
+    expect(scope('.bar-val').map(n => n.textContent.trim())).toEqual(['0','0','0','1','0','2']);
+  });
+
+  await it('renders the chart even with zero consecutive-day pairs', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(                                   // no two dates adjacent
+      makeEntry({ date:'2027-08-10', sleep:'poor' }),
+      makeEntry({ date:'2027-08-01', sleep:'poor' })
+    );
+    renderPatterns();
+    restore();
+    expect(scope('.bar-col')).toHaveLength(6);    // chart is there…
+    expect(el().innerHTML).toContain('back-to-back');   // …while the rows stay gated
+    expect(el().querySelectorAll('.dv-row')).toHaveLength(0);
+  });
+
+  await it('shows worse-than-baseline exposures to the right, better to the left', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    consecutive(GLUTEN_BAD);
+    renderPatterns();
+    restore();
+    const row = name => [...el().querySelectorAll('.dv-row')]
+      .find(r => r.querySelector('.dv-name').textContent.includes(name));
+    expect(row('gluten').querySelector('.dv-bar').className).toContain('worse');
+    expect(row('dairy').querySelector('.dv-bar').className).toContain('better');
+  });
+
+  await it('sorts the rows worst-first', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    consecutive(GLUTEN_BAD);
+    renderPatterns();
+    restore();
+    const names = texts('.dv-name');
+    expect(names[0]).toContain('gluten');
+    expect(names[names.length - 1]).toContain('dairy');
+  });
+
+  await it('keeps the sample size visible on every row', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    consecutive(GLUTEN_BAD);
+    renderPatterns();
+    restore();
+    expect(texts('.dv-sub')[0]).toContain('nights poor');
+  });
+
+  await it('collapses low-sample exposures into one line', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    consecutive(GLUTEN_BAD);
+    renderPatterns();
+    restore();
+    const weak = el().querySelector('.dv-weak').textContent;
+    expect(weak).toContain('Not enough data yet');
+    expect(weak).toContain('egg');                // never logged → never its own row
+    expect(texts('.dv-name').join('|')).not.toContain('egg');
+  });
+
+  await it('shows the baseline and leaves the correlation table alone', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    consecutive(GLUTEN_BAD);
+    renderPatterns();
+    restore();
+    expect(el().innerHTML).toContain('Baseline poor sleep');
+    expect(el().querySelectorAll('.corr-row')).toHaveLength(9);   // the other table, untouched
+  });
+
+  await it('tapping a sleep bar opens the nights and what preceded them', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    consecutive(GLUTEN_BAD);
+    renderPatterns();
+    scope('.bar-col')[5].click();                 // August
+    restore();
+    const p = el().querySelector('.month-panel.sleep');
+    expect(p).not.toBeNull();
+    expect(p.textContent).toContain('3 poor nights');
+    // 08-02's poor night follows 08-01, a gluten day
+    expect(texts('.month-panel.sleep .month-row')[0]).toContain('Gluten');
+  });
+
+  await it('says so when the night before was never logged', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(                                   // 08-10 poor, but 08-09 absent
+      makeEntry({ date:'2027-08-10', sleep:'poor' }),
+      makeEntry({ date:'2027-08-04', sleep:'ok' })
+    );
+    renderPatterns();
+    scope('.bar-col')[5].click();
+    restore();
+    expect(el().querySelector('.month-panel.sleep').textContent).toContain('previous day not logged');
+  });
+
+  await it('counts co-occurrence only over nights whose previous day is known', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(
+      makeEntry({ date:'2027-08-10', sleep:'poor' }),                        // 08-09 missing
+      makeEntry({ date:'2027-08-05', sleep:'poor' }),                        // 08-04 logged, gluten
+      makeEntry({ date:'2027-08-04', sleep:'ok', meals:[ml({ gluten:true })] })
+    );
+    renderPatterns();
+    scope('.bar-col')[5].click();
+    restore();
+    const foot = el().querySelector('.month-panel.sleep .month-foot').textContent;
+    expect(foot).toContain('Gluten 1/1');         // 1 of the 1 night with a known day before
+    expect(foot).not.toContain('1/2');
+  });
+
+  await it('the two charts open independently', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(
+      makeEntry({ date:'2027-08-10', sleep:'poor', reactions:[episode()] }),
+      makeEntry({ date:'2027-08-09', sleep:'ok' })
+    );
+    renderPatterns();
+    el().querySelectorAll('.chart-vomit .bar-col')[5].click();
+    el().querySelectorAll('.chart-sleep .bar-col')[5].click();
+    restore();
+    expect(el().querySelector('.month-panel.vomit')).not.toBeNull();   // still open
+    expect(el().querySelector('.month-panel.sleep')).not.toBeNull();
+  });
+
+  await it('the sleep section follows the language', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    consecutive(GLUTEN_BAD);
+    LANG = 'es';
+    renderPatterns();
+    restore();
+    const html = el().innerHTML;
+    expect(html).toContain('noches malas');       // chart total
+    expect(html).toContain('peor');               // axis label
+    expect(html).toContain('Aún no hay datos suficientes');
   });
 });
 

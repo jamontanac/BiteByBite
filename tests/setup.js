@@ -100,7 +100,7 @@ function resetState() {
   mealCount      = 0;
   reactionCount  = 0;
   editIndex      = -1;
-  chartMonth     = null;
+  chartOpen      = { vomit: null, sleep: null };
   activeSymptoms = new Set();
   activeSev      = '';
   journalBranchReady = false;
