@@ -465,11 +465,33 @@ input[type="date"],input[type="time"]{
    token — carries the theme for free; only the height is inline (it's data). */
 .bar-chart{display:flex;align-items:flex-end;gap:.5rem;height:132px;margin-bottom:.75rem}
 .bar-chart+.timing-note{margin-bottom:0}
-.bar-col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;gap:.25rem}
+/* A bar is a <button> (keyboard + screen-reader operable), stripped back to look
+   like the plain column it is. */
+.bar-col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;gap:.25rem;
+  border:none;background:none;padding:0;font:inherit;color:inherit;transition:opacity .15s}
+.bar-col:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r)}
+.bar-chart.has-sel .bar-col{opacity:.4}
+.bar-chart.has-sel .bar-col.sel{opacity:1}
 .bar-val{font-size:.72rem;color:var(--ink2);font-variant-numeric:tabular-nums}
 .bar-track{flex:1;width:100%;display:flex;align-items:flex-end}
 .bar-fill{width:100%;min-height:2px;border-radius:4px 4px 0 0;background:var(--warn)}
 .bar-lbl{font-size:.7rem;color:var(--ink3)}
+
+/* Month detail panel. Only the day list scrolls, so the heading and the close
+   button stay reachable on a phone however heavy the month was. */
+.month-panel{margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)}
+.month-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.25rem}
+.month-title{font-size:.85rem;font-weight:500}
+.month-close{border:none;background:none;color:var(--ink3);font-size:1.2rem;line-height:1;padding:.1rem .45rem;border-radius:var(--r)}
+.month-close:active{background:var(--border)}
+.month-rows{max-height:38vh;overflow-y:auto}
+.month-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:.375rem;padding:.45rem 0;border-bottom:1px solid var(--border)}
+.month-row:last-child{border-bottom:none}
+.month-date{font-size:.8rem;font-weight:500;min-width:54px}
+.month-count{font-size:.8rem;color:var(--warn);min-width:26px}
+.month-tags{display:flex;flex-wrap:wrap;gap:.25rem}
+.month-foot{margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)}
+.month-foot-lbl{font-size:.72rem;color:var(--ink3)}
 .insight-card.insight-howto{margin-top:.75rem;border-left:3px solid var(--border)}
 
 /* Language selector (Settings) */
