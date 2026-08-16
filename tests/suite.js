@@ -2168,6 +2168,161 @@ await describe('renderPatterns() – streak, 30-day count, monthly chart', async
 
 
 // ════════════════════════════════════════════════════════
+// 21e². Monthly chart — tapping a bar opens that month's detail
+// ════════════════════════════════════════════════════════
+await describe('renderPatterns() – month detail panel', async () => {
+  const TODAY = '2027-08-15';
+  const el    = () => document.getElementById('patterns-content');
+  const bars  = () => [...el().querySelectorAll('.bar-col')];
+  const panel = () => el().querySelector('.month-panel');
+  const texts = sel => [...el().querySelectorAll(sel)].map(n => n.textContent.trim());
+
+  const mealWith = o => ({ type:'lunch', time:'12:00', source:'homemade', foods:'pasta',
+    heavy:'moderate', amount:'all', freshFood:true, cookedWhen:'', newFood:false,
+    newFoodName:'', gluten:false, dairy:false, egg:false, ...o });
+
+  // Jun: 2 days / 3 episodes (one gluten+away, one dairy). Aug: 1 day / 1 episode.
+  const seed = () => setJournal(
+    makeEntry({ date:'2027-08-04', reactions:[episode()] }),
+    makeEntry({ date:'2027-06-17', reactions:[episode()],
+                meals:[mealWith({ dairy:true })] }),
+    makeEntry({ date:'2027-06-04', reactions:[episode(), episode()],
+                meals:[mealWith({ gluten:true })], newEnv:true }),
+    makeEntry({ date:'2027-06-02', reactions:[], meals:[mealWith({ gluten:true })] })
+  );
+
+  await it('renders each bar as a button so it is keyboard operable', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    seed(); renderPatterns();
+    restore();
+    expect(bars()).toHaveLength(6);
+    expect(bars().every(b => b.tagName === 'BUTTON')).toBeTruthy();
+    expect(panel()).toBeNull();                     // nothing open until tapped
+  });
+
+  await it('tapping a bar opens that month with its episode days', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    seed(); renderPatterns();
+    bars()[3].click();                              // Mar Apr May [Jun] Jul Aug
+    restore();
+    expect(panel()).not.toBeNull();
+    expect(texts('.month-date')).toEqual(['Jun 4', 'Jun 17']);
+    expect(texts('.month-count')).toEqual(['2×', '1×']);
+    expect(panel().textContent).toContain('3 episodes');
+  });
+
+  await it('lists the exposures each episode day actually carried', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    seed(); renderPatterns();
+    bars()[3].click();
+    restore();
+    const rows = [...el().querySelectorAll('.month-row')].map(r => r.textContent.replace(/\s+/g, ' ').trim());
+    expect(rows[0]).toContain('Gluten');
+    expect(rows[0]).toContain('Away from home');
+    expect(rows[1]).toContain('Dairy');
+    expect(rows[1]).not.toContain('Gluten');
+  });
+
+  await it('summarises co-occurrence as a count, never a percentage', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    seed(); renderPatterns();
+    bars()[3].click();
+    restore();
+    const foot = el().querySelector('.month-foot').textContent;
+    expect(foot).toContain('Gluten 1/2');           // 1 of the 2 episode DAYS
+    expect(foot).toContain('Dairy 1/2');
+    expect(foot).not.toContain('%');                // n=2 percentages would be noise
+  });
+
+  await it('tapping another bar switches to that month', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    seed(); renderPatterns();
+    bars()[3].click();                              // Jun
+    bars()[5].click();                              // Aug
+    restore();
+    expect(texts('.month-date')).toEqual(['Aug 4']);
+  });
+
+  await it('tapping the open bar again closes the panel', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    seed(); renderPatterns();
+    bars()[3].click();
+    bars()[3].click();
+    restore();
+    expect(panel()).toBeNull();
+  });
+
+  await it('a month with no episodes still opens and says so', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    seed(); renderPatterns();
+    bars()[0].click();                              // Mar — empty
+    restore();
+    expect(panel().textContent).toContain('No episodes this month');
+    expect(el().querySelectorAll('.month-row')).toHaveLength(0);
+  });
+
+  await it('marks the open bar and dims the rest', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    seed(); renderPatterns();
+    bars()[3].click();
+    restore();
+    expect(el().querySelector('.bar-chart').className).toContain('has-sel');
+    expect(bars()[3].className).toContain('sel');
+    expect(bars()[3].getAttribute('aria-pressed')).toBe('true');
+    expect(bars()[5].getAttribute('aria-pressed')).toBe('false');
+  });
+
+  await it('keeps focus on the tapped bar across the re-render', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    seed(); renderPatterns();
+    bars()[3].click();                              // re-render destroys the old node
+    restore();
+    expect(document.activeElement.className).toContain('bar-col');
+    expect(document.activeElement.dataset.month).toBe('2027-06');
+  });
+
+  await it('the panel follows the language', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    seed(); renderPatterns();
+    bars()[3].click();
+    const en = panel().textContent;
+    LANG = 'es';
+    renderPatterns();
+    const es = panel().textContent;
+    restore();
+    expect(en).toContain('On those days');
+    expect(es).toContain('En esos días');
+    expect(es).toContain('Lácteos');
+    expect(es).not.toBe(en);
+  });
+
+  await it('keeps the correlation rows in their original order', () => {
+    resetState();
+    const restore = mockToday(TODAY);
+    setJournal(makeEntry({ date:'2027-08-10' }), makeEntry({ date:'2027-08-09' }));
+    renderPatterns();
+    restore();
+    expect(texts('.corr-name')).toEqual([
+      'Gluten days with vomiting', 'Dairy days with vomiting', 'Egg days with vomiting',
+      'New food days with vomiting', 'Leftover food days with vomiting',
+      'Poor-sleep days with vomiting', 'Away-from-home days with vomiting',
+      'Illness-sign days with vomiting', 'Heavy-meal days with vomiting',
+    ]);
+  });
+});
+
+
+// ════════════════════════════════════════════════════════
 // 21f. Today's date comes from the LOCAL calendar, not UTC
 // ════════════════════════════════════════════════════════
 await describe("today's date is local, not UTC", async () => {
