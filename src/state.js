@@ -5,6 +5,7 @@ let ghSha = null;     // SHA of journal.json in GitHub (needed for updates)
 let mealCount = 0;
 let reactionCount = 0;
 let editIndex = -1;
+let chartMonth = null;  // 'YYYY-MM' of the open bar in the Patterns chart, or null
 let activeSymptoms = new Set();
 let activeSev = '';
 let syncTimer = null;
@@ -17,7 +18,7 @@ const API = 'https://api.github.com';
 // shown in the Settings tab so you can confirm which build the browser loaded.
 // Keep this in sync with the ?v= query params on the <script>/<link> tags in
 // index.html.
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.2';
 
 // The five Day-overview <select> keys — each maps to #e-<key> and to
 // FORMCFG.day.selects[<key>]. Shared by the form renderer, the edit loader,

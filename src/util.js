@@ -42,6 +42,13 @@ function fmtDate(s) {
   return new Date(y, mo - 1, d).toLocaleDateString(LANG, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 }
 
+// Compact date, e.g. "Jun 4" — used by the monthly detail panel, where the year
+// is already in the heading. Built from parts (like fmtDate) so it never shifts.
+function fmtDateShort(s) {
+  const [y, mo, d] = s.split('-').map(Number);
+  return new Date(y, mo - 1, d).toLocaleDateString(LANG, { month: 'short', day: 'numeric' });
+}
+
 // A meal's short label, e.g. "Breakfast · 8:00 AM" (time optional) — translated
 // for display.
 function mealLabel(type, time) {
